@@ -1,0 +1,25 @@
+# Local/editor artifacts
+.tmp-check.js
+*.log
+
+# OS metadata
+Thumbs.db
+desktop.ini
+
+# Browser test screenshots are kept out of the source repository
+current-shell.png
+replay-indicators-check.png
+ktrainer-live.png
+ktrainer-reference.png
+product-ui.png
+trend-lab-12-regimes.png
+trend-lab-final.png
+trend-lab-guided.png
+trend-lab-mobile.png
+trend-lab-phase2-final.png
+trend-lab-phase2.png
+trend-lab-training.png
+trend-lab.png
+workspace-market.png
+workspace-training-fixed.png
+workspace-training.png
