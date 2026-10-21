@@ -10,7 +10,7 @@ assert.match(html, /axisBar\.hidden\s*=\s*false;\s*axisBar\.classList\.add\('fal
 assert.match(html, /axisBar\.classList\.remove\('fallback-placeholder'\);\s*axisBar\.hidden\s*=\s*!available;/);
 assert.doesNotMatch(html, /setProperty\('--fallback-height'/);
 assert.match(html, /body\.market-terminal\s+#chart\s*\{\s*height:\s*max\(250px,\s*min\(38vh,\s*320px\)\)\s*!important;\s*min-height:\s*max\(250px,\s*min\(38vh,\s*320px\)\);/);
-assert.match(html, /#chart\.has-rsi-pane\.has-macd-pane\.has-kdj-pane\s*\{\s*height:\s*calc\(max\(250px,\s*min\(38vh,\s*320px\)\)\s*\+\s*144px\)\s*!important;/);
+assert.match(html, /#chart\.has-rsi-pane\.has-macd-pane\.has-kdj-pane\s*\{\s*height:\s*calc\(max\(250px,\s*min\(38vh,\s*320px\)\)\s*\+\s*192px\)\s*!important;/);
 assert.match(html, /\.chart-pane-legend\s*\{[^}]*overflow-x:\s*auto;[^}]*scrollbar-width:\s*none;[^}]*touch-action:\s*pan-x;/);
 assert.match(html, /\.chart-pane-legend::\-webkit-scrollbar\s*\{\s*display:\s*none;\s*\}/);
 assert.match(html, /body\.market-terminal \.chart-indicator-values\s*\{[^}]*overflow-x:\s*auto;[^}]*scrollbar-width:\s*none;/);
@@ -19,4 +19,7 @@ assert.match(html, /@media\s*\(min-width:\s*901px\)\s*and\s*\(max-width:\s*1100p
 assert.match(html, /@media\s*\(max-width:\s*720px\)\s*\{\s*body\.market-terminal\s+#workspaceTaskDock\s*\{\s*grid-column:\s*1;\s*grid-row:\s*2;\s*\}\s*body\.market-terminal\s+\.chart-card\s*\{\s*grid-column:\s*1;\s*grid-row:\s*1;\s*\}\s*body\.market-terminal\s+\.side\s*\{\s*grid-column:\s*1;\s*grid-row:\s*3;/);
 assert.match(html, /@media\s*\(max-width:\s*560px\)\s*and\s*\(min-height:\s*780px\)\s*\{\s*body\.market-terminal\s+#chart\s*\{\s*height:\s*min\(56vh,\s*480px\)\s*!important;\s*min-height:\s*min\(56vh,\s*480px\);/);
 assert.match(html, /#chart\.has-rsi-pane\.has-macd-pane\.has-kdj-pane\s*\{\s*height:\s*calc\(min\(56vh,\s*480px\)\s*\+\s*144px\)\s*!important;/);
+assert.match(html, /const paneStep = 104;/);
+assert.match(html, /pane\.setStretchFactor\(2\.1\);/);
+assert.match(html, /const top = 406 \+ paneIndex \* paneStep, height = 100;/);
 console.log('PASS: responsive stage sizing, compact short phones, chart-first tall phones, scrollable readouts, and the axis-bar layout slot remain consistent.');

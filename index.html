@@ -1220,9 +1220,9 @@
       body.market-terminal #chart { flex: 0 0 auto; }
       body.market-terminal .chart-account-summary { grid-template-columns: repeat(3, minmax(0, 1fr)); }
       body.market-terminal #chart { height: max(250px, min(38vh, 320px)) !important; min-height: max(250px, min(38vh, 320px)); }
-      body.market-terminal #chart.has-rsi-pane:not(.has-macd-pane):not(.has-kdj-pane), body.market-terminal #chart.has-macd-pane:not(.has-rsi-pane):not(.has-kdj-pane), body.market-terminal #chart.has-kdj-pane:not(.has-rsi-pane):not(.has-macd-pane) { height: calc(max(250px, min(38vh, 320px)) + 48px) !important; }
-      body.market-terminal #chart.has-rsi-pane.has-macd-pane:not(.has-kdj-pane), body.market-terminal #chart.has-rsi-pane.has-kdj-pane:not(.has-macd-pane), body.market-terminal #chart.has-macd-pane.has-kdj-pane:not(.has-rsi-pane) { height: calc(max(250px, min(38vh, 320px)) + 96px) !important; }
-      body.market-terminal #chart.has-rsi-pane.has-macd-pane.has-kdj-pane { height: calc(max(250px, min(38vh, 320px)) + 144px) !important; }
+      body.market-terminal #chart.has-rsi-pane:not(.has-macd-pane):not(.has-kdj-pane), body.market-terminal #chart.has-macd-pane:not(.has-rsi-pane):not(.has-kdj-pane), body.market-terminal #chart.has-kdj-pane:not(.has-rsi-pane):not(.has-macd-pane) { height: calc(max(250px, min(38vh, 320px)) + 64px) !important; }
+      body.market-terminal #chart.has-rsi-pane.has-macd-pane:not(.has-kdj-pane), body.market-terminal #chart.has-rsi-pane.has-kdj-pane:not(.has-macd-pane), body.market-terminal #chart.has-macd-pane.has-kdj-pane:not(.has-rsi-pane) { height: calc(max(250px, min(38vh, 320px)) + 128px) !important; }
+      body.market-terminal #chart.has-rsi-pane.has-macd-pane.has-kdj-pane { height: calc(max(250px, min(38vh, 320px)) + 192px) !important; }
       body.market-terminal .account-metric { padding: 4px 2px; }
       body.market-terminal .account-metric:nth-child(3n) { border-right: 0; }
       body.market-terminal .account-metric:nth-child(n + 4) { border-top: 1px solid #2b3139; }
@@ -2801,7 +2801,7 @@
     }
     function addIndicatorPane(name) {
       const pane = proChart.chart.addPane();
-      pane.setStretchFactor(1.8);
+      pane.setStretchFactor(2.1);
       proChart.indicators[name] = { pane, series: [] };
       return proChart.indicators[name];
     }
@@ -3773,7 +3773,8 @@
       const svg = el('svg', { class: 'chart-fallback', viewBox: '0 0 900 430', preserveAspectRatio: 'none', role: 'img', 'aria-labelledby': 'chartTitle chartDesc' });
       container.replaceChildren(svg);
       const paneNames = ['rsi', 'macd', 'kdj'].filter(key => state.indicator[key]);
-      const paneStep = 72;
+      // 备用 SVG 与专业图保持同样的副图可读高度；三副图时每个面板约 60px。
+      const paneStep = 104;
       const H = 430 + paneNames.length * paneStep;
       container.classList.add('chart-fallback-mode');
       // 备用图作为 chart-stage 的弹性子项填满父级分配空间，避免将上一次
@@ -3862,7 +3863,7 @@
         });
       }
       paneNames.forEach((name, paneIndex) => {
-        const top = 406 + paneIndex * paneStep, height = 68;
+        const top = 406 + paneIndex * paneStep, height = 100;
         const pane = el('g', { 'data-indicator-pane': name }); svg.appendChild(pane);
         let lines, minValue = 0, maxValue = 100;
         if (name === 'rsi') lines = [calcRsi(sourceCloses, state.indicatorParams.rsi.period).map(item => item?.value).slice(start, start + visibleCount)];
