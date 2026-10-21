@@ -4088,7 +4088,8 @@
             const fraction = Math.max(0, Math.min(1, (((a.x + b.x) / 2 - rect.left) * W / rect.width - plot.x) / plot.w));
             const rows = buildData(state.scenario, state.timeframe), visible = Math.max(16, Math.min(rows.length, Math.round(rows.length / state.chartZoom)));
             const start = Math.max(0, rows.length - visible - state.chartOffset);
-            state.chartTouchPinch = { distance: Math.hypot(a.x - b.x, a.y - b.y), zoom: state.chartZoom, fraction, logical: start + fraction * visible };
+            // Keep the logical anchor on the candle center under the pinch midpoint.
+            state.chartTouchPinch = { distance: Math.hypot(a.x - b.x, a.y - b.y), zoom: state.chartZoom, fraction, logical: start + fraction * visible - .5 };
           } else {
             state.chartDragging = true; state.chartDragX = evt.clientX; state.chartTouchPinch = null;
           }
@@ -6116,7 +6117,7 @@
     syncChartDisplayControls();
     document.querySelectorAll('[data-chart-type]').forEach(button => button.addEventListener('click', () => { state.chartType = button.dataset.chartType; document.querySelectorAll('[data-chart-type]').forEach(item => item.classList.toggle('active', item.dataset.chartType === state.chartType)); renderChart(); }));
     function zoomChart(factor) {
-      if (!proChart.chart) { state.chartZoom = Math.max(1, Math.min(6, state.chartZoom * factor)); renderChart(); return; }
+      if (!proChart.chart) { setFallbackZoomAt(state.chartZoom * factor, .5); return; }
       const scale = proChart.chart.timeScale(), range = scale.getVisibleLogicalRange();
       if (!range) return;
       const center = (range.from + range.to) / 2, half = (range.to - range.from) / (2 * factor);
@@ -6129,10 +6130,12 @@
       const oldOffset = Math.max(0, Math.min(count - oldVisible, state.chartOffset));
       const oldStart = count - oldVisible - oldOffset;
       const fraction = Math.max(0, Math.min(1, anchorFraction));
-      const anchor = Number.isFinite(anchorLogical) ? anchorLogical : oldStart + fraction * oldVisible;
+      // Fallback candle coordinates use x = (index + .5) / visibleCount.  Subtracting
+      // half a bar keeps toolbar, wheel and pinch zoom anchored like Lightweight Charts.
+      const anchor = Number.isFinite(anchorLogical) ? anchorLogical : oldStart + fraction * oldVisible - .5;
       nextZoom = Math.max(1, Math.min(6, nextZoom));
       const nextVisible = Math.max(16, Math.min(count, Math.round(count / nextZoom)));
-      const nextStart = Math.max(0, Math.min(count - nextVisible, anchor - fraction * nextVisible));
+      const nextStart = Math.max(0, Math.min(count - nextVisible, anchor - fraction * nextVisible + .5));
       state.chartZoom = nextZoom;
       state.chartOffset = count - nextVisible - Math.round(nextStart);
       renderChart();
