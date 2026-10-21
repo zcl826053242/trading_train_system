@@ -141,5 +141,34 @@ async (page) => {
       await context.close();
     }
   }
+  {
+    const context = await page.context().browser().newContext({ viewport: { width: 1440, height: 900 } });
+    const errors = [];
+    try {
+      await context.route('**/api/v5/**', route => route.abort());
+      await context.route('**/unpkg.com/**', route => route.abort());
+      const target = await context.newPage();
+      target.on('pageerror', error => errors.push(error.message));
+      await target.goto('http://127.0.0.1:4188/', { waitUntil: 'domcontentloaded' });
+      await target.waitForFunction(() => historicalReady && sessionPersistenceReady);
+      await target.evaluate(() => {
+        replayTraining.decisions = [0, 1].map(() => ({ outcome: '方向不符', evidence: [], reason: '', rewardRisk: .5 }));
+        replayTraining.saved = false; replayTraining.completedAt = '';
+        setWorkspace('review');
+        renderSessionReport();
+      });
+      const actions = await target.locator('#sessionNextSteps [data-review-retry-indicator]').evaluateAll(nodes => nodes.map(node => node.dataset.reviewRetryIndicator));
+      for (const id of ['structure', 'measured-move', 'candles', 'triangle-pattern']) if (!actions.includes(id)) failures.push(`review retry: missing ${id} lesson action`);
+      await target.locator('#sessionNextSteps [data-review-retry-indicator="candles"]').click();
+      const targetLesson = await target.evaluate(() => ({ workspace: activeWorkspace, selected: selectedIndicatorId }));
+      if (targetLesson.workspace !== 'indicators' || targetLesson.selected !== 'candles' || !(await target.locator('[data-pin-replay-sample="113"]').count())) failures.push(`review retry: candle-case route failed: ${JSON.stringify(targetLesson)}`);
+      if (errors.length) failures.push(`review retry: ${errors.join('; ')}`);
+      results.push({ entry: 'review-retry', actions, targetLesson, errors });
+    } catch (error) {
+      failures.push(`review retry: ${error.message}`);
+    } finally {
+      await context.close();
+    }
+  }
   return { passed: failures.length === 0, results, failures };
 }

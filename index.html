@@ -4454,11 +4454,16 @@
       if (!mistakeItems.length) mistakeItems.push('本场没有明显的记录缺口，继续更换周期和行情类型检查规则是否稳定。');
       mistakeItems.forEach(text => { const li = document.createElement('li'); li.textContent = text; mistakes.append(li); });
       const nextItems = [];
-      if (noStructure) nextItems.push('下一轮目标：每根先写结构，再选择 EMA / 量能作为验证。');
-      if (lowRR) nextItems.push('下一轮目标：固定失效位后，再填写目标价；低于 1R 允许跳过。');
-      if (noReason) nextItems.push('下一轮目标：理由至少包含一个结构事实、一个指标事实和一个触发条件。');
-      if (!nextItems.length) nextItems.push('下一轮目标：换一个周期和一个行情场景，检查证据链能否重复执行。');
-      nextItems.forEach(text => { const li = document.createElement('li'); li.textContent = text; steps.append(li); });
+      if (noStructure) nextItems.push({ text: '下一轮目标：每根先写结构，再选择 EMA / 量能作为验证。', lesson: 'structure', label: '练结构高低点' });
+      if (lowRR) nextItems.push({ text: '下一轮目标：固定失效位后，再填写目标价；低于 1R 允许跳过。', lesson: 'measured-move', label: '练习测量空间' });
+      if (noReason) nextItems.push({ text: '下一轮目标：理由至少包含一个结构事实、一个指标事实和一个触发条件。', lesson: 'candles', label: '练 K 线证据' });
+      if (mismatch >= Math.max(2, Math.ceil(graded.length * .5))) nextItems.push({ text: '方向与下一根走势不一致较多：下一轮重点检查区间边界和收盘确认。', lesson: 'triangle-pattern', label: '练区间确认' });
+      if (!nextItems.length) nextItems.push({ text: '下一轮目标：换一个周期和一个行情场景，检查证据链能否重复执行。' });
+      nextItems.forEach(item => {
+        const li = document.createElement('li'); li.textContent = item.text;
+        if (item.lesson) { const button = document.createElement('button'); button.type = 'button'; button.className = 'text-btn'; button.dataset.reviewRetryIndicator = item.lesson; button.textContent = item.label; li.append(' ', button); }
+        steps.append(li);
+      });
     }
     function saveReplaySession() {
       if (replayTraining.saved || !replayTraining.decisions.length) return;
@@ -5842,6 +5847,17 @@
       renderIndicatorLibrary();
     }));
     document.getElementById('indicatorSearch').addEventListener('input', renderIndicatorLibrary);
+    document.getElementById('sessionNextSteps').addEventListener('click', event => {
+      const button = event.target.closest('[data-review-retry-indicator]');
+      if (!button) return;
+      const item = indicatorLibraryEntries.find(entry => entry.id === button.dataset.reviewRetryIndicator);
+      if (!item) return;
+      clearIndicatorPractice(); selectedIndicatorId = item.id; setWorkspace('indicators'); renderIndicatorLibrary(); renderIndicatorDetail(item);
+      document.querySelectorAll('[data-indicator-entry]').forEach(entry => {
+        const active = entry.dataset.indicatorEntry === selectedIndicatorId;
+        entry.classList.toggle('active', active); entry.setAttribute('aria-selected', String(active));
+      });
+    });
      document.getElementById('indicatorDetail').addEventListener('click', event => {
        const sampleButton = event.target.closest('[data-pin-replay-sample]');
        if (sampleButton) {
