@@ -115,7 +115,8 @@ async (page) => {
     { entry: 'candles', id: 138, time: '2026-10-02 19:00 UTC · 1H', title: '区间低位附近的长下影阳线', fact: '下影约 286.43，实体约 53.27', start: 115 },
     { entry: 'double-top-bottom', id: 81, time: '2026-09-30 10:00 UTC · 1H', title: '相近双低收盘越过颈线（人工标注）', fact: '中间高点 N 83849.00', start: 58, points: [63, 70, 78] },
     { entry: 'double-top-bottom', id: 276, time: '2026-10-08 13:00 UTC · 1H', title: '相近双高收盘跌破颈线（人工标注）', fact: '中间低点 N 82227.56', start: 253, points: [255, 267, 270] },
-    { entry: 'rsi-divergence', indicator: 'rsi', id: 431, time: '2026-10-15 00:00 UTC · 1H', title: '底背离候选仍待结构确认（人工标注）', fact: '价格低点更低约 0.23%', start: 408, points: [422, 431], labels: 'AB' }
+    { entry: 'rsi-divergence', indicator: 'rsi', id: 431, time: '2026-10-15 00:00 UTC · 1H', title: '底背离候选仍待结构确认（人工标注）', fact: '价格低点更低约 0.23%', start: 408, points: [422, 431], labels: 'AB' },
+    { entry: 'measured-move', id: 131, time: '2026-10-02 12:00 UTC · 1H', title: '上行波段的价格与时间跨度（人工标注）', fact: '价格跨度 3820.00', start: 108, points: [108, 131], labels: 'AB' }
   ]) for (const chartMode of ['professional', 'fallback']) for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 667 }]) {
     const context = await page.context().browser().newContext({ viewport });
     const errors = [];
@@ -161,7 +162,7 @@ async (page) => {
       if (replay.professional !== (chartMode === 'professional')) failures.push(`${sample.entry}/${sample.id}: wrong chart engine`);
       if (sample.indicator && !replay.indicatorEnabled) failures.push(`${sample.entry}/${sample.id}: sample indicator was not enabled in replay`);
       if (sample.indicator === 'rsi' && !replay.readout.includes('RSI(14) 33.3')) failures.push(`${sample.entry}/${sample.id}: replay RSI readout does not match the sample: ${replay.readout}`);
-      const expectedClose = sample.id === 81 ? 83918.01 : sample.id === 276 ? 82182.01 : sample.id === 113 ? 84802.02 : sample.id === 431 ? 81656.01 : 84315.28;
+      const expectedClose = sample.id === 81 ? 83918.01 : sample.id === 276 ? 82182.01 : sample.id === 113 ? 84802.02 : sample.id === 431 ? 81656.01 : sample.id === 131 ? 86810 : 84315.28;
       if (replay.lastClose !== expectedClose) failures.push(`${sample.entry}/${sample.id}: last revealed price is not the anchor`);
       if (errors.length) failures.push(`candles/${sample.id}: ${errors.join('; ')}`);
       results.push({ entry: sample.entry, sampleIndex: sample.id, chartMode, viewport, replay, errors });
