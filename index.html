@@ -2096,7 +2096,7 @@
       { id: 'ema', code: 'EMA20 / 60', title: '指数移动平均', category: 'trend', summary: '比较短期与中期均线的位置和斜率。', observe: '先描述价格高低点，再看 EMA20 与 EMA60 是否同向；均线只作方向过滤。', confirm: '价格结构抬高且 EMA20 在 EMA60 上方，回踩时结构仍守住，才算多头假设得到配合。', caution: '均线交叉滞后，横盘时会反复交叉；不能把交叉本身当作入场信号。', action: 'ema', questionIndexes: [0, 7], sampleIds: ['trendExtension', 'pullbackContinuation'] },
       { id: 'structure', code: 'HH / HL', title: '摆动高低点结构', category: 'trend', summary: '用高点、低点的抬高或下移描述趋势。', observe: '比较连续摆动高点与低点：同步抬高、同步下移，或互相重叠。', confirm: '突破后观察是否出现新的摆动点，并结合回踩是否守住前一个结构位。', caution: '单根影线不一定构成有效摆动点；区间中部不要强行判趋势。', action: 'structure', questionIndexes: [0, 1] },
       { id: 'bollinger', code: 'BOLL', title: '布林带', category: 'channel', summary: '观察波动区间的收缩、扩张与价格位置。', observe: '带宽收窄代表近期波动变小；带宽扩大代表波动扩张，不直接给出方向。', confirm: '结合区间边界、收盘位置和成交量判断突破是否站稳。', caution: '触及上轨不是自动做空，触及下轨也不是自动做多；强趋势中价格可沿轨运行。', action: 'bb', sampleIds: ['bollSqueezeExpansion'] },
-      { id: 'psar', code: 'SAR(0.02, 0.2)', title: '抛物线转向指标 SAR', category: 'trend', summary: '观察跟随趋势推进的止损参考点及潜在方向切换。', observe: '比较 SAR 点位与 K 线高低价，留意点位由价格一侧切换到另一侧。', confirm: '切换只提示趋势状态可能变化；结合摆动结构、关键位和收盘确认，不据此单独开仓。', caution: '趋势强度和加速因子会影响点位；震荡市容易反复翻转，SAR 不是保证止损价。', action: 'psar' },
+      { id: 'psar', code: 'SAR(0.02, 0.2)', title: '抛物线转向指标 SAR', category: 'trend', summary: '观察跟随趋势推进的止损参考点及潜在方向切换。', observe: '比较 SAR 点位与 K 线高低价，留意点位由价格一侧切换到另一侧。', confirm: '切换只提示趋势状态可能变化；结合摆动结构、关键位和收盘确认，不据此单独开仓。', caution: '趋势强度和加速因子会影响点位；震荡市容易反复翻转，SAR 不是保证止损价。', action: 'psar', sampleIds: ['sarCountertrendFlip', 'sarTrendResumption'] },
       { id: 'levels', code: 'S / R', title: '支撑与阻力位', category: 'channel', summary: '把多次出现反应的价格区域作为观察边界。', observe: '找前高、前低或多次反应区，画线后观察价格如何接近和离开该区域。', confirm: '观察收盘是否突破、回踩是否守住，以及突破时量能是否支持。', caution: '支撑阻力是区域假设，不是精确到一格的保证；被突破后角色可能互换。', action: 'levels', questionIndexes: [1, 3] },
       { id: 'rsi', code: 'RSI(14)', title: '相对强弱指标', category: 'momentum', summary: '衡量近期涨跌速度，不单独预测反转。', observe: '看 RSI 的区间、斜率，以及它与价格结构是否同步。', confirm: '趋势方向由价格结构决定；RSI 用于检查动能是否增强、减弱或与价格背离。', caution: '超买可以持续，超卖也不代表马上反转；先确认结构变化。', action: 'rsi', questionIndexes: [6], sampleIds: ['rsiOversold', 'rsiHotTrend'] },
       { id: 'kdj', code: 'KDJ(9,3,3)', title: '随机指标 KDJ', category: 'momentum', summary: '比较收盘价在近期高低区间中的位置及其平滑变化。', observe: '同时看 K、D、J 三线的位置与斜率，并对照价格所处的结构区间。', confirm: '用 K/D 相对位置和 J 线变化描述短期动能，再结合关键位收盘判断是否有结构确认。', caution: 'KDJ 对短期价格波动敏感，横盘中容易反复交叉；超买/超卖不是单独的反转信号。', action: 'kdj', sampleIds: ['kdjOversoldDowntrend'] },
@@ -2123,7 +2123,9 @@
       macdPositiveCooling: { index: 87, title: '零轴上方柱体连续收缩', prompt: 'DIF、DEA 和柱体仍在零轴上方，但柱体已连续收缩。先描述动能变化，再核对价格与均线结构；动能减弱本身不等于趋势反转。' },
       macdBearCrossBelowZero: { index: 276, title: '零轴下方死叉与弱势结构', prompt: 'DIF 下穿 DEA，且两者位于零轴下方；收盘低于 EMA20/EMA60。记录这是偏弱证据，但等待后续价格结构确认，不把交叉当成入场指令。' },
       bollSqueezeExpansion: { index: 174, title: '窄带后上轨外收盘', prompt: 'BOLL(20,2) 带宽约 0.46%，收盘位于上轨外，随后带宽继续扩大。先区分波动扩张与方向确认；上轨外收盘不等于必须追多，也不等于马上反转。' },
-      kdjOversoldDowntrend: { index: 242, title: '低位金叉发生在下跌结构中', prompt: 'K、D 位于 20 附近并出现金叉，但 EMA20 仍低于 EMA60。记录短线动能回升与大级别弱势并存，等待摆动高低点变化，不把低位金叉当作趋势反转。' }
+      kdjOversoldDowntrend: { index: 242, title: '低位金叉发生在下跌结构中', prompt: 'K、D 位于 20 附近并出现金叉，但 EMA20 仍低于 EMA60。记录短线动能回升与大级别弱势并存，等待摆动高低点变化，不把低位金叉当作趋势反转。' },
+      sarCountertrendFlip: { index: 255, title: 'SAR 翻到价格下方，均线仍为空头', prompt: 'SAR 翻到收盘价下方，但 EMA20 仍低于 EMA60。把它记为潜在状态切换，而不是直接做多；检查后续是否延续并突破摆动高点。' },
+      sarTrendResumption: { index: 265, title: 'SAR 再翻回上方且弱势延续', prompt: 'SAR 已翻到价格上方，EMA20 低于 EMA60，收盘也低于两条均线。对照前一案例：单次 SAR 翻转容易反复，价格结构和后续跟随更重要。' }
     };
     const indicatorCategoryLabels = { trend: '趋势', channel: '通道', momentum: '动量', sentiment: '情绪', volume: '量能', pattern: '形态' };
     let activeIndicatorCategory = 'all';
@@ -5388,7 +5390,7 @@
       const pinnedNotice = document.getElementById('setupPinnedSample');
       pinnedNotice.hidden = pendingReplaySampleIndex == null;
       if (pendingReplaySampleIndex != null) {
-        const labels = { macd: 'MACD(12,26,9)', bb: 'BOLL(20,2)', kdj: 'KDJ(9,3,3)' };
+        const labels = { macd: 'MACD(12,26,9)', bb: 'BOLL(20,2)', kdj: 'KDJ(9,3,3)', psar: 'SAR(0.02,0.2)' };
         pinnedNotice.textContent = `已选择课程历史位置；固定为 1 小时、60 根双盲，回放期间不显示日期或后续走势。${labels[indicator] ? `本课使用 ${labels[indicator]} 默认参数，已应用到图表设置。` : ''}`;
       }
       document.querySelectorAll('[data-setup-time]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.setupTime === trainingSetupState.timeframe)));
@@ -5599,8 +5601,9 @@
       const bands = focusIndicator === 'bb' ? calcBollinger(prefixCloses, indicatorParamDefaults.bb) : null;
       const bollinger = bands?.at(-1) ?? null;
       const kdj = focusIndicator === 'kdj' ? calcKdj(prefix, indicatorParamDefaults.kdj.period, indicatorParamDefaults.kdj.k, indicatorParamDefaults.kdj.d).at(-1) : null;
+      const psar = focusIndicator === 'psar' ? calcParabolicSar(prefix, indicatorParamDefaults.psar.step, indicatorParamDefaults.psar.max).at(-1) : null;
       const bandWidth = bands?.length > 1 && bands.at(-1) ? (bands.at(-1).upper - bands.at(-1).lower) / bands.at(-1).mid : null;
-      return { row, e20: e20.at(-1), e60: e60.at(-1), rsi: rsi.at(-1)?.value ?? null, volumeRatio: averageVolume ? row.volume / averageVolume : null, priorHigh: Math.max(...prior.map(item => item.high)), macd: macd ? { dif: macd.dif.at(-1), dea: macd.dea.at(-1), histogram: macd.histogram.at(-1) } : null, bollinger, bandWidth, kdj };
+      return { row, e20: e20.at(-1), e60: e60.at(-1), rsi: rsi.at(-1)?.value ?? null, volumeRatio: averageVolume ? row.volume / averageVolume : null, priorHigh: Math.max(...prior.map(item => item.high)), macd: macd ? { dif: macd.dif.at(-1), dea: macd.dea.at(-1), histogram: macd.histogram.at(-1) } : null, bollinger, bandWidth, kdj, psar };
     }
     function renderIndicatorSampleChart(rows, index) {
       const sample = rows.slice(index - 23, index + 1);
@@ -5629,7 +5632,7 @@
       const section = document.createElement('section'); section.className = 'indicator-market-samples'; section.setAttribute('aria-label', '历史行情样本');
       const heading = document.createElement('strong'); heading.textContent = '历史行情样本 · Binance BTCUSDT 现货'; section.append(heading);
       samples.forEach(sample => {
-        const hasIndicatorSample = ['macd', 'bb', 'kdj'].includes(item.action);
+        const hasIndicatorSample = ['macd', 'bb', 'kdj', 'psar'].includes(item.action);
         const metrics = indicatorSampleMetrics(sample.index, hasIndicatorSample ? item.action : '');
         const card = document.createElement('article'); card.className = 'indicator-market-sample';
         const timestamp = metrics?.row.openTime ? new Date(metrics.row.openTime).toISOString().replace('T', ' ').slice(0, 16) + ' UTC' : '历史数据加载中';
@@ -5646,6 +5649,7 @@
           if (metrics.macd) values.push([`MACD(12,26,9) DIF ${metrics.macd.dif.toFixed(2)}`, 'dif'], [`DEA ${metrics.macd.dea.toFixed(2)}`, 'dea'], [`柱 ${metrics.macd.histogram.toFixed(2)}`, 'histogram']);
           if (metrics.bollinger) values.push([`BOLL(20,2) 上轨 ${metrics.bollinger.upper.toFixed(2)}`, 'upper'], [`中轨 ${metrics.bollinger.mid.toFixed(2)}`, 'middle'], [`下轨 ${metrics.bollinger.lower.toFixed(2)}`, 'lower'], [`带宽 ${(metrics.bandWidth * 100).toFixed(2)}%`, 'width']);
           if (metrics.kdj) values.push([`K ${metrics.kdj.k.toFixed(2)}`, 'k'], [`D ${metrics.kdj.d.toFixed(2)}`, 'd'], [`J ${metrics.kdj.j.toFixed(2)}`, 'j']);
+          if (metrics.psar) values.push([`SAR(0.02,0.2) ${metrics.psar.value.toFixed(2)} · ${metrics.psar.rising ? '位于价格下方' : '位于价格上方'}`, 'value']);
           values.forEach(([value, field]) => { const tag = document.createElement('span'); tag.textContent = value; if (field) tag.dataset[`${item.action}Metric`] = field; data.append(tag); });
           card.append(data);
         }

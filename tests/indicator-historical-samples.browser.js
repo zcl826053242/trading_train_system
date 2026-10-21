@@ -5,7 +5,8 @@ async (page) => {
   const cases = [
     { entry: 'macd', indicator: 'macd', indices: [{ index: 87, expectedReadout: 'DIF 199.25' }, { index: 276, expectedReadout: 'DIF -401.29' }], metricCount: 3 },
     { entry: 'bollinger', indicator: 'bb', indices: [{ index: 174, expectedReadout: '上 85057.67' }], metricCount: 4 },
-    { entry: 'kdj', indicator: 'kdj', indices: [{ index: 242, expectedReadout: 'K 18.9' }], metricCount: 3 }
+    { entry: 'kdj', indicator: 'kdj', indices: [{ index: 242, expectedReadout: 'K 18.9' }], metricCount: 3 },
+    { entry: 'psar', indicator: 'psar', indices: [{ index: 255, expectedReadout: 'SAR(0.02,0.2) 82787.25' }, { index: 265, expectedReadout: 'SAR(0.02,0.2) 83681.91' }], metricCount: 1 }
   ];
   for (const { entry, indicator, indices, metricCount } of cases) for (const { index: sampleIndex, expectedReadout } of indices) for (const chartMode of ['professional', 'fallback']) {
     const context = await page.context().browser().newContext({ viewport: { width: 1440, height: 900 } });
@@ -31,6 +32,7 @@ async (page) => {
         if (group === 'macd') state.indicatorParams.macd = { fast: 10, slow: 30, signal: 5 };
         if (group === 'bb') state.indicatorParams.bb = { period: 10, multiplier: 1.5 };
         if (group === 'kdj') state.indicatorParams.kdj = { period: 7, k: 2, d: 2 };
+        if (group === 'psar') state.indicatorParams.psar = { step: .04, max: .3 };
         saveIndicatorParams();
       }, indicator);
       await card.locator('[data-pin-replay-sample]').click();
@@ -46,12 +48,12 @@ async (page) => {
         notice: document.querySelector('#setupPinnedSample').textContent
       }), indicator);
       if (!setup.open || !setup.pinned || setup.timeframe !== '1H' || setup.length !== '60' || setup.mode !== 'blind' || !setup.indicatorEnabled || !setup.savedIndicator) failures.push(`${entry}/${sampleIndex}: pinned replay setup or indicator preference incorrect`);
-      const expectedParams = indicator === 'macd' ? { fast: 12, slow: 26, signal: 9 } : indicator === 'bb' ? { period: 20, multiplier: 2 } : { period: 9, k: 3, d: 3 };
+      const expectedParams = indicator === 'macd' ? { fast: 12, slow: 26, signal: 9 } : indicator === 'bb' ? { period: 20, multiplier: 2 } : indicator === 'kdj' ? { period: 9, k: 3, d: 3 } : { step: .02, max: .2 };
       if (JSON.stringify(setup.params) !== JSON.stringify(expectedParams)) failures.push(`${entry}/${sampleIndex}: course default parameters were not applied`);
-      if (!setup.notice.includes(indicator === 'macd' ? 'MACD(12,26,9)' : indicator === 'bb' ? 'BOLL(20,2)' : 'KDJ(9,3,3)')) failures.push(`${entry}/${sampleIndex}: pinned setup does not disclose course parameters`);
+      const parameterLabel = indicator === 'macd' ? 'MACD(12,26,9)' : indicator === 'bb' ? 'BOLL(20,2)' : indicator === 'kdj' ? 'KDJ(9,3,3)' : 'SAR(0.02,0.2)';
+      if (!setup.notice.includes(parameterLabel)) failures.push(`${entry}/${sampleIndex}: pinned setup does not disclose course parameters`);
       await target.locator('#confirmTrainingStart').click();
-      await target.mouse.move(4, 4);
-      await target.waitForTimeout(40);
+      await target.evaluate(() => updateChartOhlc(proChart.visibleRows.at(-1), proChart.visibleRows.length - 1, proChart.visibleRows));
       const replay = await target.evaluate(indicatorKey => ({
         workspace: activeWorkspace, timeframe: state.timeframe, length: state.sessionLength,
         start: state.sessionStart, reveal: state.revealCount, indicatorEnabled: state.indicator[indicatorKey], mode: replayTraining.mode,
