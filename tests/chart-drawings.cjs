@@ -42,7 +42,7 @@ const context = vm.createContext({
   },
   renderDrawingManager() { context.renderDrawingOverlay(); }
 });
-for (const name of ['drawingSurface', 'drawingEventPoint', 'createFallbackDrawingSurface', 'drawingTimeOrder', 'drawingPoint', 'drawingLogicalIndex', 'drawingTimeCoordinate', 'measurementBarCount', 'measurementSummary', 'clipDrawingLine', 'drawingAngleDegrees', 'applyDrawingState', 'syncDrawingPriceLines', 'handleDrawingToolClick', 'renderDrawingOverlay', 'renderDrawingManager', 'removeDrawing', 'beginDrawingEdit', 'moveDrawingEdit', 'endDrawingEdit']) vm.runInContext(source(name), context);
+for (const name of ['chartUsesHeikinAshi', 'activeChartSeries', 'drawingSurface', 'drawingEventPoint', 'createFallbackDrawingSurface', 'drawingTimeOrder', 'drawingPoint', 'drawingLogicalIndex', 'drawingTimeCoordinate', 'measurementBarCount', 'measurementSummary', 'clipDrawingLine', 'drawingAngleDegrees', 'applyDrawingState', 'syncDrawingPriceLines', 'handleDrawingToolClick', 'renderDrawingOverlay', 'renderDrawingManager', 'removeDrawing', 'beginDrawingEdit', 'moveDrawingEdit', 'endDrawingEdit']) vm.runInContext(source(name), context);
 vm.runInContext(source('handleDrawingManagerAction').split("\n    document.getElementById('drawingList')")[0], context);
 const renderDrawingManager = context.renderDrawingManager;
 context.renderDrawingManager = () => context.renderDrawingOverlay();

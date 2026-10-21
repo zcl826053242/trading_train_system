@@ -123,6 +123,8 @@
     .binance-chart-actions button { display: inline-flex; width: 28px; height: 28px; flex: 0 0 28px; align-items: center; justify-content: center; border: 0; border-radius: 4px; background: transparent; color: #848e9c; padding: 0; font-size: 11px; white-space: nowrap; }
     .binance-chart-actions button i, .binance-chart-actions button svg { width: 15px; height: 15px; }
     .binance-chart-actions button:hover, .binance-chart-actions button:focus-visible, .binance-chart-actions button.active { background: #2b3139; color: #f0b90b; outline: none; }
+    .binance-chart-actions .chart-type-short { font-size: 9px; font-weight: 700; letter-spacing: -.04em; }
+    .chart-mode-badge { display: inline-flex; align-items: center; padding: 1px 5px; border: 1px solid #665211; border-radius: 3px; color: #f0b90b; font-size: 9px; line-height: 16px; white-space: nowrap; }
     .binance-chart-actions button:disabled { opacity: .4; cursor: default; }
     .indicator-menu-trigger { display: inline-flex; min-height: 30px; align-items: center; gap: 5px; padding: 4px 8px; border: 1px solid #3a4149; border-radius: 3px; background: #1e2329; color: #b7bdc6; font-size: 11px; }
     .indicator-menu-trigger:hover, .indicator-menu-trigger:focus-visible { border-color: #f0b90b; color: #f0b90b; outline: none; }
@@ -1678,8 +1680,8 @@
           </div>
           <div class="chart-plot">
           <div class="binance-chart-bar" aria-label="K线图状态栏">
-            <div class="binance-chart-meta"><span id="chartIntervalLabel">1H</span><span id="chartOhlc" class="chart-ohlc" tabindex="0" aria-label="十字光标选中 K 线的开盘、最高、最低和收盘价，可横向滚动查看">开 — 高 — 低 — 收 —</span><span id="chartIndicatorValues" class="chart-indicator-values" tabindex="0" aria-label="图表指标读数，可横向滚动查看更多">EMA20 — · EMA60 —</span></div>
-            <div class="binance-chart-actions" aria-label="图表视图操作"><button type="button" class="active" data-chart-type="candles" aria-label="蜡烛图" title="蜡烛图"><i data-lucide="chart-no-axes-column-increasing" aria-hidden="true"></i></button><button type="button" data-chart-type="line" aria-label="分时线" title="分时线"><i data-lucide="chart-spline" aria-hidden="true"></i></button><button type="button" id="chartZoomOut" aria-label="缩小" title="缩小"><i data-lucide="minus" aria-hidden="true"></i></button><button type="button" id="chartZoomIn" aria-label="放大" title="放大"><i data-lucide="plus" aria-hidden="true"></i></button><button type="button" id="chartResetView" aria-label="重置图表视图" title="重置图表视图"><i data-lucide="rotate-ccw" aria-hidden="true"></i></button><button type="button" id="chartFullscreen" aria-label="全屏" title="全屏"><i data-lucide="maximize" aria-hidden="true"></i></button><button type="button" id="replayToggle" aria-label="开启真实回放" title="开启真实回放"><i data-lucide="database" aria-hidden="true"></i></button></div>
+            <div class="binance-chart-meta"><span id="chartIntervalLabel">1H</span><span id="chartModeBadge" class="chart-mode-badge" hidden title="Heikin Ashi 蜡烛和十字线 OHLC 为合成值；顶部最新报价、成交量、指标、账户与训练判断仍使用原始 K 线。">HA 合成</span><span id="chartOhlc" class="chart-ohlc" tabindex="0" aria-label="十字光标选中 K 线的开盘、最高、最低和收盘价，可横向滚动查看">开 — 高 — 低 — 收 —</span><span id="chartIndicatorValues" class="chart-indicator-values" tabindex="0" aria-label="图表指标读数，可横向滚动查看更多">EMA20 — · EMA60 —</span></div>
+            <div class="binance-chart-actions" aria-label="图表视图操作"><button type="button" class="active" data-chart-type="candles" aria-label="蜡烛图" title="蜡烛图"><i data-lucide="chart-no-axes-column-increasing" aria-hidden="true"></i></button><button type="button" data-chart-type="heikin" aria-label="Heikin Ashi 平均K线（合成）" title="Heikin Ashi 平均K线（合成）"><span class="chart-type-short" aria-hidden="true">HA</span></button><button type="button" data-chart-type="line" aria-label="分时线" title="分时线"><i data-lucide="chart-spline" aria-hidden="true"></i></button><button type="button" id="chartZoomOut" aria-label="缩小" title="缩小"><i data-lucide="minus" aria-hidden="true"></i></button><button type="button" id="chartZoomIn" aria-label="放大" title="放大"><i data-lucide="plus" aria-hidden="true"></i></button><button type="button" id="chartResetView" aria-label="重置图表视图" title="重置图表视图"><i data-lucide="rotate-ccw" aria-hidden="true"></i></button><button type="button" id="chartFullscreen" aria-label="全屏" title="全屏"><i data-lucide="maximize" aria-hidden="true"></i></button><button type="button" id="replayToggle" aria-label="开启真实回放" title="开启真实回放"><i data-lucide="database" aria-hidden="true"></i></button></div>
           </div>
           <div class="chart-stage" id="chartStage">
             <div class="chart-pane-legends" id="chartPaneLegends" aria-label="各图表面板指标读数"></div>
@@ -2090,6 +2092,15 @@
     const colors = { grid: '#e2e8ec', ink: '#18222d', muted: '#6e7c88', orange: '#e66b3c', teal: '#128e86', blue: '#3976c8', red: '#c44f54' };
     const chartColors = { grid: '#2b3139', ink: '#eaecef', muted: '#848e9c', orange: '#f0b90b', teal: '#0ecb81', blue: '#5b8def', red: '#f6465d' };
     const chartDisplayDefaults = { lastPrice: true, highLow: false, indicatorLastValues: false, grid: true, invertScale: false, priceScaleMode: 'normal', candleStyle: 'solid' };
+    function loadChartTypePreference() {
+      try {
+        const saved = localStorage.getItem('trend-lab-chart-type');
+        return ['candles', 'heikin', 'line'].includes(saved) ? saved : 'candles';
+      } catch (_) { return 'candles'; }
+    }
+    function saveChartTypePreference() {
+      try { localStorage.setItem('trend-lab-chart-type', state.chartType); } catch (_) {}
+    }
     function loadChartDisplayPreferences() {
       try {
         const saved = JSON.parse(localStorage.getItem('trend-lab-chart-display') || '{}');
@@ -2146,7 +2157,7 @@
       document.querySelectorAll('[data-ma]').forEach(input => { input.checked = state.sma[Number(input.dataset.ma)]; });
       document.querySelectorAll('[data-vol-ma]').forEach(input => { input.checked = state.volumeSma[Number(input.dataset.volMa)]; });
     }
-    const state = { scenario: 'up', timeframe: '1H', dataMode: 'live', chartType: 'candles', chartZoom: 1, chartOffset: 0, chartDragging: false, chartDragX: 0, chartTouchPoints: {}, chartTouchPinch: null, fallbackPriceScale: { auto: true, zoom: 1, offset: 0, baseMin: null, baseMax: null }, fallbackPriceDrag: null, ...loadChartOverlayPreferences(), chartDisplay: loadChartDisplayPreferences(), indicatorParams: loadIndicatorParams(), lesson: 0, tool: 'cursor', indicator: loadIndicatorPreferences(), drawings: [], pendingDraw: [], replayMode: false, replayPaused: false, revealCount: 24, sessionLength: 60, sessionStart: 0, liveRows: [], liveUpdatedAt: 0, liveLoading: false, liveError: '' };
+    const state = { scenario: 'up', timeframe: '1H', dataMode: 'live', chartType: loadChartTypePreference(), chartZoom: 1, chartOffset: 0, chartDragging: false, chartDragX: 0, chartTouchPoints: {}, chartTouchPinch: null, fallbackPriceScale: { auto: true, zoom: 1, offset: 0, baseMin: null, baseMax: null }, fallbackPriceDrag: null, ...loadChartOverlayPreferences(), chartDisplay: loadChartDisplayPreferences(), indicatorParams: loadIndicatorParams(), lesson: 0, tool: 'cursor', indicator: loadIndicatorPreferences(), drawings: [], pendingDraw: [], replayMode: false, replayPaused: false, revealCount: 24, sessionLength: 60, sessionStart: 0, liveRows: [], liveUpdatedAt: 0, liveLoading: false, liveError: '' };
     const indicatorLibraryEntries = [
       { id: 'ema', code: 'EMA20 / 60', title: '指数移动平均', category: 'trend', summary: '比较短期与中期均线的位置和斜率。', observe: '先描述价格高低点，再看 EMA20 与 EMA60 是否同向；均线只作方向过滤。', confirm: '价格结构抬高且 EMA20 在 EMA60 上方，回踩时结构仍守住，才算多头假设得到配合。', caution: '均线交叉滞后，横盘时会反复交叉；不能把交叉本身当作入场信号。', action: 'ema', questionIndexes: [0, 7], sampleIds: ['trendExtension', 'pullbackContinuation'] },
       { id: 'structure', code: 'HH / HL', title: '摆动高低点结构', category: 'trend', summary: '用高点、低点的抬高或下移描述趋势。', observe: '比较连续摆动高点与低点：同步抬高、同步下移，或互相重叠。', confirm: '突破后观察是否出现新的摆动点，并结合回踩是否守住前一个结构位。', caution: '单根影线不一定构成有效摆动点；区间中部不要强行判趋势。', action: 'structure', questionIndexes: [0, 1] },
@@ -2652,12 +2663,14 @@
     function clearProfessionalChartData() {
       if (!proChart.chart) return;
       const clear = series => { try { series?.setData([]); } catch (_) {} };
-      [proChart.candles, proChart.line, proChart.ema20, proChart.ema60, proChart.psarSeries, proChart.volume,
+      [proChart.candles, proChart.heikin, proChart.line, proChart.ema20, proChart.ema60, proChart.psarSeries, proChart.volume,
         ...Object.values(proChart.smaSeries), ...Object.values(proChart.volumeSmaSeries), ...(proChart.bb || [])].forEach(clear);
       if (proChart.markers) { try { proChart.markers.setMarkers([]); } catch (_) {} }
       Object.values(proChart.indicators).forEach(item => item.series.forEach(series => { try { series.setData([]); } catch (_) {} }));
-      [...proChart.riskLines, ...proChart.extremeLines].forEach(line => { try { proChart.candles.removePriceLine(line); } catch (_) {} });
+      proChart.riskLines.forEach(line => { try { proChart.riskLineOwner?.removePriceLine(line); } catch (_) {} });
+      proChart.extremeLines.forEach(line => { try { proChart.extremeLineOwner?.removePriceLine(line); } catch (_) {} });
       proChart.riskLines = []; proChart.extremeLines = [];
+      proChart.riskLineOwner = null; proChart.extremeLineOwner = null;
       proChart.visibleRows = []; proChart.readoutRows = []; proChart.readoutOffset = 0; proChart.readoutData = null; proChart.psarValues = [];
       proChart.viewKey = '';
       configureChartInspection([], 0, -1, null, null);
@@ -2686,7 +2699,39 @@
       if (text) node.textContent = text; return node;
     }
     function pathFor(values, x, y) { return values.map((v, i) => `${i ? 'L' : 'M'} ${x(i).toFixed(1)} ${y(v).toFixed(1)}`).join(' '); }
-    const proChart = { chart: null, candles: null, line: null, ema20: null, ema60: null, psarSeries: null, psarValues: [], smaSeries: {}, volume: null, volumeSmaSeries: {}, volumePane: null, indicators: {}, drawings: [], riskLines: [], extremeLines: [], lastTimes: [], viewKey: '', editingDrawing: null, measurePoint: null, shapePoints: [], drawingOverlay: null };
+    // Binance 风格的 Heikin Ashi 只替换主图蜡烛；指标、成交量、账户和训练判断仍基于原始 K 线。
+    // 计算只接收当前已加载/已揭示的前缀，回放不会因为绘图样式读取未来 K 线。
+    function calculateHeikinAshi(rows) {
+      let previousOpen = null, previousClose = null;
+      return (rows || []).map((row, index) => {
+        const close = (row.open + row.high + row.low + row.close) / 4;
+        const open = index === 0 ? (row.open + row.close) / 2 : (previousOpen + previousClose) / 2;
+        const high = Math.max(row.high, open, close), low = Math.min(row.low, open, close);
+        previousOpen = open; previousClose = close;
+        return { ...row, open, high, low, close, heikinAshi: true };
+      });
+    }
+    function chartUsesHeikinAshi() { return state.chartType === 'heikin'; }
+    function activeChartSeries() {
+      return state.chartType === 'line' ? proChart.line : chartUsesHeikinAshi() ? proChart.heikin : proChart.candles;
+    }
+    function syncChartTypeButtons() {
+      document.querySelectorAll('[data-chart-type]').forEach(button => {
+        const active = button.dataset.chartType === state.chartType;
+        button.classList.toggle('active', active);
+        button.setAttribute('aria-pressed', String(active));
+      });
+    }
+    function syncChartModeBadge() {
+      const badge = document.getElementById('chartModeBadge');
+      if (!badge) return;
+      badge.hidden = !chartUsesHeikinAshi();
+      badge.textContent = chartUsesHeikinAshi() ? 'HA 合成' : '';
+      badge.title = chartUsesHeikinAshi()
+        ? 'Heikin Ashi 蜡烛和十字线 OHLC 为合成值；顶部最新报价、成交量、指标、账户与训练判断仍使用原始 K 线。'
+        : '';
+    }
+    const proChart = { chart: null, candles: null, heikin: null, line: null, ema20: null, ema60: null, psarSeries: null, psarValues: [], smaSeries: {}, volume: null, volumeSmaSeries: {}, volumePane: null, indicators: {}, drawings: [], riskLines: [], riskLineOwner: null, extremeLines: [], extremeLineOwner: null, lastTimes: [], viewKey: '', editingDrawing: null, measurePoint: null, shapePoints: [], drawingOverlay: null };
     const practiceChart = { chart: null, candles: null, ema20: null, ema60: null, volume: null, volumePane: null, resizeObserver: null };
     const chartInspection = { rows: [], first: 0, last: -1, index: null, active: false, show: null, clear: null };
     function configureChartInspection(rows, first, last, show, clear) {
@@ -2737,6 +2782,7 @@
       document.getElementById('chart').append(drawingOverlay);
       const mainPriceFormat = chartPriceFormat();
       const candles = chart.addSeries(L.CandlestickSeries, { priceFormat: mainPriceFormat, upColor: '#0ecb81', downColor: '#f6465d', borderUpColor: '#0ecb81', borderDownColor: '#f6465d', wickUpColor: '#0ecb81', wickDownColor: '#f6465d', priceLineVisible: true, lastValueVisible: true });
+      const heikin = chart.addSeries(L.CandlestickSeries, { priceFormat: mainPriceFormat, upColor: '#0ecb81', downColor: '#f6465d', borderUpColor: '#0ecb81', borderDownColor: '#f6465d', wickUpColor: '#0ecb81', wickDownColor: '#f6465d', priceLineVisible: true, lastValueVisible: true });
       const line = chart.addSeries(L.LineSeries, { priceFormat: mainPriceFormat, color: '#f0b90b', lineWidth: 2, priceLineVisible: true, lastValueVisible: true });
       const psarSeries = chart.addSeries(L.LineSeries, { priceFormat: mainPriceFormat, color: '#f0b90b', lineVisible: false, pointMarkersVisible: true, pointMarkersRadius: 2, priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: true });
       const ema20 = chart.addSeries(L.LineSeries, { priceFormat: mainPriceFormat, color: '#f0b90b', lineWidth: 1, priceLineVisible: false, lastValueVisible: false });
@@ -2750,10 +2796,10 @@
       const volumeSmaSeries = Object.fromEntries(Object.entries(volumeSmaColors).map(([period, color]) => [period, chart.addSeries(L.LineSeries, { color, lineWidth: 1, priceScaleId: 'right', priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false }, volumePane.paneIndex())]));
       volumePane.setStretchFactor(3.5);
       volumePane.priceScale('right').applyOptions({ visible: true, ticksVisible: true, scaleMargins: { top: .12, bottom: 0 }, borderVisible: true, borderColor: '#2b3139' });
-      Object.assign(proChart, { chart, candles, line, ema20, ema60, psarSeries, smaSeries, volume, volumeSmaSeries, volumePane, drawingOverlay });
+      Object.assign(proChart, { chart, candles, heikin, line, ema20, ema60, psarSeries, smaSeries, volume, volumeSmaSeries, volumePane, drawingOverlay });
       chart.subscribeCrosshairMove(param => {
         if ((['measure', 'rectangle', 'circle', 'arrow'].includes(state.tool) && proChart.measurePoint || ['triangle', 'parallelogram', 'threeWaves', 'fiveWaves', 'eightWaves', 'anyWaves'].includes(state.tool) && proChart.shapePoints.length) && param.time && param.point && (param.paneIndex == null || param.paneIndex === 0)) {
-          const series = state.chartType === 'line' ? proChart.line : proChart.candles;
+          const series = activeChartSeries();
           const price = series.coordinateToPrice(param.point.y);
           if (Number.isFinite(price)) { proChart.measurePreview = { time: param.time, price }; renderDrawingOverlay(); }
         }
@@ -2788,13 +2834,18 @@
         if (lastIndex >= 0) updateChartOhlc(rows[lastIndex], lastIndex, rows);
       });
     }
-    function updateChartOhlc(bar, index, rows) {
+    function updateChartOhlc(bar, index, rows, displayBar = bar) {
       const ohlc = document.getElementById('chartOhlc');
       if (!ohlc || !bar) return;
-      ohlc.textContent = `开 ${formatChartPrice(bar.open)}  高 ${formatChartPrice(bar.high)}  低 ${formatChartPrice(bar.low)}  收 ${formatChartPrice(bar.close)}`;
-      ohlc.classList.toggle('up', bar.close >= bar.open); ohlc.classList.toggle('down', bar.close < bar.open);
       const sourceRows = rows || proChart.visibleRows || [];
       const rowIndex = Number.isInteger(index) ? index : sourceRows.indexOf(bar);
+      const visual = chartUsesHeikinAshi() ? (proChart.heikinRows?.[rowIndex] || displayBar || bar) : bar;
+      const prefix = visual.heikinAshi ? 'HA ' : '';
+      ohlc.textContent = `${prefix}开 ${formatChartPrice(visual.open)}  高 ${formatChartPrice(visual.high)}  低 ${formatChartPrice(visual.low)}  收 ${formatChartPrice(visual.close)}`;
+      ohlc.setAttribute('aria-label', visual.heikinAshi
+        ? 'Heikin Ashi 合成 K 线的开盘、最高、最低和收盘价；真实行情值仍显示在顶部报价。'
+        : '十字光标选中 K 线的开盘、最高、最低和收盘价，可横向滚动查看');
+      ohlc.classList.toggle('up', visual.close >= visual.open); ohlc.classList.toggle('down', visual.close < visual.open);
       const calculationRows = proChart.readoutRows || sourceRows;
       const calculationIndex = rowIndex + (proChart.readoutOffset || 0);
       if (!proChart.readoutData) {
@@ -3083,14 +3134,16 @@
       // 全局 rightPriceScale 会同时改成交量和振荡指标，只变换主图价格轴。
       proChart.chart.panes()[0].priceScale('right').applyOptions({ mode: modes[display.priceScaleMode], invertScale: display.invertScale });
       const hollow = display.candleStyle === 'hollow';
-      proChart.candles.applyOptions({ upColor: hollow ? '#0b0e11' : '#0ecb81', downColor: hollow ? '#0b0e11' : '#f6465d', borderUpColor: '#0ecb81', borderDownColor: '#f6465d', wickUpColor: '#0ecb81', wickDownColor: '#f6465d', priceLineVisible: display.lastPrice, lastValueVisible: display.lastPrice });
+      const candleOptions = { upColor: hollow ? '#0b0e11' : '#0ecb81', downColor: hollow ? '#0b0e11' : '#f6465d', borderUpColor: '#0ecb81', borderDownColor: '#f6465d', wickUpColor: '#0ecb81', wickDownColor: '#f6465d', priceLineVisible: display.lastPrice, lastValueVisible: display.lastPrice };
+      proChart.candles.applyOptions(candleOptions);
+      proChart.heikin?.applyOptions({ ...candleOptions, upColor: '#0ecb81', downColor: '#f6465d' });
       proChart.line.applyOptions({ priceLineVisible: display.lastPrice, lastValueVisible: display.lastPrice });
       const indicatorSeries = [...Object.values(proChart.smaSeries), proChart.ema20, proChart.ema60, proChart.psarSeries, ...Object.values(proChart.volumeSmaSeries), ...(proChart.bb || []), ...Object.values(proChart.indicators).flatMap(item => item.series)];
       indicatorSeries.forEach(series => series.applyOptions({ lastValueVisible: display.indicatorLastValues }));
       syncChartAxisControls();
     }
     function syncDrawingPriceLines() {
-      const series = state.chartType === 'line' ? proChart.line : proChart.candles;
+      const series = activeChartSeries();
       proChart.drawings.forEach(drawing => drawing.parts.forEach(part => {
         if (part.type !== 'price' || part.owner === series) return;
         try { part.owner.removePriceLine(part.item); } catch (_) {}
@@ -3116,17 +3169,22 @@
       const live = state.dataMode === 'live' && state.liveRows.length > 0;
       const data = rows.map((row, i) => ({ ...row, time: barTime(row, i) }));
       const calculation = indicatorCalculationContext(data), calculationRows = calculation.rows, calculationOffset = calculation.offset;
+      const visualContext = chartUsesHeikinAshi() ? calculateHeikinAshi(calculationRows) : calculationRows;
+      const visualData = visualContext.slice(calculationOffset, calculationOffset + data.length);
       const closes = calculationRows.map(row => row.close), calculationVolumes = calculationRows.map(row => row.volume);
       proChart.visibleRows = data;
+      proChart.heikinRows = visualData;
       proChart.readoutRows = calculationRows; proChart.readoutOffset = calculationOffset; proChart.readoutData = null;
       proChart.psarValues = state.indicator.psar ? calcParabolicSar(calculationRows, state.indicatorParams.psar.step, state.indicatorParams.psar.max).slice(calculationOffset, calculationOffset + data.length) : [];
       proChart.psarSeries.setData(data.flatMap((row, i) => proChart.psarValues[i] ? [{ time: row.time, value: proChart.psarValues[i].value }] : []));
       const candles = data.map(({ time, open, high, low, close }) => ({ time, open, high, low, close }));
+      const heikinCandles = visualData.map(({ time, open, high, low, close }) => ({ time, open, high, low, close }));
       const e20 = ema(closes, 20).slice(calculationOffset, calculationOffset + data.length), e60 = ema(closes, 60).slice(calculationOffset, calculationOffset + data.length);
       proChart.smaValues = Object.fromEntries([5, 10, 20, 60, 120].map(period => [period, sma(closes, period).slice(calculationOffset, calculationOffset + data.length)]));
       proChart.volumeSmaValues = Object.fromEntries([5, 10, 20].map(period => [period, sma(calculationVolumes, period).slice(calculationOffset, calculationOffset + data.length)]));
       const volumes = data.map(row => ({ time: row.time, value: row.volume, color: row.close >= row.open ? '#0ecb8155' : '#f6465d55' }));
       proChart.candles.setData(state.chartType === 'candles' ? candles : []);
+      proChart.heikin.setData(state.chartType === 'heikin' ? heikinCandles : []);
       proChart.line.setData(state.chartType === 'line' ? data.map(row => ({ time: row.time, value: row.close })) : []);
       syncDrawingPriceLines();
       proChart.ema20.setData(state.show20 ? data.map((row, i) => ({ time: row.time, value: e20[i] })) : []);
@@ -3171,12 +3229,13 @@
       renderIndicatorPanes(calculationRows, data.map(row => row.time), closes, calculationOffset);
       applyChartDisplaySettings();
       updateChartTrainingProgress();
-      proChart.riskLines.forEach(line => { try { proChart.candles.removePriceLine(line); } catch (_) {} }); proChart.riskLines = [];
-      proChart.extremeLines.forEach(line => { try { proChart.candles.removePriceLine(line); } catch (_) {} }); proChart.extremeLines = [];
-      if (state.chartDisplay.highLow && data.length) for (const [price, title, color] of [[data[data.length - 1].high, 'H', '#0ecb81'], [data[data.length - 1].low, 'L', '#f6465d']]) proChart.extremeLines.push(proChart.candles.createPriceLine({ price, color, lineVisible: false, axisLabelVisible: true, title }));
-      if (state.replayMode && sim.position) for (const [price, color, title] of [[sim.position.stop, '#f6465d', '止损'], [sim.position.target, '#0ecb81', '止盈']]) proChart.riskLines.push(proChart.candles.createPriceLine({ price, color, lineWidth: 1, lineStyle: window.LightweightCharts.LineStyle.Dashed, axisLabelVisible: true, title }));
+      const priceSeries = activeChartSeries();
+      proChart.riskLines.forEach(line => { try { proChart.riskLineOwner?.removePriceLine(line); } catch (_) {} }); proChart.riskLines = []; proChart.riskLineOwner = priceSeries;
+      proChart.extremeLines.forEach(line => { try { proChart.extremeLineOwner?.removePriceLine(line); } catch (_) {} }); proChart.extremeLines = []; proChart.extremeLineOwner = priceSeries;
+      if (state.chartDisplay.highLow && data.length) for (const [price, title, color] of [[data[data.length - 1].high, 'H', '#0ecb81'], [data[data.length - 1].low, 'L', '#f6465d']]) proChart.extremeLines.push(priceSeries.createPriceLine({ price, color, lineVisible: false, axisLabelVisible: true, title }));
+      if (state.replayMode && sim.position) for (const [price, color, title] of [[sim.position.stop, '#f6465d', '止损'], [sim.position.target, '#0ecb81', '止盈']]) proChart.riskLines.push(priceSeries.createPriceLine({ price, color, lineWidth: 1, lineStyle: window.LightweightCharts.LineStyle.Dashed, axisLabelVisible: true, title }));
       document.getElementById('chartIntervalLabel').textContent = state.timeframe;
-      updateChartOhlc(data[data.length - 1]); updateSummary(data, e20, e60);
+      updateChartOhlc(data[data.length - 1], data.length - 1, data); updateSummary(data, e20, e60);
       configureChartInspection(data, 0, data.length - 1, index => {
         const scale = proChart.chart.timeScale(), range = scale.getVisibleLogicalRange();
         if (range && (index < range.from || index > range.to)) {
@@ -3184,8 +3243,8 @@
           const from = index < range.from ? index - 1 : index - width + 1;
           scale.setVisibleLogicalRange({ from, to: from + width });
         }
-        const row = data[index], series = state.chartType === 'line' ? proChart.line : proChart.candles;
-        proChart.chart.setCrosshairPosition(row.close, row.time, series);
+        const row = data[index], series = activeChartSeries(), displayRow = state.chartType === 'heikin' ? visualData[index] : row;
+        proChart.chart.setCrosshairPosition(displayRow.close, row.time, series);
         updateChartOhlc(row, index, data);
       }, () => {
         proChart.chart.clearCrosshairPosition();
@@ -3194,6 +3253,7 @@
       const viewKey = [state.dataMode, state.liveRows.length ? 'loaded' : 'pending', liveMarket.instrument, state.timeframe, state.replayMode ? `replay-${state.sessionStart}` : state.scenario].join('|');
       if (proChart.viewKey !== viewKey) { fitMarketChart(); proChart.viewKey = viewKey; }
       renderDrawingOverlay();
+      syncChartModeBadge();
       scheduleChartOverlay();
     }
     function fitMarketChart() {
@@ -3225,7 +3285,7 @@
       if (proChart.fallback) { proChart.fallback.refresh(); return proChart.fallback; }
       const chart = proChart.chart;
       if (!chart) return null;
-      return { chart, series: state.chartType === 'line' ? proChart.line : proChart.candles, svg: proChart.drawingOverlay, left: 0, top: 0 };
+      return { chart, series: activeChartSeries(), svg: proChart.drawingOverlay, left: 0, top: 0 };
     }
     function drawingEventPoint(event) {
       const rect = event.currentTarget.getBoundingClientRect(), surface = drawingSurface();
@@ -4019,6 +4079,8 @@
     }
     function renderChart() {
       hideChartTooltip();
+      syncChartModeBadge();
+      syncChartTypeButtons();
       proChart.readoutData = null;
       updateDataSourceUI();
       const replayButton = document.getElementById('replayToggle');
@@ -4066,17 +4128,23 @@
       const data = sourceData.slice(start, start + visibleCount);
       // 指标可用已揭示窗口之前的历史预热，但不读取当前揭示边界之后的数据。
       const calculation = indicatorCalculationContext(sourceData), calculationData = calculation.rows, calculationOffset = calculation.offset;
+      const contextStart = calculationOffset + start;
+      const visualAll = chartUsesHeikinAshi()
+        ? calculateHeikinAshi(calculationData).slice(calculationOffset, calculationOffset + sourceData.length)
+        : sourceData;
+      const visualData = visualAll.slice(start, start + visibleCount);
+      proChart.heikinRows = visualAll;
       proChart.readoutRows = calculationData; proChart.readoutOffset = calculationOffset; proChart.readoutData = null;
       const sourceCloses = calculationData.map(d => d.close), sourceVolumes = calculationData.map(row => row.volume);
       const sourceE20 = ema(sourceCloses, 20), sourceE60 = ema(sourceCloses, 60);
-      const closes = data.map(d => d.close), contextStart = calculationOffset + start;
+      const closes = data.map(d => d.close);
       const e20 = sourceE20.slice(contextStart, contextStart + visibleCount), e60 = sourceE60.slice(contextStart, contextStart + visibleCount);
       const psar = state.indicator.psar ? calcParabolicSar(calculationData, state.indicatorParams.psar.step, state.indicatorParams.psar.max).slice(contextStart, contextStart + visibleCount) : [];
       const smaValues = Object.fromEntries([5, 10, 20, 60, 120].filter(period => state.sma[period]).map(period => [period, sma(sourceCloses, period).slice(contextStart, contextStart + visibleCount)]));
       const bollinger = state.indicator.bb ? calcBollinger(sourceCloses, state.indicatorParams.bb).slice(contextStart, contextStart + visibleCount) : [];
       const riskLevels = state.replayMode && sim.position ? [sim.position.stop, sim.position.target] : [];
       const indicatorPrices = [...psar.filter(Boolean).map(item => item.value), ...Object.values(smaValues).flat().filter(Number.isFinite), ...bollinger.filter(Boolean).flatMap(item => [item.upper, item.lower]), ...(state.show20 ? e20 : []), ...(state.show60 ? e60 : [])];
-      const min = Math.min(...data.map(d => d.low), ...indicatorPrices, ...riskLevels), max = Math.max(...data.map(d => d.high), ...indicatorPrices, ...riskLevels);
+      const min = Math.min(...visualData.map(d => d.low), ...indicatorPrices, ...riskLevels), max = Math.max(...visualData.map(d => d.high), ...indicatorPrices, ...riskLevels);
       const pad = Math.max(max - min, Math.abs(max) * .001, .01) * .10;
       const baseLo = min - pad, baseHi = max + pad, priceScale = state.fallbackPriceScale;
       priceScale.baseMin = baseLo; priceScale.baseMax = baseHi;
@@ -4088,7 +4156,9 @@
       const x = i => plot.x + (i + .5) * plot.w / data.length;
       const y = v => plot.y + (hi - v) / (hi - lo) * plot.h;
       const sourceLabel = state.replayMode ? 'Binance BTCUSDT 现货历史' : live ? `${liveMarket.instrument.replace('-SWAP', '').replace('-', '/')} Binance 永续只读实盘` : '模拟 BTC 永续教学';
-      svg.replaceChildren(el('title', { id: 'chartTitle' }, `${sourceLabel} · 基础 K 线图`), el('desc', { id: 'chartDesc' }, '图表库不可用时使用基础图表，指标按已揭示的行情计算。'));
+      container.dataset.chartType = state.chartType;
+      svg.dataset.chartType = state.chartType;
+      svg.replaceChildren(el('title', { id: 'chartTitle' }, `${sourceLabel} · ${chartUsesHeikinAshi() ? 'Heikin Ashi 合成K线图' : '基础 K 线图'}`), el('desc', { id: 'chartDesc' }, chartUsesHeikinAshi() ? '合成蜡烛仅用于视觉观察；成交量、指标、账户和训练判断使用原始 K 线，指标只计算已揭示的行情。' : '图表库不可用时使用基础图表，指标按已揭示的行情计算。'));
       svg.appendChild(el('rect', { x: 0, y: 0, width: W, height: H, fill: '#0b0e11' }));
       for (let n = 0; n <= 4; n++) {
         const yy = plot.y + plot.h * n / 4; const val = hi - (hi - lo) * n / 4;
@@ -4105,11 +4175,13 @@
       svg.appendChild(el('text', { x: plot.x + plot.w, y: H - 3, 'text-anchor': 'end', fill: colors.muted }, `${state.timeframe} · ${sourceLabel} · ${data.length} 根`));
       data.forEach((d, i) => {
         const xx = x(i), candleW = Math.max(2, Math.min(13, plot.w / data.length * .56));
-        const up = d.close >= d.open, color = up ? colors.teal : colors.red;
-        if (state.chartType === 'candles') svg.appendChild(el('line', { x1: xx, x2: xx, y1: y(d.high), y2: y(d.low), stroke: color, 'stroke-width': 1 }));
-        if (state.chartType === 'candles') svg.appendChild(el('rect', { x: xx - candleW / 2, y: Math.min(y(d.open), y(d.close)), width: candleW, height: Math.max(2, Math.abs(y(d.open) - y(d.close))), fill: color, stroke: color, rx: 1 }));
+        const rawColor = d.close >= d.open ? colors.teal : colors.red;
+        const visual = state.chartType === 'heikin' ? visualData[i] : d;
+        const visualUp = visual.close >= visual.open, visualColor = visualUp ? colors.teal : colors.red;
+        if (state.chartType === 'candles' || state.chartType === 'heikin') svg.appendChild(el('line', { x1: xx, x2: xx, y1: y(visual.high), y2: y(visual.low), stroke: visualColor, 'stroke-width': 1 }));
+        if (state.chartType === 'candles' || state.chartType === 'heikin') svg.appendChild(el('rect', { x: xx - candleW / 2, y: Math.min(y(visual.open), y(visual.close)), width: candleW, height: Math.max(2, Math.abs(y(visual.open) - y(visual.close))), fill: visualColor, stroke: visualColor, rx: 1 }));
         const vh = d.volume / maxVol * plot.volH;
-        svg.appendChild(el('rect', { x: xx - candleW / 2, y: plot.volY + plot.volH - vh, width: candleW, height: vh, fill: color, opacity: .32, rx: 1, 'data-volume-bar': '' }));
+        svg.appendChild(el('rect', { x: xx - candleW / 2, y: plot.volY + plot.volH - vh, width: candleW, height: vh, fill: rawColor, opacity: .32, rx: 1, 'data-volume-bar': '' }));
       });
       if (state.chartType === 'line') svg.appendChild(el('path', { d: pathFor(closes, x, y), fill: 'none', stroke: '#f0b90b', 'stroke-width': 2 }));
       if (state.show20) svg.appendChild(el('path', { d: pathFor(e20, x, y), fill: 'none', stroke: colors.orange, 'stroke-width': 2.2 }));
@@ -4128,7 +4200,7 @@
       for (const period of [5, 10, 20]) {
         if (state.volumeSma[period]) drawValues(sma(sourceVolumes, period).slice(contextStart, contextStart + visibleCount), value => plot.volY + plot.volH - value / Math.max(1, maxVol) * plot.volH, ({ 5: '#f0b90b', 10: '#5b8def', 20: '#0ecb81' })[period]);
       }
-      if (state.showStructure) {
+      if (state.showStructure && state.chartType === 'candles') {
         const picks = downModeFor(state.scenario) ? [6, 14, 22, 30, 38] : ['range', 'falseBreak', 'squeeze', 'volatility'].includes(state.scenario) ? [7, 15, 23, 31, 39] : [7, 13, 20, 28, 36];
         picks.filter(i => i < data.length).forEach((i, j) => {
           const isHigh = j % 2 === 0; const yy = isHigh ? y(data[i].high) - 9 : y(data[i].low) + 15;
@@ -4203,7 +4275,8 @@
         crossTimeBg.setAttribute('x', timeX); crossTimeBg.setAttribute('y', H - 33);
         crossTime.setAttribute('x', timeX + 29); crossTime.setAttribute('y', H - 20);
         crossTime.textContent = d.openTime && !state.replayMode ? new Date(d.openTime).toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' }) : `${start + idx + 1}`;
-        tooltip.innerHTML = `<strong>${live ? '实盘' : '样本'} ${start + idx + 1} · ${state.timeframe}</strong>${d.openTime && !state.replayMode ? `<span>${formatLiveTime(d.openTime)}</span><br>` : ''}<span>开 ${formatChartPrice(d.open)}</span><span>收 ${formatChartPrice(d.close)}</span><br><span>高 ${formatChartPrice(d.high)}</span><span>低 ${formatChartPrice(d.low)}</span>`;
+        const visual = chartUsesHeikinAshi() ? visualData[idx] : d;
+        tooltip.innerHTML = `<strong>${live ? '实盘' : '样本'} ${start + idx + 1} · ${state.timeframe}${chartUsesHeikinAshi() ? ' · HA 合成' : ''}</strong>${d.openTime && !state.replayMode ? `<span>${formatLiveTime(d.openTime)}</span><br>` : ''}${chartUsesHeikinAshi() ? `<span>原始开 ${formatChartPrice(d.open)}</span><span>收 ${formatChartPrice(d.close)}</span><br><span>高 ${formatChartPrice(d.high)}</span><span>低 ${formatChartPrice(d.low)}</span><br><span>HA 开 ${formatChartPrice(visual.open)}</span><span>收 ${formatChartPrice(visual.close)}</span><br><span>高 ${formatChartPrice(visual.high)}</span><span>低 ${formatChartPrice(visual.low)}</span>` : `<span>开 ${formatChartPrice(d.open)}</span><span>收 ${formatChartPrice(d.close)}</span><br><span>高 ${formatChartPrice(d.high)}</span><span>低 ${formatChartPrice(d.low)}</span>`}`;
         const currentSar = psar[idx];
         if (state.indicator.psar) tooltip.innerHTML += `<br><span>SAR ${currentSar ? currentSar.value.toFixed(2) : '—'}</span>`;
         tooltip.hidden = false;
@@ -4219,7 +4292,7 @@
       const restoreLatestReadout = () => updateChartOhlc(sourceData[sourceData.length - 1], sourceData.length - 1, sourceData);
       configureChartInspection(sourceData, start, start + data.length - 1, index => {
         const rect = svg.getBoundingClientRect(), localIndex = index - start;
-        updateCrosshair({ clientX: rect.left + x(localIndex) / W * rect.width, clientY: rect.top + y(data[localIndex].close) / H * rect.height });
+        updateCrosshair({ clientX: rect.left + x(localIndex) / W * rect.width, clientY: rect.top + y(visualData[localIndex].close) / H * rect.height });
       }, () => {
         hideChartTooltip(); crosshair.setAttribute('opacity', '0');
         restoreLatestReadout();
@@ -5221,6 +5294,7 @@
       if (!['sim', 'live'].includes(c.dataMode) || !['1m', '3m', '5m', '15m', '30m', '1H', '2H', '4H', '6H', '8H', '12H', '1D', '3D', '1W', '1M'].includes(c.timeframe)
         || (c.replayMode && !['1m', '5m', '1H'].includes(c.timeframe))
         || !['up', 'range', 'down', 'breakout', 'pullback', 'reversalUp', 'exhaustion', 'falseBreak', 'squeeze', 'volatility', 'breakdown', 'breakRetest'].includes(c.scenario)
+        || (c.chartType != null && !['candles', 'heikin', 'line'].includes(c.chartType))
         || typeof c.replayMode !== 'boolean' || typeof c.replayPaused !== 'boolean'
         || !integer(c.sessionLength, minSessionLength, 500) || !integer(c.revealCount, 8, c.sessionLength) || !integer(c.sessionStart, 0, 100000)
         || !['BTC-USDT-SWAP', 'ETH-USDT-SWAP', 'SOL-USDT-SWAP'].includes(c.instrument)) throw new Error('草稿行情位置无效');
@@ -5347,7 +5421,7 @@
           if (!replayDatasetMatches(d, rows) || c.sessionStart + c.sessionLength + TRAINING_WARMUP > rows.length) throw new Error('本地历史数据校验不匹配，不能安全续接原回放');
         }
         Object.assign(state, { scenario: c.scenario, timeframe: c.timeframe, dataMode: c.dataMode, replayMode: c.replayMode, replayPaused: c.replayPaused,
-          revealCount: c.revealCount, sessionLength: c.sessionLength, sessionStart: c.sessionStart, chartType: c.chartType === 'line' ? 'line' : 'candles' });
+          revealCount: c.revealCount, sessionLength: c.sessionLength, sessionStart: c.sessionStart, chartType: ['candles', 'heikin', 'line'].includes(c.chartType) ? c.chartType : 'candles' });
         Object.assign(sim, { balance: draft.account.balance, initialBalance: draft.account.initialBalance, realized: draft.account.realized,
           position: draft.account.position, side: draft.account.side, log: draft.account.log, trades: draft.account.trades });
         Object.assign(replayTraining, draft.replay);
@@ -5362,7 +5436,7 @@
         document.querySelectorAll('[name="decisionEvidence"]').forEach(input => { input.checked = draft.evidence.includes(input.value); });
         document.querySelectorAll('[data-side]').forEach(button => button.classList.toggle('active', button.dataset.side === sim.side));
         document.querySelectorAll('[data-time]').forEach(button => button.classList.toggle('active', button.dataset.time === c.timeframe));
-        document.querySelectorAll('[data-chart-type]').forEach(button => button.classList.toggle('active', button.dataset.chartType === state.chartType));
+        syncChartTypeButtons(); syncChartModeBadge();
         document.getElementById('blindRange').max = String(c.sessionLength); document.getElementById('blindRange').value = String(c.revealCount);
         document.getElementById('replayPause').textContent = c.replayPaused ? '继续揭示' : '暂停揭示';
         document.getElementById('simLog').textContent = sim.log.join(' · ') || '训练记录会显示在这里。';
@@ -6151,7 +6225,7 @@
         syncAnyWavesFinishControl();
       }
       document.querySelectorAll('[data-indicator]').forEach(input => { input.checked = Boolean(state.indicator[input.dataset.indicator]); });
-      document.querySelectorAll('[data-chart-type]').forEach(button => button.classList.toggle('active', button.dataset.chartType === state.chartType));
+      syncChartTypeButtons(); syncChartModeBadge();
       syncDrawingToolButtons();
       setWorkspace('market');
       renderIndicatorPractice();
@@ -6410,7 +6484,12 @@
     });
     document.getElementById('chartCandleStyle').addEventListener('change', event => { state.chartDisplay.candleStyle = event.target.value; saveChartDisplayPreferences(); renderChart(); });
     syncChartDisplayControls();
-    document.querySelectorAll('[data-chart-type]').forEach(button => button.addEventListener('click', () => { state.chartType = button.dataset.chartType; document.querySelectorAll('[data-chart-type]').forEach(item => item.classList.toggle('active', item.dataset.chartType === state.chartType)); renderChart(); }));
+    document.querySelectorAll('[data-chart-type]').forEach(button => button.addEventListener('click', () => {
+      if (!['candles', 'heikin', 'line'].includes(button.dataset.chartType)) return;
+      state.chartType = button.dataset.chartType;
+      saveChartTypePreference(); syncChartTypeButtons(); syncChartModeBadge(); renderChart();
+      if (state.replayMode) scheduleSessionSave();
+    }));
     function zoomChart(factor) {
       if (!proChart.chart) { setFallbackZoomAt(state.chartZoom * factor, .5); return; }
       const scale = proChart.chart.timeScale(), range = scale.getVisibleLogicalRange();

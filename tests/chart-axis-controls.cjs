@@ -14,7 +14,7 @@ const context = vm.createContext({
   window: { LightweightCharts: { PriceScaleMode: { Normal: 0, Logarithmic: 1, Percentage: 2, IndexedTo100: 3 } } },
   proChart: {
     chart: { applyOptions(options) { globalOptions.push(options); }, panes: () => scales.map(scale => ({ priceScale: () => ({ applyOptions: options => Object.assign(scale, options) }) })) },
-    candles: series(), line: series(), ema20: series(), ema60: series(), psarSeries: series(),
+    candles: series(), heikin: series(), line: series(), ema20: series(), ema60: series(), psarSeries: series(),
     smaSeries: {}, volumeSmaSeries: {}, indicators: {}
   },
   syncChartAxisControls() { synced++; }

@@ -23,7 +23,7 @@ assert.equal(context.chartPriceFormat().minMove, 0.01);
 assert.equal(context.chartPriceFormat().formatter(71000.5), '71,000.50');
 assert.match(html, /const mainPriceFormat = chartPriceFormat\(\);/);
 assert.match(html, /lastPrice'\)\.textContent = formatChartPrice\(last\)/);
-assert.match(html, /开 \$\{formatChartPrice\(bar\.open\)\}  高 \$\{formatChartPrice\(bar\.high\)\}/);
+assert.match(html, /\$\{prefix\}开 \$\{formatChartPrice\(visual\.open\)\}  高 \$\{formatChartPrice\(visual\.high\)\}/);
 assert.match(html, /formatChartPrice\(val\)/, 'fallback price-axis ticks must use the shared formatter');
 assert.match(html, /crossPrice\.textContent = formatChartPrice\(price\)/);
 assert.doesNotMatch(html, /Math\.round\(val\)\.toLocaleString\(\)/, 'obsolete integer fallback ticks must not return');
