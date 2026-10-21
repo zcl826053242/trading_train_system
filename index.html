@@ -768,6 +768,25 @@
     .home-stat-card small { margin-top: 3px; color: var(--muted); font-size: 10px; line-height: 1.4; }
     .home-grid { display: grid; grid-template-columns: 1.15fr .85fr; gap: 14px; }
     .home-grid-primary { grid-template-columns: minmax(0, 1fr); }
+    .home-loop-card { border-color: #d8dff0; background: linear-gradient(135deg,#fbfcff,#f6f8ff); }
+    .home-loop-card .home-card-head p { max-width: 720px; margin: 5px 0 0; color: var(--muted); font-size: 10px; line-height: 1.5; }
+    .home-loop-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 14px 0 0; padding: 0; list-style: none; }
+    .home-loop-step { display: flex; min-width: 0; align-items: center; gap: 8px; padding: 10px; border: 1px solid var(--line); border-radius: 11px; background: #fff; }
+    .home-loop-step.active { border-color: #bdb7ff; background: #f5f3ff; box-shadow: inset 0 0 0 1px rgba(105,89,242,.12); }
+    .home-loop-step.done { border-color: #cbece5; background: #f4fbfa; }
+    .home-loop-step.locked { opacity: .68; }
+    .home-loop-index { display: grid; width: 25px; height: 25px; flex: 0 0 auto; place-items: center; border-radius: 8px; background: var(--surface-2); color: var(--muted); font-size: 10px; font-weight: 700; }
+    .home-loop-step.active .home-loop-index { background: var(--blue); color: #fff; }
+    .home-loop-step.done .home-loop-index { background: var(--teal); color: #fff; }
+    .home-loop-copy { min-width: 0; flex: 1; }
+    .home-loop-copy strong, .home-loop-copy small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .home-loop-copy strong { font-size: 10px; }
+    .home-loop-copy small { margin-top: 3px; color: var(--muted); font-size: 9px; }
+    .home-loop-action { min-width: 46px; min-height: 28px; flex: 0 0 auto; padding: 4px 7px; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--blue); font-size: 9px; }
+    .home-loop-action:hover:not(:disabled), .home-loop-action:focus-visible:not(:disabled) { border-color: var(--blue); outline: none; }
+    .home-loop-action:disabled { color: #9aa4b2; cursor: not-allowed; }
+    .home-loop-step.active .home-loop-action { border-color: var(--blue); background: var(--blue); color: #fff; }
+    .home-loop-step.done .home-loop-action { border-color: var(--teal); color: var(--teal); }
     .home-grid-lower { grid-template-columns: 1fr 1fr 1.1fr; }
     .home-mistake-card { grid-column: 1 / -1; }
     .home-mistake-list { display: grid; gap: 8px; margin-top: 12px; }
@@ -887,6 +906,7 @@
       .home-overview.home-overview-stats { grid-template-columns: 1fr; }
       .home-progress-card { grid-column: auto; }
       .home-grid-lower { grid-template-columns: 1fr; }
+      .home-loop-steps { grid-template-columns: 1fr; }
       .home-coverage-card { grid-column: auto; }
       .home-stat-card { min-height: 100px; }
     }
@@ -1476,6 +1496,14 @@
       </div>
       <div class="home-grid home-grid-primary">
         <article class="surface-card home-plan-card"><div class="home-card-head"><div><h3>今日训练路线</h3><p>每完成一项，下一项会自动变成主任务。</p></div><span class="home-plan-time">约 15 分钟</span></div><div class="home-plan-list" id="homePlanList"></div></article>
+        <article class="surface-card home-loop-card" id="homeLearningLoop" aria-labelledby="homeLearningLoopTitle">
+          <div class="home-card-head"><div><h3 id="homeLearningLoopTitle">三步训练闭环</h3><p>先选节奏，再逐根推演，最后回到报告练弱项；不需要先记住所有模块入口。</p></div><span class="home-plan-time" id="homeLoopStatus">从选择开始</span></div>
+          <ol class="home-loop-steps" id="homeLoopSteps" aria-label="训练闭环">
+            <li class="home-loop-step active" data-loop-step="setup"><span class="home-loop-index">01</span><span class="home-loop-copy"><strong>选择周期与长度</strong><small id="homeLoopSetupMeta">1H · 60 根 · 双盲判断</small></span><button class="home-loop-action" type="button" data-loop-action="setup">开始</button></li>
+            <li class="home-loop-step locked" data-loop-step="replay"><span class="home-loop-index">02</span><span class="home-loop-copy"><strong>逐根推演并记录</strong><small id="homeLoopReplayMeta">完成设置后解锁</small></span><button class="home-loop-action" type="button" data-loop-action="replay" disabled>待解锁</button></li>
+            <li class="home-loop-step locked" data-loop-step="review"><span class="home-loop-index">03</span><span class="home-loop-copy"><strong>复盘弱项再训练</strong><small id="homeLoopReviewMeta">完成一场后生成报告</small></span><button class="home-loop-action" type="button" data-loop-action="review" disabled>待解锁</button></li>
+          </ol>
+        </article>
       </div>
       <details class="home-support">
         <summary>训练数据与更多练习</summary>
@@ -4397,8 +4425,43 @@
         goal: `${definition.name}要求已达成，本场仍有记录待保存。继续 ${state.revealCount} / ${state.sessionLength} 根训练，结束后查看复盘，再进入下一步。` } : null;
       return { steps, current: current || sessionTask };
     }
+    function updateHomeLearningLoop() {
+      const root = document.getElementById('homeLearningLoop');
+      if (!root) return;
+      const activeReplay = Boolean(state.replayMode && replayTraining.id && !replayTraining.saved);
+      const completedReplay = Boolean(replayHistory.length || (replayTraining.saved && replayTraining.completedAt));
+      const current = activeReplay ? 'replay' : completedReplay ? 'review' : 'setup';
+      const setupMeta = document.getElementById('homeLoopSetupMeta');
+      const replayMeta = document.getElementById('homeLoopReplayMeta');
+      const reviewMeta = document.getElementById('homeLoopReviewMeta');
+      const status = document.getElementById('homeLoopStatus');
+      if (setupMeta) setupMeta.textContent = `${trainingSetupState.timeframe} · ${trainingSetupState.length || 60} 根 · ${trainingModeState.mode === 'free' ? '自由操盘' : '双盲判断'}`;
+      if (replayMeta) replayMeta.textContent = activeReplay ? `${state.timeframe} · 已揭示 ${state.revealCount} / ${state.sessionLength} 根` : completedReplay ? '上一场已完成，可再次开始' : '完成设置后解锁';
+      if (reviewMeta) { const latest = replayHistory[0]; reviewMeta.textContent = completedReplay && latest ? `最近 ${latest.timeframe || '1H'} · ${latest.length || 60} 根 · 可按错因重练` : '完成一场后生成报告'; }
+      const labels = {
+        setup: ['开始', '从选择开始'],
+        replay: [activeReplay ? (state.revealCount >= state.sessionLength ? '完成并复盘' : '继续') : '再训练', activeReplay ? '进行中' : '可再训练'],
+        review: ['查看报告', '已形成记录']
+      };
+      if (status) status.textContent = labels[current][1];
+      document.querySelectorAll('#homeLoopSteps .home-loop-step').forEach(step => {
+        const id = step.dataset.loopStep, enabled = id === 'setup' || (id === 'replay' && (activeReplay || completedReplay)) || (id === 'review' && completedReplay);
+        step.classList.toggle('active', id === current); step.classList.toggle('done', id !== current && ((id === 'setup' && (activeReplay || completedReplay)) || (id === 'replay' && completedReplay))); step.classList.toggle('locked', !enabled);
+        if (id === current) step.setAttribute('aria-current', 'step'); else step.removeAttribute('aria-current');
+        const action = step.querySelector('[data-loop-action]');
+        if (action) {
+          action.disabled = !enabled;
+          action.textContent = id === current ? labels[current][0]
+            : id === 'setup' && enabled ? '重新开始'
+            : id === 'replay' && enabled ? (activeReplay ? '继续' : '再训练')
+            : id === 'review' && enabled ? '查看'
+            : '待解锁';
+        }
+      });
+    }
     function renderTrainingHome() {
       const title = document.getElementById('homeStageTitle'); if (!title) return;
+      updateHomeLearningLoop();
       const def = stageDefinitions[stageState.active], progress = stageState.progress[stageState.active];
       const completion = stageCompletionPercent(stageState.active);
       title.textContent = def.name;
@@ -5709,6 +5772,18 @@
       document.getElementById('replaySessionLabel').textContent = `匿名样本 · ${state.timeframe} · ${state.sessionLength} 根${trainingModeState.mode === 'free' ? '自由操盘' : '双盲判断'}`; clearReplayDecision(); if (dialog.open) dialog.close(); updateDataSourceUI(); document.getElementById('chartCoach').textContent = `Binance BTCUSDT 现货历史回放 · ${state.timeframe} · 来源标识 ${source.id}：先记录结构、指标证据与失效位，再揭示下一根 K 线；样本不代表永续合约行情。`; updateReplayGate(); updateBlind(); updateStats(); renderReplayHistory(); setWorkspace('replay');
     }
     document.getElementById('homeContinue').addEventListener('click', continueTrainingRoute);
+    document.getElementById('homeLoopSteps').addEventListener('click', event => {
+      const action = event.target.closest('[data-loop-action]');
+      if (!action || action.disabled) return;
+      if (action.dataset.loopAction === 'setup') openTrainingSetup();
+      else if (action.dataset.loopAction === 'replay') {
+        if (state.replayMode && replayTraining.id && !replayTraining.saved) {
+          setWorkspace('replay');
+          document.getElementById(state.revealCount >= state.sessionLength ? 'replayFinish' : 'workspaceDecision')?.focus({ preventScroll: true });
+        } else openTrainingSetup();
+      }
+      else if (action.dataset.loopAction === 'review') setWorkspace('review');
+    });
     document.getElementById('homeOpenStages').addEventListener('click', () => { setWorkspace('training'); document.getElementById('stageCards')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); });
     document.getElementById('homeOpenReview').addEventListener('click', () => setWorkspace('review'));
     document.getElementById('topStartTraining').addEventListener('click', continueTrainingRoute);
