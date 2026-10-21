@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="icon" href="data:," />
-  <title>合约趋势实验室</title>
+  <title>趋势训练台</title>
   <style>
     :root {
       --bg: #f4f6f8;
@@ -1412,18 +1412,17 @@
     <nav class="app-nav" aria-label="主工作区导航">
       <div class="nav-brand"><div class="nav-brand-mark">TA</div><div><strong>趋势训练台</strong><span>TRADING LAB</span></div></div>
       <div class="nav-section">WORKSPACE</div>
-      <button type="button" data-nav-target="market"><i data-lucide="candlestick-chart" aria-hidden="true"></i>行情</button>
-      <button type="button" data-nav-target="home"><i data-lucide="graduation-cap" aria-hidden="true"></i>训练</button>
-      <button type="button" data-nav-target="replay"><i data-lucide="rewind" aria-hidden="true"></i>回放</button>
-      <button type="button" data-nav-target="review"><i data-lucide="scan-search" aria-hidden="true"></i>复盘</button>
+      <button type="button" data-nav-target="home"><i data-lucide="graduation-cap" aria-hidden="true"></i>学习路线</button>
+      <button type="button" data-nav-target="market"><i data-lucide="candlestick-chart" aria-hidden="true"></i>看图训练</button>
+      <button type="button" data-nav-target="review"><i data-lucide="scan-search" aria-hidden="true"></i>训练复盘</button>
       <div class="nav-foot">模拟环境<br>数据仅供训练，不连接交易账户</div>
     </nav>
     <header class="topbar">
       <div class="brand">
         <div class="brand-mark">TA</div>
         <div>
-          <h1>合约趋势实验室</h1>
-          <p>把“感觉”拆成可以复盘的观察步骤</p>
+          <h1>趋势训练台</h1>
+          <p>按路线学习，在图表中练习，再回顾判断</p>
         </div>
       </div>
       <div class="top-actions">
@@ -1438,11 +1437,11 @@
     <div class="session-save-status" id="sessionSaveStatus" role="status" aria-live="polite" hidden><span id="sessionSaveMessage"></span><button type="button" id="retrySessionSave">重试</button><button type="button" id="exportSessionDraft" hidden>导出草稿备份</button><button type="button" id="discardSessionDraft" hidden>放弃当前草稿</button></div>
 
     <nav class="learning-nav" id="learningNav" aria-label="训练模块" hidden>
-      <button type="button" data-subworkspace="home" class="active">总览</button>
-      <button type="button" data-subworkspace="training">课程</button>
+      <button type="button" data-subworkspace="home" class="active">学习总览</button>
+      <button type="button" data-subworkspace="training">阶段课程</button>
       <button type="button" data-subworkspace="practice">题库与专项</button>
-      <button type="button" data-subworkspace="risk">风险</button>
-      <button type="button" data-subworkspace="indicators">指标学习</button>
+      <button type="button" data-subworkspace="risk">风险实验</button>
+      <button type="button" data-subworkspace="indicators">指标课程</button>
     </nav>
 
     <section class="workspace-surface training-home" data-workspace="home" aria-label="训练中心">
@@ -5817,7 +5816,7 @@
           : item.action === 'volume' ? `${item.title}：下方成交量已显示。比较突破与区间内的量能，再看收盘和回踩是否确认。`
             : `${item.title}：已在行情图中打开对应观察工具。先写下价格结构证据，再判断该工具支持还是反驳你的假设。`;
     }
-    const workspaceLabels = { home: '训练总览', market: '行情工作台', training: '课程', practice: '题库与专项', replay: '历史回放', review: '行为复盘', risk: '风险实验', indicators: '指标学习' };
+    const workspaceLabels = { home: '学习总览', market: '看图训练', training: '阶段课程', practice: '题库与专项', replay: '历史回放', review: '训练复盘', risk: '风险实验', indicators: '指标课程' };
     function dockWorkspaceControls(mobile) {
       const task = document.getElementById('workspaceTask');
       const actions = document.getElementById('workspaceSessionActions');
@@ -5862,7 +5861,8 @@
       document.getElementById('riskFoundationBridge').hidden = !(name === 'risk' && needsFoundationLesson() && stageState.foundationStarted && stageState.foundationStep === lessonData.length - 1 && state.lesson === stageState.foundationStep);
       document.body.classList.toggle('market-terminal', terminal);
       document.body.classList.toggle('training-home-active', name === 'home');
-      document.querySelectorAll('[data-nav-target]').forEach(button => button.classList.toggle('active', button.dataset.navTarget === (isLearning ? 'home' : name)));
+      const primaryWorkspace = isLearning ? 'home' : name === 'replay' ? 'market' : name;
+      document.querySelectorAll('[data-nav-target]').forEach(button => button.classList.toggle('active', button.dataset.navTarget === primaryWorkspace));
       document.querySelectorAll('[data-subworkspace]').forEach(button => button.classList.toggle('active', button.dataset.subworkspace === learningView));
       document.getElementById('routePill').textContent = workspaceLabels[name] || '训练工作台';
       if (name === 'home') renderTrainingHome();

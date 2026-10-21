@@ -78,6 +78,14 @@ function harness() {
 const markup = html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '');
 const ids = [...markup.matchAll(/\bid=["']([^"']+)["']/g)].map(match => match[1]);
 assert.equal(ids.length, new Set(ids).size, 'HTML ids must be unique');
+assert.deepEqual([...markup.matchAll(/data-nav-target="([^"]+)"/g)].map(match => match[1]), ['home', 'market', 'review'],
+  'Primary navigation should present the three learning, chart-training, and review paths');
+assert.ok(!markup.includes('合约趋势实验室') && markup.includes('data-nav-target="market"><i data-lucide="candlestick-chart" aria-hidden="true"></i>看图训练'),
+  'The obsolete lab identity is removed and the chart workspace has a clear name');
+assert.ok(markup.includes('id="workspaceStart">开始历史训练</button>'),
+  'Historical replay remains directly reachable from the chart-training task');
+assert.match(html, /name === 'replay' \? 'market' : name/,
+  'An active replay remains grouped under the chart-training primary path');
 for (const match of html.matchAll(/document\.getElementById\(['"]([^'"]+)['"]\)\.addEventListener\(/g)) {
   assert.ok(ids.includes(match[1]), `Listener target ${match[1]} is missing`);
 }
