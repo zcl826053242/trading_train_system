@@ -990,6 +990,17 @@
     body.market-terminal .change { margin-top: 3px; font-size: 10px; }
     body.market-terminal #chartToolbar { position: static; min-height: 42px; align-items: center; justify-content: flex-start; gap: 5px; padding: 0 0 5px; border: 0; border-bottom: 1px solid #2b3139; }
     body.market-terminal #chartToolbar > .segmented { grid-column: 3; grid-row: 1; }
+    body.market-terminal .chart-period-control { grid-column: 3; grid-row: 1; display: flex; align-items: center; gap: 4px; min-width: 0; }
+    body.market-terminal .chart-more-intervals { position: relative; flex: 0 0 auto; }
+    body.market-terminal .chart-more-intervals > summary { display: grid; width: 28px; height: 26px; place-items: center; border-radius: 3px; color: #848e9c; cursor: pointer; list-style: none; }
+    body.market-terminal .chart-more-intervals > summary::-webkit-details-marker { display: none; }
+    body.market-terminal .chart-more-intervals > summary:hover, body.market-terminal .chart-more-intervals[open] > summary,
+    body.market-terminal .chart-more-intervals[data-active="true"] > summary { background: #2b3139; color: #f0b90b; }
+    body.market-terminal .chart-more-intervals > summary svg { width: 15px; height: 15px; }
+    body.market-terminal .chart-interval-menu { position: absolute; top: calc(100% + 5px); left: 0; z-index: 30; display: grid; grid-template-columns: repeat(3, minmax(44px, 1fr)); gap: 3px; width: 158px; padding: 5px; border: 1px solid #343a40; border-radius: 4px; background: #202328; box-shadow: 0 8px 24px rgba(0,0,0,.4); }
+    body.market-terminal .chart-interval-menu button { min-height: 30px; border: 0; border-radius: 3px; background: transparent; color: #b7bdc6; cursor: pointer; font: inherit; font-size: 11px; }
+    body.market-terminal .chart-interval-menu button:hover, body.market-terminal .chart-interval-menu button.active { background: #302b1b; color: #f0b90b; }
+    body.market-terminal .chart-interval-menu button:disabled { color: #5f6875; cursor: not-allowed; }
     body.market-terminal #chartIndicatorsOpen { grid-column: 4; grid-row: 1; }
     body.market-terminal #chartToolbar > .chart-advanced { grid-column: 5; grid-row: 1; }
     body.market-terminal .chart-training-progress { grid-column: 6; grid-row: 1; }
@@ -1163,7 +1174,7 @@
     body.market-terminal .learning-nav:not([hidden]) { display: flex; }
     @media (min-width: 901px) and (max-width: 1100px) {
       body.market-terminal .chart-card { grid-template-columns: max-content auto minmax(0, 1fr) auto auto; grid-template-rows: 42px 38px auto minmax(0, 1fr); }
-      body.market-terminal #chartToolbar > .segmented { grid-column: 1; grid-row: 2; }
+      body.market-terminal .chart-period-control { grid-column: 1; grid-row: 2; }
       body.market-terminal #chartIndicatorsOpen { grid-column: 2; grid-row: 2; }
       body.market-terminal #chartToolbar > .chart-advanced { grid-column: 4; grid-row: 2; }
       body.market-terminal .chart-training-progress { grid-column: 5; grid-row: 2; }
@@ -1249,6 +1260,8 @@
       body.market-terminal .chart-head .coin { width: 25px; height: 25px; }
       body.market-terminal .instrument select { max-width: 155px; font-size: 12px; }
       body.market-terminal #chartToolbar { min-height: 30px; gap: 4px; padding: 2px 0; }
+      body.market-terminal .chart-period-control { gap: 2px; }
+      body.market-terminal .chart-interval-menu { right: 0; left: auto; }
       body.market-terminal .price-block { margin-right: 0; }
       body.market-terminal .price-block .change { display: none; }
       body.market-terminal .chart-advanced { position: static; top: auto; right: auto; z-index: 12; margin: 0 0 0 auto; }
@@ -1270,7 +1283,7 @@
     }
     @media (max-width: 360px) {
       /* Keep all six periods, indicators and settings on one narrow-screen row. */
-      body.market-terminal #chartToolbar > .segmented button { padding-inline: 5px; }
+      body.market-terminal .chart-period-control .segmented button { padding-inline: 5px; }
     }
     @media (max-width: 720px) {
       body.market-terminal #workspaceTaskDock { grid-column: 1; grid-row: 2; }
@@ -1500,13 +1513,25 @@
           </div>
         </div>
         <div class="chart-toolbar" id="chartToolbar">
-          <div class="segmented" role="tablist" aria-label="时间周期">
-            <button type="button" data-time="1m">1m</button>
-            <button type="button" data-time="5m">5m</button>
-            <button type="button" data-time="15m">15m</button>
-            <button type="button" data-time="1H" class="active">1H</button>
-            <button type="button" data-time="4H">4H</button>
-            <button type="button" data-time="1D">1D</button>
+          <div class="chart-period-control" aria-label="K线时间周期">
+            <div class="segmented" role="tablist" aria-label="常用时间周期">
+              <button type="button" role="tab" aria-selected="false" data-time="1m">1m</button>
+              <button type="button" role="tab" aria-selected="false" data-time="5m">5m</button>
+              <button type="button" role="tab" aria-selected="false" data-time="15m">15m</button>
+              <button type="button" role="tab" aria-selected="true" data-time="1H" class="active">1H</button>
+              <button type="button" role="tab" aria-selected="false" data-time="4H">4H</button>
+              <button type="button" role="tab" aria-selected="false" data-time="1D">1D</button>
+            </div>
+            <details class="chart-more-intervals" id="chartMoreIntervals">
+              <summary aria-label="更多时间周期" title="更多时间周期"><i data-lucide="ellipsis" aria-hidden="true"></i></summary>
+              <div class="chart-interval-menu" role="group" aria-label="更多时间周期">
+                <button type="button" data-time="3m" aria-pressed="false">3m</button><button type="button" data-time="30m" aria-pressed="false">30m</button>
+                <button type="button" data-time="2H" aria-pressed="false">2H</button><button type="button" data-time="6H" aria-pressed="false">6H</button>
+                <button type="button" data-time="8H" aria-pressed="false">8H</button><button type="button" data-time="12H" aria-pressed="false">12H</button>
+                <button type="button" data-time="3D" aria-pressed="false">3D</button><button type="button" data-time="1W" aria-pressed="false">1W</button>
+                <button type="button" data-time="1M" aria-pressed="false">1M</button>
+              </div>
+            </details>
           </div>
           <button type="button" class="indicator-menu-trigger" id="chartIndicatorsOpen" aria-haspopup="dialog" aria-controls="chartIndicatorsDialog"><i data-lucide="chart-no-axes-combined" aria-hidden="true"></i>指标</button>
           <details class="chart-advanced">
@@ -2116,7 +2141,7 @@
     const replayHistory = (() => { try { const value = JSON.parse(localStorage.getItem('trend-lab-replay-history') || '[]'); return Array.isArray(value) ? value.slice(0, 20) : []; } catch (_) { return []; } })();
     const trainingMeta = (() => { try { const value = JSON.parse(localStorage.getItem('trend-lab-training-meta') || 'null'); return value && typeof value === 'object' ? { lastDate: value.lastDate || '', streak: Math.max(0, Number(value.streak) || 0), completedSessions: Math.max(0, Number(value.completedSessions) || 0) } : { lastDate: '', streak: 0, completedSessions: 0 }; } catch (_) { return { lastDate: '', streak: 0, completedSessions: 0 }; } })();
     const liveMarket = { instrument: 'BTC-USDT-SWAP', source: 'OKX 公开行情', endpoint: 'https://www.okx.com/api/v5/market/candles' };
-    const liveBars = { '1m': '1m', '5m': '5m', '15m': '15m', '1H': '1H', '4H': '4H', '1D': '1D' };
+    const liveBars = { '1m': '1m', '3m': '3m', '5m': '5m', '15m': '15m', '30m': '30m', '1H': '1H', '2H': '2H', '4H': '4H', '6H': '6H', '8H': '8H', '12H': '12H', '1D': '1D', '3D': '3D', '1W': '1W', '1M': '1M' };
     let liveRefreshTimer = null;
     let liveRequestId = 0;
     let liveRequestController = null;
@@ -2398,9 +2423,13 @@
         const timeframe = button.dataset.time;
         const unavailable = state.replayMode && !(historicalByTimeframe[timeframe]?.length);
         button.classList.toggle('active', timeframe === state.timeframe);
+        if (button.getAttribute('role') === 'tab') button.setAttribute('aria-selected', String(timeframe === state.timeframe));
+        else button.setAttribute('aria-pressed', String(timeframe === state.timeframe));
         button.disabled = unavailable;
         button.title = unavailable ? `${timeframe} 暂无历史快照，不能用于回放` : state.replayMode && timeframe !== state.timeframe ? `在训练设置中切换到 ${timeframe}，将开始新场次` : `切换到 ${timeframe}`;
       });
+      const moreIntervals = document.getElementById('chartMoreIntervals');
+      if (moreIntervals) moreIntervals.dataset.active = String(Boolean(moreIntervals.querySelector('[data-time].active')));
     }
     function selectChartTimeframe(timeframe) {
       if (!Object.hasOwn(liveBars, timeframe)) return false;
@@ -2438,8 +2467,8 @@
     function buildData(scenario, timeframe) {
       if (state.replayMode && historicalRows.length) return getHistoricalReplay();
       if (state.dataMode === 'live' && state.liveRows.length) return state.liveRows.slice(-300);
-      const count = timeframe === '1m' ? 60 : timeframe === '5m' ? 54 : timeframe === '15m' ? 48 : timeframe === '4H' ? 36 : timeframe === '1D' ? 30 : 42;
-      const step = timeframe === '1m' ? 0.28 : timeframe === '5m' ? 0.46 : timeframe === '15m' ? 0.72 : timeframe === '4H' ? 1.36 : timeframe === '1D' ? 2.15 : 1;
+      const count = ({ '1m': 60, '3m': 56, '5m': 54, '15m': 48, '30m': 46, '1H': 42, '2H': 40, '4H': 36, '6H': 34, '8H': 32, '12H': 32, '1D': 30, '3D': 28, '1W': 28, '1M': 24 })[timeframe] || 42;
+      const step = ({ '1m': 0.28, '3m': 0.36, '5m': 0.46, '15m': 0.72, '30m': 0.86, '1H': 1, '2H': 1.18, '4H': 1.36, '6H': 1.52, '8H': 1.66, '12H': 1.82, '1D': 2.15, '3D': 2.75, '1W': 3.25, '1M': 4 })[timeframe] || 1;
       const downMode = ['down', 'breakdown'].includes(scenario);
       const upMode = ['up', 'breakout', 'pullback', 'reversalUp', 'exhaustion'].includes(scenario);
       const rangeMode = ['range', 'falseBreak', 'squeeze', 'volatility'].includes(scenario);
@@ -2755,7 +2784,7 @@
       }
     }
     function timeframeSeconds(timeframe) {
-      return ({ '1m': 60, '5m': 300, '15m': 900, '1H': 3600, '4H': 14400, '1D': 86400 })[timeframe] || 3600;
+      return ({ '1m': 60, '3m': 180, '5m': 300, '15m': 900, '30m': 1800, '1H': 3600, '2H': 7200, '4H': 14400, '6H': 21600, '8H': 28800, '12H': 43200, '1D': 86400, '3D': 259200, '1W': 604800, '1M': 2592000 })[timeframe] || 3600;
     }
     function barTime(row, index) {
       if (row.openTime > 1000000000000) return Math.floor(row.openTime / 1000);
@@ -4846,7 +4875,8 @@
       const integer = (value, min, max) => Number.isInteger(value) && value >= min && value <= max;
       if (!draft || draft.version !== 1 || !draft.context || !draft.account || !draft.replay) throw new Error('草稿版本或结构无法识别');
       const c = draft.context, a = draft.account, r = draft.replay;
-      if (!['sim', 'live'].includes(c.dataMode) || !['1m', '5m', '15m', '1H', '4H', '1D'].includes(c.timeframe)
+      if (!['sim', 'live'].includes(c.dataMode) || !['1m', '3m', '5m', '15m', '30m', '1H', '2H', '4H', '6H', '8H', '12H', '1D', '3D', '1W', '1M'].includes(c.timeframe)
+        || (c.replayMode && !['1m', '5m', '1H'].includes(c.timeframe))
         || !['up', 'range', 'down', 'breakout', 'pullback', 'reversalUp', 'exhaustion', 'falseBreak', 'squeeze', 'volatility', 'breakdown', 'breakRetest'].includes(c.scenario)
         || typeof c.replayMode !== 'boolean' || typeof c.replayPaused !== 'boolean'
         || !integer(c.sessionLength, 24, 500) || !integer(c.revealCount, 8, c.sessionLength) || !integer(c.sessionStart, 0, 100000)
@@ -5809,7 +5839,20 @@
        if (button) applyIndicatorLesson(button.dataset.openIndicatorChart);
      });
     document.querySelectorAll('[data-scenario]').forEach(btn => btn.addEventListener('click', () => setScenario(btn.dataset.scenario, state.timeframe)));
-    document.querySelectorAll('[data-time]').forEach(button => button.addEventListener('click', () => selectChartTimeframe(button.dataset.time)));
+    document.querySelectorAll('[data-time]').forEach(button => button.addEventListener('click', () => {
+      selectChartTimeframe(button.dataset.time);
+      document.getElementById('chartMoreIntervals').open = false;
+    }));
+    document.addEventListener('pointerdown', event => {
+      const menu = document.getElementById('chartMoreIntervals');
+      if (menu?.open && !menu.contains(event.target)) menu.open = false;
+    });
+    document.getElementById('chartMoreIntervals').addEventListener('keydown', event => {
+      if (event.key !== 'Escape') return;
+      document.getElementById('chartMoreIntervals').open = false;
+      document.querySelector('#chartMoreIntervals > summary').focus();
+      event.stopPropagation();
+    });
     document.getElementById('chartInstrument').addEventListener('change', event => {
       const instrument = event.target.value;
       if (state.replayMode || state.dataMode !== 'live' || !['BTC-USDT-SWAP', 'ETH-USDT-SWAP', 'SOL-USDT-SWAP'].includes(instrument)) { updateDataSourceUI(); return; }

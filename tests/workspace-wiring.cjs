@@ -47,7 +47,7 @@ function harness() {
   const c = vm.createContext({
     state, sim, replayTraining, liveRefreshTimer: 7,
     proChart: { editingDrawing: {}, measurePoint: {}, shapePoints: [{}], measurePreview: {}, fibPoint: {}, trendPoint: {} },
-    liveBars: { '1m': '1m', '5m': '5m', '15m': '15m', '1H': '1H', '4H': '4H', '1D': '1D' },
+    liveBars: { '1m': '1m', '3m': '3m', '5m': '5m', '15m': '15m', '30m': '30m', '1H': '1H', '2H': '2H', '4H': '4H', '6H': '6H', '8H': '8H', '12H': '12H', '1D': '1D', '3D': '3D', '1W': '1W', '1M': '1M' },
     historicalByTimeframe: { '1H': [{}], '5m': [{}], '1m': [{}] },
     document: { getElementById: get, querySelectorAll: selector => selector === '[name="decisionEvidence"]' ? evidence : selector === '[data-tool]' ? drawingButtons : [],
       querySelector: selector => selector === '.layout .side' ? get('side') : null },
@@ -83,7 +83,8 @@ for (const match of html.matchAll(/document\.getElementById\(['"]([^'"]+)['"]\)\
 }
 assert.ok(!html.includes('revealNext'), 'Removed replay control cannot retain JS references');
 assert.match(html, /workspace-session-actions\[hidden\]\s*{\s*display:\s*none\s*!important/);
-assert.ok(html.includes("document.querySelectorAll('[data-time]').forEach(button => button.addEventListener('click', () => selectChartTimeframe(button.dataset.time)))"),
+assert.ok(html.includes("document.querySelectorAll('[data-time]').forEach(button => button.addEventListener('click', () => {")
+  && html.includes('selectChartTimeframe(button.dataset.time);') && html.includes("document.getElementById('chartMoreIntervals').open = false;"),
   'Period buttons must use the guarded entry');
 
 // 历史无对应数据、同周期和未知周期不能修改场次；有效周期只打开设置。
@@ -117,6 +118,17 @@ for (const accept of [false, true]) {
   assert.equal(c.selectChartTimeframe('5m'), true);
   assert.equal(JSON.stringify(c.sim), account); assert.equal(c.state.liveRows.length, 0);
   assert.deepEqual(calls.map(call => call[0]), ['timeframes', 'load']);
+}
+{
+  const { c, calls } = harness(); c.state.replayMode = false; c.state.dataMode = 'live';
+  assert.equal(c.selectChartTimeframe('2H'), true);
+  assert.equal(c.state.timeframe, '2H'); assert.equal(c.sim.position.side, 'long');
+  assert.deepEqual(calls.map(call => call[0]), ['timeframes', 'load']);
+}
+{
+  const { c, calls } = harness(); c.state.replayMode = true;
+  assert.equal(c.selectChartTimeframe('3m'), false);
+  assert.equal(c.state.timeframe, '1H'); assert.equal(calls.length, 0);
 }
 {
   const { c } = harness(); c.state.replayMode = false; c.state.dataMode = 'live';

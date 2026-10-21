@@ -30,7 +30,7 @@ function harness() {
   const context = vm.createContext({
     state: { dataMode: 'live', replayMode: false, timeframe: '1H', liveRows: [], liveLoading: false, liveError: '', liveUpdatedAt: 0 },
     liveMarket: { endpoint: 'https://example.test/candles', instrument: 'BTC-USDT-SWAP', source: 'test fixture' },
-    liveBars: { '1H': '1H', '5m': '5m' }, liveRequestId: 0, liveRequestController: null, liveRefreshTimer: null,
+    liveBars: { '1m': '1m', '3m': '3m', '5m': '5m', '15m': '15m', '30m': '30m', '1H': '1H', '2H': '2H', '4H': '4H', '6H': '6H', '8H': '8H', '12H': '12H', '1D': '1D', '3D': '3D', '1W': '1W', '1M': '1M' }, liveRequestId: 0, liveRequestController: null, liveRefreshTimer: null,
     AbortController, encodeURIComponent, Date,
     document: { getElementById: get },
     setTimeout: (callback, ms) => { const id = ++nextTimer; timers.set(id, { callback, ms }); return id; },
@@ -116,5 +116,16 @@ function harness() {
     assert.equal(get('chartLoadStatus').hidden, true);
     assert.equal(get('chartLoadStatus').classList.contains('failed'), false);
   }
+  for (const timeframe of Object.keys(contextTimeframes())) {
+    const { context: c, requests } = harness(); c.state.timeframe = timeframe;
+    const pending = c.loadLiveMarket();
+    assert.ok(requests[0].url.includes(`bar=${encodeURIComponent(timeframe)}`), `${timeframe} requests the selected bar size`);
+    requests[0].ok(500); await pending;
+  }
   console.log('PASS: latest request wins; simulation/replay cancellation; 12s timeout; HTTP/offline/insufficient data; stale labels and retry.');
 })().catch(error => { console.error(error); process.exitCode = 1; });
+
+function contextTimeframes() {
+  return { '1m': 1, '3m': 1, '5m': 1, '15m': 1, '30m': 1, '1H': 1, '2H': 1, '4H': 1,
+    '6H': 1, '8H': 1, '12H': 1, '1D': 1, '3D': 1, '1W': 1, '1M': 1 };
+}
