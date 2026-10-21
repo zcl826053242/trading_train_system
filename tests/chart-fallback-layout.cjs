@@ -19,10 +19,36 @@ assert.match(html, /@media\s*\(min-width:\s*901px\)\s*and\s*\(max-width:\s*1100p
 assert.match(html, /@media\s*\(max-width:\s*720px\)\s*\{\s*body\.market-terminal\s+#workspaceTaskDock\s*\{\s*grid-column:\s*1;\s*grid-row:\s*2;\s*\}\s*body\.market-terminal\s+\.chart-card\s*\{\s*grid-column:\s*1;\s*grid-row:\s*1;\s*\}\s*body\.market-terminal\s+\.side\s*\{\s*grid-column:\s*1;\s*grid-row:\s*3;/);
 assert.match(html, /@media\s*\(max-width:\s*560px\)\s*and\s*\(min-height:\s*780px\)\s*\{\s*body\.market-terminal\s+#chart\s*\{\s*height:\s*min\(56vh,\s*480px\)\s*!important;\s*min-height:\s*min\(56vh,\s*480px\);/);
 assert.match(html, /#chart\.has-rsi-pane\.has-macd-pane\.has-kdj-pane\s*\{\s*height:\s*calc\(min\(56vh,\s*480px\)\s*\+\s*144px\)\s*!important;/);
-assert.match(html, /const paneStep = 104;/);
+// 验证真实布局函数：最窄/短屏和全屏，各指标数量均给图例留下26px。
+const vm = require('node:vm');
+const start = html.indexOf('    function fallbackChartLayout(');
+assert.notEqual(start, -1);
+const context = vm.createContext({});
+vm.runInContext(html.slice(start, html.indexOf('\n    function ', start + 1)), context);
+for (const width of [264, 334, 1048]) {
+  for (const height of [280, 300, 396, 444, 606, 617, 900]) {
+    for (let count = 0; count <= 3; count++) {
+      // 最小手机基础图高280px，每开一个副图至少增加48px。
+      if (height < 280 + count * 48) continue;
+      const {plot, volumeTop, paneStart, paneStep} = context.fallbackChartLayout(width, height, count);
+      assert.ok(plot.w > 0 && plot.x + plot.w + 64 <= width);
+      assert.ok(plot.y >= 3 + 26 + 3, 'main legend has independent space');
+      assert.ok(plot.y + plot.h < volumeTop, 'main data stays above the volume legend');
+      assert.ok(plot.volY >= volumeTop + 26 + 3, 'volume data stays below its legend');
+      assert.ok(plot.volY + plot.volH <= paneStart, 'volume data stays in its pane');
+      assert.ok(paneStart + count * paneStep <= height - 28 + 1e-6, 'panes stay above time axis');
+      for (let i = 0; i < count; i++) {
+        const top = paneStart + i * paneStep;
+        const height = paneStep - 5;
+        const curveTop = top + height - Math.max(1, height - 32);
+        assert.ok(curveTop >= top + 3 + 26 + 3 - 1e-6, 'oscillator curves clear the legend');
+        assert.ok(height - 32 >= 9, 'short-screen oscillators retain usable drawing height');
+      }
+    }
+  }
+}
+assert.match(html, /const H = container\.clientHeight \|\| 540;/);
+assert.match(html, /Math\.abs\(svg\.viewBox\.baseVal\.height - chart\.clientHeight\) > \.5/);
 assert.match(html, /pane\.setStretchFactor\(2\.1\);/);
 assert.match(html, /volumePane\.setStretchFactor\(3\.5\);/);
-assert.match(html, /const plot = \{ x: 8, y: 48, w: W - 72, h: 230, volY: 296, volH: 120 \};/);
-assert.match(html, /const H = 454 \+ paneNames\.length \* paneStep;/);
-assert.match(html, /const top = 430 \+ paneIndex \* paneStep, height = 100;/);
-console.log('PASS: responsive stage sizing, compact short phones, chart-first tall phones, scrollable readouts, and the axis-bar layout slot remain consistent.');
+console.log('PASS: responsive stage, pixel-based fallback geometry, non-overlapping panel readouts and usable short-screen oscillators.');

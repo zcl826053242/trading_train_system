@@ -3761,6 +3761,18 @@
       if (fallbackResizeFrame !== null) cancelAnimationFrame(fallbackResizeFrame);
       fallbackResizeFrame = requestAnimationFrame(() => { fallbackResizeFrame = null; renderChart(); });
     });
+    function fallbackChartLayout(width, height, paneCount, axisWidth = 72) {
+      // SVG 使用 CSS 像素坐标；各面板单独预留 26px 图例，避免缩放后遮住数据。
+      const available = Math.max(100, height - 28);
+      const unit = available / (7 + 3.5 + paneCount * 2.1);
+      const mainHeight = unit * 7, volumeHeight = unit * 3.5;
+      const paneStep = unit * 2.1, paneStart = mainHeight + volumeHeight;
+      return {
+        plot: { x: 8, y: 36, w: Math.max(40, width - axisWidth - 8), h: Math.max(1, mainHeight - 44),
+          volY: mainHeight + 32, volH: Math.max(1, volumeHeight - 38) },
+        paneStep, paneStart, volumeTop: mainHeight + 3
+      };
+    }
     function renderChart() {
       hideChartTooltip();
       proChart.readoutData = null;
@@ -3782,21 +3794,17 @@
       container.classList.remove('chart-fallback-mode');
       container.style.removeProperty('--fallback-height');
       for (const name of ['rsi', 'macd', 'kdj']) container.classList.toggle(`has-${name}-pane`, Boolean(state.indicator[name]));
-      // SVG 随可用宽度排版，坐标文字不再把桌面 900px 等比压进手机。
+      // 宽高均使用当前可用像素，文字与 HTML 图例不随副图数量变形。
       const W = Math.max(200, container.clientWidth || 900);
-      const plot = { x: 8, y: 48, w: W - 72, h: 230, volY: 296, volH: 120 };
-      const svg = el('svg', { class: 'chart-fallback', viewBox: '0 0 900 454', preserveAspectRatio: 'none', role: 'img', 'aria-labelledby': 'chartTitle chartDesc' });
+      const svg = el('svg', { class: 'chart-fallback', preserveAspectRatio: 'none', role: 'img', 'aria-labelledby': 'chartTitle chartDesc' });
       container.replaceChildren(svg);
       const paneNames = ['rsi', 'macd', 'kdj'].filter(key => state.indicator[key]);
-      // 备用 SVG 与专业图保持同样的副图可读高度；三副图时每个面板约 60px。
-      const paneStep = 104;
-      const H = 454 + paneNames.length * paneStep;
       container.classList.add('chart-fallback-mode');
-      // 备用图作为 chart-stage 的弹性子项填满父级分配空间，避免将上一次
-      // 测量高度写成 min-height 后反向撑大 stage，桌面尺寸会随重绘累积。
+      const H = container.clientHeight || 540;
+      const { plot, paneStep, paneStart, volumeTop } = fallbackChartLayout(W, H, paneNames.length);
       svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
       svg.dataset.plotX = plot.x; svg.dataset.plotWidth = plot.w;
-      svg.dataset.paneTops = JSON.stringify({ main: 12, volume: plot.volY + 3, ...Object.fromEntries(paneNames.map((name, i) => [name, 430 + i * paneStep])) });
+      svg.dataset.paneTops = JSON.stringify({ main: 3, volume: volumeTop, ...Object.fromEntries(paneNames.map((name, i) => [name, paneStart + 3 + i * paneStep])) });
       const colors = chartColors;
       const sourceData = buildData(state.scenario, state.timeframe);
       const live = state.dataMode === 'live' && state.liveRows.length > 0;
@@ -3832,7 +3840,7 @@
         const tickLabel = live && !state.replayMode && data[idx].openTime ? new Date(data[idx].openTime).toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' }) : `${idx + 1}`;
         svg.appendChild(el('text', { x: xx, y: H - 16, 'text-anchor': 'middle' }, tickLabel));
       }
-      svg.appendChild(el('line', { x1: plot.x, x2: plot.x + plot.w, y1: plot.volY - 10, y2: plot.volY - 10, stroke: colors.grid }));
+      svg.appendChild(el('line', { x1: plot.x, x2: plot.x + plot.w, y1: volumeTop - 3, y2: volumeTop - 3, stroke: colors.grid }));
       svg.appendChild(el('text', { x: plot.x + plot.w, y: H - 3, 'text-anchor': 'end', fill: colors.muted }, `${state.timeframe} · ${sourceLabel} · ${data.length} 根`));
       data.forEach((d, i) => {
         const xx = x(i), candleW = Math.max(2, Math.min(13, plot.w / data.length * .56));
@@ -3840,7 +3848,7 @@
         if (state.chartType === 'candles') svg.appendChild(el('line', { x1: xx, x2: xx, y1: y(d.high), y2: y(d.low), stroke: color, 'stroke-width': 1 }));
         if (state.chartType === 'candles') svg.appendChild(el('rect', { x: xx - candleW / 2, y: Math.min(y(d.open), y(d.close)), width: candleW, height: Math.max(2, Math.abs(y(d.open) - y(d.close))), fill: color, stroke: color, rx: 1 }));
         const vh = d.volume / maxVol * plot.volH;
-        svg.appendChild(el('rect', { x: xx - candleW / 2, y: plot.volY + plot.volH - vh, width: candleW, height: vh, fill: color, opacity: .32, rx: 1 }));
+        svg.appendChild(el('rect', { x: xx - candleW / 2, y: plot.volY + plot.volH - vh, width: candleW, height: vh, fill: color, opacity: .32, rx: 1, 'data-volume-bar': '' }));
       });
       if (state.chartType === 'line') svg.appendChild(el('path', { d: pathFor(closes, x, y), fill: 'none', stroke: '#f0b90b', 'stroke-width': 2 }));
       if (state.show20) svg.appendChild(el('path', { d: pathFor(e20, x, y), fill: 'none', stroke: colors.orange, 'stroke-width': 2.2 }));
@@ -3878,7 +3886,7 @@
         });
       }
       paneNames.forEach((name, paneIndex) => {
-        const top = 430 + paneIndex * paneStep, height = 100;
+        const top = paneStart + paneIndex * paneStep, height = paneStep - 5;
         const pane = el('g', { 'data-indicator-pane': name }); svg.appendChild(pane);
         let lines, minValue = 0, maxValue = 100;
         if (name === 'rsi') lines = [calcRsi(sourceCloses, state.indicatorParams.rsi.period).map(item => item?.value).slice(start, start + visibleCount)];
@@ -3895,8 +3903,8 @@
         minValue = Math.min(minValue, ...finite); maxValue = Math.max(name === 'macd' ? 0 : maxValue, ...finite);
         const range = Math.max(maxValue - minValue, .01);
         // 为 HTML 面板图例留出固定行高，不遮挡曲线和柱体。
-        const paneY = value => top + height - (value - minValue) / range * (height - 30);
-        pane.appendChild(el('line', { x1: plot.x, x2: plot.x + plot.w, y1: top - 6, y2: top - 6, stroke: colors.grid }));
+        const paneY = value => top + height - (value - minValue) / range * Math.max(1, height - 32);
+        pane.appendChild(el('line', { x1: plot.x, x2: plot.x + plot.w, y1: top, y2: top, stroke: colors.grid }));
         if (name === 'macd') lines[0].forEach((value, i) => {
           const histogram = value - lines[1][i];
           pane.appendChild(el('rect', { x: x(i) - 1.5, y: Math.min(paneY(0), paneY(histogram)), width: 3, height: Math.max(.5, Math.abs(paneY(0) - paneY(histogram))), fill: histogram >= 0 ? '#0ecb8177' : '#f6465d77' }));
@@ -5970,7 +5978,7 @@
     const fallbackLayoutObserver = new ResizeObserver(() => {
       const chart = document.getElementById('chart'), svg = chart.querySelector('svg.chart-fallback');
       if (!svg || window.LightweightCharts || !chart.clientWidth) return;
-      if (Math.abs(svg.viewBox.baseVal.width - chart.clientWidth) > .5) renderChart();
+      if (Math.abs(svg.viewBox.baseVal.width - chart.clientWidth) > .5 || Math.abs(svg.viewBox.baseVal.height - chart.clientHeight) > .5) renderChart();
       else { positionChartPaneLegends(); renderDrawingOverlay(); }
     });
     fallbackLayoutObserver.observe(document.getElementById('chart'));
