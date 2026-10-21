@@ -117,6 +117,62 @@ async (page) => {
         checks.push({ action, ...result });
       };
       await audit('created');
+      const axisPoint = await target.evaluate(() => {
+        const chart = document.querySelector('#chart'), rect = chart.getBoundingClientRect();
+        if (proChart.chart) return { x: rect.right - 18, y: rect.top + proChart.chart.panes()[0].getHeight() * .42 };
+        const svg = chart.querySelector('.chart-fallback'), view = svg.viewBox.baseVal, svgRect = svg.getBoundingClientRect();
+        return { x: svgRect.left + (Number(svg.dataset.plotX) + Number(svg.dataset.plotWidth) + 24) * svgRect.width / view.width,
+          y: svgRect.top + (Number(svg.dataset.plotY) + Number(svg.dataset.plotHeight) * .42) * svgRect.height / view.height };
+      });
+      const beforeAxis = await frame();
+      await target.mouse.move(axisPoint.x, axisPoint.y); await target.mouse.down();
+      await target.mouse.move(axisPoint.x, axisPoint.y + 42, { steps: 8 }); await target.mouse.up();
+      await target.waitForTimeout(120);
+      const afterAxis = await frame();
+      const axisState = await target.evaluate(() => ({
+        auto: proChart.chart ? proChart.chart.panes()[0].priceScale('right').options().autoScale : state.fallbackPriceScale.auto,
+        zoom: proChart.chart ? null : state.fallbackPriceScale.zoom,
+        tool: state.tool,
+        points: proChart.drawings.at(-1)?.edit.points.map(point => ({ time: point.time, price: point.price }))
+      }));
+      check(!axisState.auto, 'price-axis drag did not enter manual scale mode');
+      if (fallback) check(axisState.zoom > 1, 'fallback price-axis drag did not increase scale');
+      check(JSON.stringify(axisState.points) === JSON.stringify(points), 'price-axis drag changed drawing anchors');
+      if (fallback) check(afterAxis.offset === beforeAxis.offset, 'price-axis drag changed the time offset');
+      else check(afterAxis.range.from === beforeAxis.range.from && afterAxis.range.to === beforeAxis.range.to, 'price-axis drag changed the visible time range');
+      checks.push({ action: 'price-axis-state', axisPoint, beforeAxis, afterAxis, axisState });
+      await audit('price-axis-after-drawing');
+      await target.locator('[data-tool="cursor"]').click();
+      const panBeforeAxis = await frame();
+      const panX = panBeforeAxis.left + panBeforeAxis.width * .52, panY = panBeforeAxis.top + panBeforeAxis.height * .58;
+      await target.mouse.move(panX, panY); await target.mouse.down();
+      await target.mouse.move(panX + panBeforeAxis.width * .11, panY, { steps: 8 }); await target.mouse.up();
+      await target.waitForTimeout(150);
+      const panAfterAxis = await frame();
+      check(fallback ? panAfterAxis.offset > panBeforeAxis.offset : panAfterAxis.range.from < panBeforeAxis.range.from - .5,
+        'time pan failed after manual price-axis scaling');
+      await audit('pan-after-price-axis');
+      const postAxisProbe = await target.evaluate(() => {
+        const surface = drawingSurface(), rows = proChart.visibleRows, chart = document.querySelector('#chart'), rect = chart.getBoundingClientRect();
+        const range = proChart.chart?.timeScale().getVisibleLogicalRange();
+        const first = range ? Math.max(0, Math.ceil(range.from)) : Math.max(0, rows.length - Math.max(16, Math.min(rows.length, Math.round(rows.length / state.chartZoom))) - state.chartOffset);
+        const last = range ? Math.min(rows.length - 1, Math.floor(range.to)) : Math.min(rows.length - 1, first + Math.max(16, Math.min(rows.length, Math.round(rows.length / state.chartZoom))) - 1);
+        const row = rows[Math.round(first + (last - first) * .56)], y = surface.chart.panes()[0].getHeight() * .52;
+        return { x: rect.left + surface.left + surface.chart.timeScale().timeToCoordinate(row.time),
+          y: rect.top + surface.top + y, expected: [row.open, row.high, row.low, row.close].map(formatChartPrice),
+          pointerPrice: formatChartPrice(surface.series.coordinateToPrice(y)) };
+      });
+      await target.evaluate(() => document.querySelector('#chart').addEventListener('pointermove', event => {
+        window.__axisSequencePointer = { x: event.clientX, y: event.clientY };
+      }, { once: true, capture: true }));
+      await target.mouse.move(postAxisProbe.x, postAxisProbe.y); await target.waitForTimeout(80);
+      const postAxisReadout = await target.locator('#chartOhlc').textContent();
+      check(postAxisProbe.expected.every(value => postAxisReadout.includes(value)), 'crosshair OHLC failed after pan and manual price scaling');
+      if (fallback) {
+        const crosshairPrice = await target.locator('.chart-fallback > g[opacity="1"] text').first().textContent();
+        check(crosshairPrice === postAxisProbe.pointerPrice, 'fallback crosshair price detached after pan and axis scaling');
+      }
+      checks.push({ action: 'crosshair-after-pan-and-price-axis', probe: postAxisProbe, ohlc: postAxisReadout });
       await target.locator('#chartZoomIn').click(); await audit('zoom');
       for (const size of [{ width: 1100, height: 760 }, { width: 901, height: 760 }, { width: 390, height: 844 }, viewport]) {
         await target.setViewportSize(size); await audit(`resize-${size.width}x${size.height}`);

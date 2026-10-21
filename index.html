@@ -4067,7 +4067,7 @@
       container.onpointerdown = evt => {
         container.dataset.dragMoved = '';
         const rect = svg.getBoundingClientRect(), localX = (evt.clientX - rect.left) * W / Math.max(1, rect.width), localY = (evt.clientY - rect.top) * H / Math.max(1, rect.height);
-        if (state.tool === 'cursor' && evt.button === 0 && localX >= plot.x + plot.w && localY >= plot.y && localY <= plot.y + plot.h) {
+        if (evt.button === 0 && localX >= plot.x + plot.w && localY >= plot.y && localY <= plot.y + plot.h) {
           evt.preventDefault();
           const fraction = Math.max(0, Math.min(1, (localY - plot.y) / plot.h));
           state.fallbackPriceDrag = { pointerId: evt.pointerId, y: evt.clientY, fraction, anchor: hi - fraction * (hi - lo), zoom: priceScale.auto ? 1 : priceScale.zoom };
