@@ -2095,11 +2095,11 @@
     const indicatorLibraryEntries = [
       { id: 'ema', code: 'EMA20 / 60', title: '指数移动平均', category: 'trend', summary: '比较短期与中期均线的位置和斜率。', observe: '先描述价格高低点，再看 EMA20 与 EMA60 是否同向；均线只作方向过滤。', confirm: '价格结构抬高且 EMA20 在 EMA60 上方，回踩时结构仍守住，才算多头假设得到配合。', caution: '均线交叉滞后，横盘时会反复交叉；不能把交叉本身当作入场信号。', action: 'ema', questionIndexes: [0, 7], sampleIds: ['trendExtension', 'pullbackContinuation'] },
       { id: 'structure', code: 'HH / HL', title: '摆动高低点结构', category: 'trend', summary: '用高点、低点的抬高或下移描述趋势。', observe: '比较连续摆动高点与低点：同步抬高、同步下移，或互相重叠。', confirm: '突破后观察是否出现新的摆动点，并结合回踩是否守住前一个结构位。', caution: '单根影线不一定构成有效摆动点；区间中部不要强行判趋势。', action: 'structure', questionIndexes: [0, 1] },
-      { id: 'bollinger', code: 'BOLL', title: '布林带', category: 'channel', summary: '观察波动区间的收缩、扩张与价格位置。', observe: '带宽收窄代表近期波动变小；带宽扩大代表波动扩张，不直接给出方向。', confirm: '结合区间边界、收盘位置和成交量判断突破是否站稳。', caution: '触及上轨不是自动做空，触及下轨也不是自动做多；强趋势中价格可沿轨运行。', action: 'bb' },
+      { id: 'bollinger', code: 'BOLL', title: '布林带', category: 'channel', summary: '观察波动区间的收缩、扩张与价格位置。', observe: '带宽收窄代表近期波动变小；带宽扩大代表波动扩张，不直接给出方向。', confirm: '结合区间边界、收盘位置和成交量判断突破是否站稳。', caution: '触及上轨不是自动做空，触及下轨也不是自动做多；强趋势中价格可沿轨运行。', action: 'bb', sampleIds: ['bollSqueezeExpansion'] },
       { id: 'psar', code: 'SAR(0.02, 0.2)', title: '抛物线转向指标 SAR', category: 'trend', summary: '观察跟随趋势推进的止损参考点及潜在方向切换。', observe: '比较 SAR 点位与 K 线高低价，留意点位由价格一侧切换到另一侧。', confirm: '切换只提示趋势状态可能变化；结合摆动结构、关键位和收盘确认，不据此单独开仓。', caution: '趋势强度和加速因子会影响点位；震荡市容易反复翻转，SAR 不是保证止损价。', action: 'psar' },
       { id: 'levels', code: 'S / R', title: '支撑与阻力位', category: 'channel', summary: '把多次出现反应的价格区域作为观察边界。', observe: '找前高、前低或多次反应区，画线后观察价格如何接近和离开该区域。', confirm: '观察收盘是否突破、回踩是否守住，以及突破时量能是否支持。', caution: '支撑阻力是区域假设，不是精确到一格的保证；被突破后角色可能互换。', action: 'levels', questionIndexes: [1, 3] },
       { id: 'rsi', code: 'RSI(14)', title: '相对强弱指标', category: 'momentum', summary: '衡量近期涨跌速度，不单独预测反转。', observe: '看 RSI 的区间、斜率，以及它与价格结构是否同步。', confirm: '趋势方向由价格结构决定；RSI 用于检查动能是否增强、减弱或与价格背离。', caution: '超买可以持续，超卖也不代表马上反转；先确认结构变化。', action: 'rsi', questionIndexes: [6], sampleIds: ['rsiOversold', 'rsiHotTrend'] },
-      { id: 'kdj', code: 'KDJ(9,3,3)', title: '随机指标 KDJ', category: 'momentum', summary: '比较收盘价在近期高低区间中的位置及其平滑变化。', observe: '同时看 K、D、J 三线的位置与斜率，并对照价格所处的结构区间。', confirm: '用 K/D 相对位置和 J 线变化描述短期动能，再结合关键位收盘判断是否有结构确认。', caution: 'KDJ 对短期价格波动敏感，横盘中容易反复交叉；超买/超卖不是单独的反转信号。', action: 'kdj' },
+      { id: 'kdj', code: 'KDJ(9,3,3)', title: '随机指标 KDJ', category: 'momentum', summary: '比较收盘价在近期高低区间中的位置及其平滑变化。', observe: '同时看 K、D、J 三线的位置与斜率，并对照价格所处的结构区间。', confirm: '用 K/D 相对位置和 J 线变化描述短期动能，再结合关键位收盘判断是否有结构确认。', caution: 'KDJ 对短期价格波动敏感，横盘中容易反复交叉；超买/超卖不是单独的反转信号。', action: 'kdj', sampleIds: ['kdjOversoldDowntrend'] },
       { id: 'macd', code: 'MACD', title: '指数平滑异同移动平均', category: 'momentum', summary: '比较快慢均线差及其变化，辅助观察动能。', observe: '关注零轴上下、柱体扩张收缩和快慢线关系。', confirm: '把信号与价格高低点、关键位置和成交量一起核对。', caution: '交叉信号会滞后且可能反复；背离只是提醒，不构成反转确认。', action: 'macd', sampleIds: ['macdPositiveCooling', 'macdBearCrossBelowZero'] },
       { id: 'volume', code: 'VOL', title: '成交量', category: 'volume', summary: '观察参与度变化，验证突破或回踩。', observe: '比较同一品种、相邻周期中的成交量变化，不把单根柱子孤立解读。', confirm: '突破时放量、回踩时缩量可为假设提供证据；仍需观察价格是否站稳。', caution: '量能不能告诉你买方或卖方的身份；不同交易所与合约的量不可简单混比。', action: 'volume', questionIndexes: [2, 3], sampleIds: ['trendExtension', 'pullbackContinuation'] },
       { id: 'candles', code: 'OHLC', title: 'K线实体与影线', category: 'pattern', summary: '用开高低收描述一段周期内的价格行为。', observe: '看实体方向、实体占比、上下影线和所在的结构位置。', confirm: '长影线只有出现在关键位置并得到后续收盘确认，才有较强解释力。', caution: '单根形态不代表未来方向；先看它发生在哪里，再看后续是否确认。', action: 'candles', questionIndexes: [2] },
@@ -2121,7 +2121,9 @@
       rsiOversold: { index: 278, title: 'RSI 低位但结构仍偏弱', prompt: 'RSI 处于低位且收盘低于 EMA20/EMA60。记录超卖读数与结构方向是否冲突，不能据此预判反转。' },
       rsiHotTrend: { index: 189, title: '高 RSI 与趋势扩张', prompt: 'RSI 处于高位且价格高于上行均线。观察强动能是否仍在延续，同时评估是否已经远离可定义风险的位置。' },
       macdPositiveCooling: { index: 87, title: '零轴上方柱体连续收缩', prompt: 'DIF、DEA 和柱体仍在零轴上方，但柱体已连续收缩。先描述动能变化，再核对价格与均线结构；动能减弱本身不等于趋势反转。' },
-      macdBearCrossBelowZero: { index: 276, title: '零轴下方死叉与弱势结构', prompt: 'DIF 下穿 DEA，且两者位于零轴下方；收盘低于 EMA20/EMA60。记录这是偏弱证据，但等待后续价格结构确认，不把交叉当成入场指令。' }
+      macdBearCrossBelowZero: { index: 276, title: '零轴下方死叉与弱势结构', prompt: 'DIF 下穿 DEA，且两者位于零轴下方；收盘低于 EMA20/EMA60。记录这是偏弱证据，但等待后续价格结构确认，不把交叉当成入场指令。' },
+      bollSqueezeExpansion: { index: 174, title: '窄带后上轨外收盘', prompt: 'BOLL(20,2) 带宽约 0.46%，收盘位于上轨外，随后带宽继续扩大。先区分波动扩张与方向确认；上轨外收盘不等于必须追多，也不等于马上反转。' },
+      kdjOversoldDowntrend: { index: 242, title: '低位金叉发生在下跌结构中', prompt: 'K、D 位于 20 附近并出现金叉，但 EMA20 仍低于 EMA60。记录短线动能回升与大级别弱势并存，等待摆动高低点变化，不把低位金叉当作趋势反转。' }
     };
     const indicatorCategoryLabels = { trend: '趋势', channel: '通道', momentum: '动量', sentiment: '情绪', volume: '量能', pattern: '形态' };
     let activeIndicatorCategory = 'all';
@@ -2466,6 +2468,13 @@
       const windowRows = historicalRows.slice(start, start + state.sessionLength);
       return windowRows.slice(0, Math.max(8, Math.min(state.revealCount, windowRows.length))).map((row, i) => ({ ...row, i }));
     }
+    function indicatorCalculationContext(visibleRows) {
+      if (!state.replayMode || !historicalRows.length || !visibleRows?.length) return { rows: visibleRows || [], offset: 0 };
+      const start = Math.min(state.sessionStart, Math.max(0, historicalRows.length - state.sessionLength));
+      const end = Math.min(historicalRows.length, start + visibleRows.length);
+      const rows = historicalRows.slice(0, end).map((row, index) => ({ ...row, time: barTime(row, index) }));
+      return { rows, offset: rows.length - visibleRows.length };
+    }
     function buildData(scenario, timeframe) {
       if (state.replayMode && historicalRows.length) return getHistoricalReplay();
       if (state.dataMode === 'live' && state.liveRows.length) return state.liveRows.slice(-300);
@@ -2633,11 +2642,12 @@
       ohlc.classList.toggle('up', bar.close >= bar.open); ohlc.classList.toggle('down', bar.close < bar.open);
       const sourceRows = rows || proChart.visibleRows || [];
       const rowIndex = Number.isInteger(index) ? index : sourceRows.indexOf(bar);
-      if (proChart.readoutRows !== sourceRows || !proChart.readoutData) {
-        proChart.readoutRows = sourceRows;
-        proChart.readoutData = calculateChartReadoutData(sourceRows);
+      const calculationRows = proChart.readoutRows || sourceRows;
+      const calculationIndex = rowIndex + (proChart.readoutOffset || 0);
+      if (!proChart.readoutData) {
+        proChart.readoutData = calculateChartReadoutData(calculationRows);
       }
-      const groups = chartReadoutGroups(sourceRows, rowIndex, proChart.readoutData);
+      const groups = chartReadoutGroups(calculationRows, calculationIndex, proChart.readoutData);
       const summary = document.getElementById('chartIndicatorValues');
       summary.textContent = Object.values(groups).flat().map(item => `${item.label} ${item.value}`).join(' · ') || '指标已关闭';
       renderChartPaneLegends(groups);
@@ -2858,7 +2868,7 @@
       proChart.indicators[name] = { pane, series: [] };
       return proChart.indicators[name];
     }
-    function renderIndicatorPanes(rows, times, closes) {
+    function renderIndicatorPanes(rows, times, closes, offset = 0) {
       const L = window.LightweightCharts;
       const enabled = new Set();
       if (state.indicator.rsi) enabled.add('rsi');
@@ -2881,7 +2891,7 @@
           p.series[0].createPriceLine({ price: 30, color: '#59616c', lineWidth: 1, lineStyle: L.LineStyle.Dashed, axisLabelVisible: true, title: '30' });
           p.pane.priceScale('right').applyOptions({ autoScale: false, scaleMargins: { top: 0, bottom: 0 } });
         }
-        p.series[0].setData(calcRsi(closes, state.indicatorParams.rsi.period).flatMap((item, i) => item ? [{ time: times[i], value: item.value }] : []));
+        p.series[0].setData(calcRsi(closes, state.indicatorParams.rsi.period).slice(offset, offset + times.length).flatMap((item, i) => item ? [{ time: times[i], value: item.value }] : []));
       }
       if (state.indicator.macd) {
         const p = proChart.indicators.macd;
@@ -2892,9 +2902,9 @@
           p.series.push(proChart.chart.addSeries(L.LineSeries, { color: '#f0b90b', lineWidth: 1, priceScaleId: 'right', lastValueVisible: false, priceLineVisible: false }, idx));
         }
         const values = calcMacd(closes, state.indicatorParams.macd);
-        p.series[0].setData(values.histogram.map((value, i) => ({ time: times[i], value, color: value >= 0 ? '#0ecb8177' : '#f6465d77' })));
-        p.series[1].setData(values.dif.map((value, i) => ({ time: times[i], value })));
-        p.series[2].setData(values.dea.map((value, i) => ({ time: times[i], value })));
+        p.series[0].setData(values.histogram.slice(offset, offset + times.length).map((value, i) => ({ time: times[i], value, color: value >= 0 ? '#0ecb8177' : '#f6465d77' })));
+        p.series[1].setData(values.dif.slice(offset, offset + times.length).map((value, i) => ({ time: times[i], value })));
+        p.series[2].setData(values.dea.slice(offset, offset + times.length).map((value, i) => ({ time: times[i], value })));
       }
       if (state.indicator.kdj) {
         const p = proChart.indicators.kdj;
@@ -2907,7 +2917,7 @@
           p.series[0].createPriceLine({ price: 20, color: '#59616c', lineWidth: 1, lineStyle: L.LineStyle.Dashed, axisLabelVisible: true, title: '20' });
         }
         const params = state.indicatorParams.kdj;
-        const values = calcKdj(rows, params.period, params.k, params.d);
+        const values = calcKdj(rows, params.period, params.k, params.d).slice(offset, offset + times.length);
         p.series[0].setData(values.flatMap((item, i) => item ? [{ time: times[i], value: item.k }] : []));
         p.series[1].setData(values.flatMap((item, i) => item ? [{ time: times[i], value: item.d }] : []));
         p.series[2].setData(values.flatMap((item, i) => item ? [{ time: times[i], value: item.j }] : []));
@@ -2947,14 +2957,16 @@
       chartElement.style.height = `${620 + (state.indicator.rsi ? 105 : 0) + (state.indicator.macd ? 115 : 0) + (state.indicator.kdj ? 105 : 0)}px`;
       const live = state.dataMode === 'live' && state.liveRows.length > 0;
       const data = rows.map((row, i) => ({ ...row, time: barTime(row, i) }));
+      const calculation = indicatorCalculationContext(data), calculationRows = calculation.rows, calculationOffset = calculation.offset;
+      const closes = calculationRows.map(row => row.close), calculationVolumes = calculationRows.map(row => row.volume);
       proChart.visibleRows = data;
-      proChart.psarValues = state.indicator.psar ? calcParabolicSar(data, state.indicatorParams.psar.step, state.indicatorParams.psar.max) : [];
+      proChart.readoutRows = calculationRows; proChart.readoutOffset = calculationOffset; proChart.readoutData = null;
+      proChart.psarValues = state.indicator.psar ? calcParabolicSar(calculationRows, state.indicatorParams.psar.step, state.indicatorParams.psar.max).slice(calculationOffset, calculationOffset + data.length) : [];
       proChart.psarSeries.setData(data.flatMap((row, i) => proChart.psarValues[i] ? [{ time: row.time, value: proChart.psarValues[i].value }] : []));
       const candles = data.map(({ time, open, high, low, close }) => ({ time, open, high, low, close }));
-      const closes = data.map(row => row.close), e20 = ema(closes, 20), e60 = ema(closes, 60);
-      proChart.smaValues = Object.fromEntries([5, 10, 20, 60, 120].map(period => [period, sma(closes, period)]));
-      const volumeValues = data.map(row => row.volume);
-      proChart.volumeSmaValues = Object.fromEntries([5, 10, 20].map(period => [period, sma(volumeValues, period)]));
+      const e20 = ema(closes, 20).slice(calculationOffset, calculationOffset + data.length), e60 = ema(closes, 60).slice(calculationOffset, calculationOffset + data.length);
+      proChart.smaValues = Object.fromEntries([5, 10, 20, 60, 120].map(period => [period, sma(closes, period).slice(calculationOffset, calculationOffset + data.length)]));
+      proChart.volumeSmaValues = Object.fromEntries([5, 10, 20].map(period => [period, sma(calculationVolumes, period).slice(calculationOffset, calculationOffset + data.length)]));
       const volumes = data.map(row => ({ time: row.time, value: row.volume, color: row.close >= row.open ? '#0ecb8155' : '#f6465d55' }));
       proChart.candles.setData(state.chartType === 'candles' ? candles : []);
       proChart.line.setData(state.chartType === 'line' ? data.map(row => ({ time: row.time, value: row.close })) : []);
@@ -2993,12 +3005,12 @@
       }
       if (proChart.bb) {
         if (bb) {
-          const values = calcBollinger(closes, state.indicatorParams.bb), upper = [], lower = [], middle = [];
+          const values = calcBollinger(closes, state.indicatorParams.bb).slice(calculationOffset, calculationOffset + data.length), upper = [], lower = [], middle = [];
           values.forEach((value, i) => { if (value) { upper.push({ time: data[i].time, value: value.upper }); lower.push({ time: data[i].time, value: value.lower }); middle.push({ time: data[i].time, value: value.mid }); } });
           proChart.bb[0].setData(upper); proChart.bb[1].setData(lower); proChart.bb[2].setData(middle);
         } else proChart.bb.forEach(series => series.setData([]));
       }
-      renderIndicatorPanes(data, data.map(row => row.time), closes);
+      renderIndicatorPanes(calculationRows, data.map(row => row.time), closes, calculationOffset);
       applyChartDisplaySettings();
       updateChartTrainingProgress();
       proChart.riskLines.forEach(line => { try { proChart.candles.removePriceLine(line); } catch (_) {} }); proChart.riskLines = [];
@@ -3869,13 +3881,16 @@
       state.chartOffset = Math.max(0, Math.min(maxOffset, state.chartOffset));
       const start = Math.max(0, sourceData.length - visibleCount - state.chartOffset);
       const data = sourceData.slice(start, start + visibleCount);
-      // 所有指标先计算完整的已揭示数据，再裁切视窗，平移/缩放不改变历史指标值。
-      const sourceCloses = sourceData.map(d => d.close);
+      // 指标可用已揭示窗口之前的历史预热，但不读取当前揭示边界之后的数据。
+      const calculation = indicatorCalculationContext(sourceData), calculationData = calculation.rows, calculationOffset = calculation.offset;
+      proChart.readoutRows = calculationData; proChart.readoutOffset = calculationOffset; proChart.readoutData = null;
+      const sourceCloses = calculationData.map(d => d.close), sourceVolumes = calculationData.map(row => row.volume);
       const sourceE20 = ema(sourceCloses, 20), sourceE60 = ema(sourceCloses, 60);
-      const closes = data.map(d => d.close), e20 = sourceE20.slice(start, start + visibleCount), e60 = sourceE60.slice(start, start + visibleCount);
-      const psar = state.indicator.psar ? calcParabolicSar(sourceData, state.indicatorParams.psar.step, state.indicatorParams.psar.max).slice(start, start + visibleCount) : [];
-      const smaValues = Object.fromEntries([5, 10, 20, 60, 120].filter(period => state.sma[period]).map(period => [period, sma(sourceCloses, period).slice(start, start + visibleCount)]));
-      const bollinger = state.indicator.bb ? calcBollinger(sourceCloses, state.indicatorParams.bb).slice(start, start + visibleCount) : [];
+      const closes = data.map(d => d.close), contextStart = calculationOffset + start;
+      const e20 = sourceE20.slice(contextStart, contextStart + visibleCount), e60 = sourceE60.slice(contextStart, contextStart + visibleCount);
+      const psar = state.indicator.psar ? calcParabolicSar(calculationData, state.indicatorParams.psar.step, state.indicatorParams.psar.max).slice(contextStart, contextStart + visibleCount) : [];
+      const smaValues = Object.fromEntries([5, 10, 20, 60, 120].filter(period => state.sma[period]).map(period => [period, sma(sourceCloses, period).slice(contextStart, contextStart + visibleCount)]));
+      const bollinger = state.indicator.bb ? calcBollinger(sourceCloses, state.indicatorParams.bb).slice(contextStart, contextStart + visibleCount) : [];
       const riskLevels = state.replayMode && sim.position ? [sim.position.stop, sim.position.target] : [];
       const indicatorPrices = [...psar.filter(Boolean).map(item => item.value), ...Object.values(smaValues).flat().filter(Number.isFinite), ...bollinger.filter(Boolean).flatMap(item => [item.upper, item.lower]), ...(state.show20 ? e20 : []), ...(state.show60 ? e60 : [])];
       const min = Math.min(...data.map(d => d.low), ...indicatorPrices, ...riskLevels), max = Math.max(...data.map(d => d.high), ...indicatorPrices, ...riskLevels);
@@ -3922,7 +3937,7 @@
       psar.forEach((item, i) => { if (item) svg.appendChild(el('circle', { cx: x(i), cy: y(item.value), r: 2, fill: '#f0b90b', 'data-sar-index': start + i, 'data-sar-value': item.value })); });
       for (const key of ['upper', 'mid', 'lower']) drawValues(bollinger.map(item => item?.[key]), y, key === 'mid' ? '#f0b90b' : '#c084fc');
       for (const period of [5, 10, 20]) {
-        if (state.volumeSma[period]) drawValues(sma(sourceData.map(row => row.volume), period).slice(start, start + visibleCount), value => plot.volY + plot.volH - value / Math.max(1, maxVol) * plot.volH, ({ 5: '#f0b90b', 10: '#5b8def', 20: '#0ecb81' })[period]);
+        if (state.volumeSma[period]) drawValues(sma(sourceVolumes, period).slice(contextStart, contextStart + visibleCount), value => plot.volY + plot.volH - value / Math.max(1, maxVol) * plot.volH, ({ 5: '#f0b90b', 10: '#5b8def', 20: '#0ecb81' })[period]);
       }
       if (state.showStructure) {
         const picks = downModeFor(state.scenario) ? [6, 14, 22, 30, 38] : ['range', 'falseBreak', 'squeeze', 'volatility'].includes(state.scenario) ? [7, 15, 23, 31, 39] : [7, 13, 20, 28, 36];
@@ -3946,14 +3961,14 @@
         const top = paneStart + paneIndex * paneStep, height = paneStep - 5;
         const pane = el('g', { 'data-indicator-pane': name }); svg.appendChild(pane);
         let lines;
-        if (name === 'rsi') lines = [calcRsi(sourceCloses, state.indicatorParams.rsi.period).map(item => item?.value).slice(start, start + visibleCount)];
+        if (name === 'rsi') lines = [calcRsi(sourceCloses, state.indicatorParams.rsi.period).map(item => item?.value).slice(contextStart, contextStart + visibleCount)];
         if (name === 'kdj') {
-          const params = state.indicatorParams.kdj, values = calcKdj(sourceData, params.period, params.k, params.d).slice(start, start + visibleCount);
+          const params = state.indicatorParams.kdj, values = calcKdj(calculationData, params.period, params.k, params.d).slice(contextStart, contextStart + visibleCount);
           lines = ['k', 'd', 'j'].map(key => values.map(item => item?.[key]));
         }
         if (name === 'macd') {
           const values = calcMacd(sourceCloses, state.indicatorParams.macd);
-          lines = [values.dif, values.dea].map(values => values.slice(start, start + visibleCount));
+          lines = [values.dif, values.dea].map(values => values.slice(contextStart, contextStart + visibleCount));
         }
         const histogramValues = name === 'macd' ? lines[0].map((value, i) => value - lines[1][i]) : [];
         const { min: minValue, max: maxValue } = fallbackIndicatorScale(name, [...lines.flat(), ...histogramValues]);
@@ -5361,7 +5376,7 @@
             : `${trainingSetupState.timeframe} 数据不足以完成 ${trainingSetupState.length} 根训练，请更换周期或长度。`;
     }
     function setTrainingMode(mode) { trainingModeState.mode = mode === 'free' ? 'free' : 'blind'; document.querySelectorAll('[data-setup-mode]').forEach(item => item.setAttribute('aria-pressed', String(item.dataset.setupMode === trainingModeState.mode))); document.getElementById('setupModeHint').textContent = trainingModeState.mode === 'free' ? '逐根推进 K 线；可直接使用模拟开多、开空和平仓。' : '未来 K 线隐藏；每次揭示前先记录判断。'; }
-    function openTrainingSetup({ mode, sampleIndex, timeframe } = {}) {
+    function openTrainingSetup({ mode, sampleIndex, timeframe, indicator } = {}) {
       if (sampleIndex != null && Number.isInteger(Number(sampleIndex))) {
         pendingReplaySampleIndex = Number(sampleIndex); trainingSetupState.timeframe = '1H'; trainingSetupState.length = 60; setTrainingMode('blind');
       } else {
@@ -5370,7 +5385,12 @@
         const requested = timeframe || state.timeframe;
         trainingSetupState.timeframe = Object.hasOwn(historicalDatasetConfig, requested) ? requested : '1H';
       }
-      document.getElementById('setupPinnedSample').hidden = pendingReplaySampleIndex == null;
+      const pinnedNotice = document.getElementById('setupPinnedSample');
+      pinnedNotice.hidden = pendingReplaySampleIndex == null;
+      if (pendingReplaySampleIndex != null) {
+        const labels = { macd: 'MACD(12,26,9)', bb: 'BOLL(20,2)', kdj: 'KDJ(9,3,3)' };
+        pinnedNotice.textContent = `已选择课程历史位置；固定为 1 小时、60 根双盲，回放期间不显示日期或后续走势。${labels[indicator] ? `本课使用 ${labels[indicator]} 默认参数，已应用到图表设置。` : ''}`;
+      }
       document.querySelectorAll('[data-setup-time]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.setupTime === trainingSetupState.timeframe)));
       document.querySelectorAll('[data-setup-length]').forEach(button => button.setAttribute('aria-pressed', String(Number(button.dataset.setupLength) === trainingSetupState.length)));
       updateTrainingSetupAvailability();
@@ -5567,15 +5587,20 @@
       }
       return null;
     }
-    function indicatorSampleMetrics(index, includeMacd = false) {
+    function indicatorSampleMetrics(index, focusIndicator = '') {
       if (!historicalReady || !historicalByTimeframe['1H']?.[index] || index < 60) return null;
       const rows = historicalByTimeframe['1H'];
       const warmupStart = Math.max(0, index - 82);
       const closes = rows.slice(warmupStart, index + 1).map(row => row.close), e20 = ema(closes, 20), e60 = ema(closes, 60), rsi = calcRsi(closes);
       const row = rows[index], prior = rows.slice(index - 20, index);
       const averageVolume = prior.reduce((sum, item) => sum + item.volume, 0) / prior.length;
-      const macd = includeMacd ? calcMacd(rows.slice(0, index + 1).map(item => item.close), indicatorParamDefaults.macd) : null;
-      return { row, e20: e20.at(-1), e60: e60.at(-1), rsi: rsi.at(-1)?.value ?? null, volumeRatio: averageVolume ? row.volume / averageVolume : null, priorHigh: Math.max(...prior.map(item => item.high)), macd: macd ? { dif: macd.dif.at(-1), dea: macd.dea.at(-1), histogram: macd.histogram.at(-1) } : null };
+      const prefix = rows.slice(0, index + 1), prefixCloses = prefix.map(item => item.close);
+      const macd = focusIndicator === 'macd' ? calcMacd(prefixCloses, indicatorParamDefaults.macd) : null;
+      const bands = focusIndicator === 'bb' ? calcBollinger(prefixCloses, indicatorParamDefaults.bb) : null;
+      const bollinger = bands?.at(-1) ?? null;
+      const kdj = focusIndicator === 'kdj' ? calcKdj(prefix, indicatorParamDefaults.kdj.period, indicatorParamDefaults.kdj.k, indicatorParamDefaults.kdj.d).at(-1) : null;
+      const bandWidth = bands?.length > 1 && bands.at(-1) ? (bands.at(-1).upper - bands.at(-1).lower) / bands.at(-1).mid : null;
+      return { row, e20: e20.at(-1), e60: e60.at(-1), rsi: rsi.at(-1)?.value ?? null, volumeRatio: averageVolume ? row.volume / averageVolume : null, priorHigh: Math.max(...prior.map(item => item.high)), macd: macd ? { dif: macd.dif.at(-1), dea: macd.dea.at(-1), histogram: macd.histogram.at(-1) } : null, bollinger, bandWidth, kdj };
     }
     function renderIndicatorSampleChart(rows, index) {
       const sample = rows.slice(index - 23, index + 1);
@@ -5604,8 +5629,8 @@
       const section = document.createElement('section'); section.className = 'indicator-market-samples'; section.setAttribute('aria-label', '历史行情样本');
       const heading = document.createElement('strong'); heading.textContent = '历史行情样本 · Binance BTCUSDT 现货'; section.append(heading);
       samples.forEach(sample => {
-        const isMacdSample = item.action === 'macd';
-        const metrics = indicatorSampleMetrics(sample.index, isMacdSample);
+        const hasIndicatorSample = ['macd', 'bb', 'kdj'].includes(item.action);
+        const metrics = indicatorSampleMetrics(sample.index, hasIndicatorSample ? item.action : '');
         const card = document.createElement('article'); card.className = 'indicator-market-sample';
         const timestamp = metrics?.row.openTime ? new Date(metrics.row.openTime).toISOString().replace('T', ' ').slice(0, 16) + ' UTC' : '历史数据加载中';
         const date = document.createElement('small'); date.textContent = `${timestamp} · 1H · 来源: Binance 现货 K 线`;
@@ -5615,18 +5640,20 @@
         card.append(date, title); if (chart) card.append(chart);
         if (metrics) {
           const data = document.createElement('div'); data.className = 'indicator-sample-metrics';
-          const values = [`收盘 ${metrics.row.close.toFixed(2)}`, `EMA20 ${metrics.e20.toFixed(2)}`, `EMA60 ${metrics.e60.toFixed(2)}`];
-          if (metrics.rsi != null) values.push(`RSI(14) ${metrics.rsi.toFixed(1)}`);
-          if (metrics.volumeRatio != null) values.push(`量 / 前20根均量 ${metrics.volumeRatio.toFixed(2)}×`);
-          if (metrics.macd) values.push(`MACD(12,26,9) DIF ${metrics.macd.dif.toFixed(2)}`, `DEA ${metrics.macd.dea.toFixed(2)}`, `柱 ${metrics.macd.histogram.toFixed(2)}`);
-          values.forEach((value, index) => { const tag = document.createElement('span'); tag.textContent = value; if (metrics.macd && index >= values.length - 3) tag.dataset.macdMetric = ['dif', 'dea', 'histogram'][index - (values.length - 3)]; data.append(tag); });
+          const values = [[`收盘 ${metrics.row.close.toFixed(2)}`], [`EMA20 ${metrics.e20.toFixed(2)}`], [`EMA60 ${metrics.e60.toFixed(2)}`]];
+          if (metrics.rsi != null) values.push([`RSI(14) ${metrics.rsi.toFixed(1)}`]);
+          if (metrics.volumeRatio != null) values.push([`量 / 前20根均量 ${metrics.volumeRatio.toFixed(2)}×`]);
+          if (metrics.macd) values.push([`MACD(12,26,9) DIF ${metrics.macd.dif.toFixed(2)}`, 'dif'], [`DEA ${metrics.macd.dea.toFixed(2)}`, 'dea'], [`柱 ${metrics.macd.histogram.toFixed(2)}`, 'histogram']);
+          if (metrics.bollinger) values.push([`BOLL(20,2) 上轨 ${metrics.bollinger.upper.toFixed(2)}`, 'upper'], [`中轨 ${metrics.bollinger.mid.toFixed(2)}`, 'middle'], [`下轨 ${metrics.bollinger.lower.toFixed(2)}`, 'lower'], [`带宽 ${(metrics.bandWidth * 100).toFixed(2)}%`, 'width']);
+          if (metrics.kdj) values.push([`K ${metrics.kdj.k.toFixed(2)}`, 'k'], [`D ${metrics.kdj.d.toFixed(2)}`, 'd'], [`J ${metrics.kdj.j.toFixed(2)}`, 'j']);
+          values.forEach(([value, field]) => { const tag = document.createElement('span'); tag.textContent = value; if (field) tag.dataset[`${item.action}Metric`] = field; data.append(tag); });
           card.append(data);
         }
         card.append(prompt);
         const start = sample.index - 23;
         const canReplay = historicalReady && start >= 0 && start + 60 <= (historicalByTimeframe['1H']?.length || 0);
         const button = document.createElement('button'); button.type = 'button'; button.dataset.pinReplaySample = String(sample.index); button.disabled = !canReplay;
-        if (isMacdSample) button.dataset.pinReplayIndicator = 'macd';
+        if (hasIndicatorSample) button.dataset.pinReplayIndicator = item.action;
         button.textContent = canReplay ? '从此位置开始双盲' : historicalLoadError ? '历史样本不可用' : '历史数据加载中';
         card.append(button); section.append(card);
       });
@@ -5814,9 +5841,14 @@
          const indicator = sampleButton.dataset.pinReplayIndicator;
          if (indicator && Object.hasOwn(state.indicator, indicator)) {
            state.indicator[indicator] = true; saveIndicatorPreferences();
+          const paramGroup = indicator === 'bb' ? 'bb' : indicator;
+          if (indicatorParamDefaults[paramGroup]) {
+            state.indicatorParams[paramGroup] = { ...indicatorParamDefaults[paramGroup] };
+            saveIndicatorParams(); syncIndicatorParamControls();
+          }
            document.querySelectorAll('[data-indicator]').forEach(input => { input.checked = Boolean(state.indicator[input.dataset.indicator]); });
          }
-         openTrainingSetup({ mode: 'blind', sampleIndex: Number(sampleButton.dataset.pinReplaySample) }); return;
+         openTrainingSetup({ mode: 'blind', sampleIndex: Number(sampleButton.dataset.pinReplaySample), indicator }); return;
        }
        const questionButton = event.target.closest('[data-indicator-question]');
        if (questionButton) {

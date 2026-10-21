@@ -1,44 +1,74 @@
 // 通过 Playwright browser_run_code_unsafe 的 filename 参数运行；本地服务端口 4188。
-// 验证 MACD 历史案例到固定双盲回放的课程路径，不代表实盘行情验收。
+// 验证指标历史案例到固定双盲回放的课程路径，不代表实盘行情验收。
 async (page) => {
   const failures = [], results = [];
-  for (const sampleIndex of [87, 276]) {
+  const cases = [
+    { entry: 'macd', indicator: 'macd', indices: [{ index: 87, expectedReadout: 'DIF 199.25' }, { index: 276, expectedReadout: 'DIF -401.29' }], metricCount: 3 },
+    { entry: 'bollinger', indicator: 'bb', indices: [{ index: 174, expectedReadout: '上 85057.67' }], metricCount: 4 },
+    { entry: 'kdj', indicator: 'kdj', indices: [{ index: 242, expectedReadout: 'K 18.9' }], metricCount: 3 }
+  ];
+  for (const { entry, indicator, indices, metricCount } of cases) for (const { index: sampleIndex, expectedReadout } of indices) for (const chartMode of ['professional', 'fallback']) {
     const context = await page.context().browser().newContext({ viewport: { width: 1440, height: 900 } });
     const errors = [];
     try {
       await context.route('**/api/v5/**', route => route.abort());
       await context.route('**/unpkg.com/**', route => route.abort());
+      if (chartMode === 'fallback') await context.route('**/vendor/lightweight-charts.standalone.production.js', route => route.fulfill({ status: 200, contentType: 'application/javascript', body: '' }));
       const target = await context.newPage();
       target.on('pageerror', error => errors.push(error.message));
       target.on('dialog', dialog => dialog.accept());
       await target.goto('http://127.0.0.1:4188/', { waitUntil: 'domcontentloaded' });
       await target.waitForFunction(() => historicalReady && sessionPersistenceReady);
       await target.evaluate(() => setWorkspace('indicators'));
-      await target.locator('[data-indicator-entry="macd"]').click();
+      await target.locator(`[data-indicator-entry="${entry}"]`).click();
       const card = target.locator(`.indicator-market-sample:has([data-pin-replay-sample="${sampleIndex}"])`);
       await card.waitFor();
-      const metrics = await card.locator('[data-macd-metric]').allTextContents();
-      if (metrics.length !== 3) failures.push(`${sampleIndex}: expected DIF/DEA/histogram readouts`);
+      const metrics = await card.locator(`[data-${indicator}-metric]`).allTextContents();
+      if (metrics.length !== metricCount) failures.push(`${entry}/${sampleIndex}: expected ${metricCount} indicator readouts`);
       if (!(await card.locator('small').first().textContent()).includes('Binance 现货 K 线')) failures.push(`${sampleIndex}: source label missing`);
+      await target.evaluate(indicatorKey => {
+        const group = indicatorKey === 'bb' ? 'bb' : indicatorKey;
+        if (group === 'macd') state.indicatorParams.macd = { fast: 10, slow: 30, signal: 5 };
+        if (group === 'bb') state.indicatorParams.bb = { period: 10, multiplier: 1.5 };
+        if (group === 'kdj') state.indicatorParams.kdj = { period: 7, k: 2, d: 2 };
+        saveIndicatorParams();
+      }, indicator);
       await card.locator('[data-pin-replay-sample]').click();
-      const setup = await target.evaluate(() => ({
+      const setup = await target.evaluate(indicatorKey => ({
         open: document.querySelector('#trainingSetup').open,
         pinned: !document.querySelector('#setupPinnedSample').hidden,
         timeframe: [...document.querySelectorAll('[data-setup-time]')].find(button => button.getAttribute('aria-pressed') === 'true')?.dataset.setupTime,
         length: [...document.querySelectorAll('[data-setup-length]')].find(button => button.getAttribute('aria-pressed') === 'true')?.dataset.setupLength,
         mode: [...document.querySelectorAll('[data-setup-mode]')].find(button => button.getAttribute('aria-pressed') === 'true')?.dataset.setupMode,
-        macdEnabled: state.indicator.macd,
-        savedMacd: JSON.parse(localStorage.getItem('trend-lab-chart-indicators') || '{}').macd
-      }));
-      if (!setup.open || !setup.pinned || setup.timeframe !== '1H' || setup.length !== '60' || setup.mode !== 'blind' || !setup.macdEnabled || !setup.savedMacd) failures.push(`${sampleIndex}: pinned replay setup or MACD preference incorrect`);
+        indicatorEnabled: state.indicator[indicatorKey],
+        savedIndicator: JSON.parse(localStorage.getItem('trend-lab-chart-indicators') || '{}')[indicatorKey],
+        params: { ...state.indicatorParams[indicatorKey === 'bb' ? 'bb' : indicatorKey] },
+        notice: document.querySelector('#setupPinnedSample').textContent
+      }), indicator);
+      if (!setup.open || !setup.pinned || setup.timeframe !== '1H' || setup.length !== '60' || setup.mode !== 'blind' || !setup.indicatorEnabled || !setup.savedIndicator) failures.push(`${entry}/${sampleIndex}: pinned replay setup or indicator preference incorrect`);
+      const expectedParams = indicator === 'macd' ? { fast: 12, slow: 26, signal: 9 } : indicator === 'bb' ? { period: 20, multiplier: 2 } : { period: 9, k: 3, d: 3 };
+      if (JSON.stringify(setup.params) !== JSON.stringify(expectedParams)) failures.push(`${entry}/${sampleIndex}: course default parameters were not applied`);
+      if (!setup.notice.includes(indicator === 'macd' ? 'MACD(12,26,9)' : indicator === 'bb' ? 'BOLL(20,2)' : 'KDJ(9,3,3)')) failures.push(`${entry}/${sampleIndex}: pinned setup does not disclose course parameters`);
       await target.locator('#confirmTrainingStart').click();
-      const replay = await target.evaluate(() => ({
+      await target.mouse.move(4, 4);
+      await target.waitForTimeout(40);
+      const replay = await target.evaluate(indicatorKey => ({
         workspace: activeWorkspace, timeframe: state.timeframe, length: state.sessionLength,
-        start: state.sessionStart, reveal: state.revealCount, macd: state.indicator.macd, mode: replayTraining.mode
-      }));
-      if (replay.workspace !== 'replay' || replay.timeframe !== '1H' || replay.length !== 60 || replay.start !== sampleIndex - 23 || replay.reveal !== 24 || !replay.macd || replay.mode !== 'blind') failures.push(`${sampleIndex}: replay did not preserve sample and lesson setup`);
-      if (errors.length) failures.push(`${sampleIndex}: ${errors.join('; ')}`);
-      results.push({ sampleIndex, metrics, setup, replay, errors });
+        start: state.sessionStart, reveal: state.revealCount, indicatorEnabled: state.indicator[indicatorKey], mode: replayTraining.mode,
+        professional: Boolean(window.LightweightCharts), readout: document.querySelector('#chartIndicatorValues').textContent
+      }), indicator);
+      if (replay.workspace !== 'replay' || replay.timeframe !== '1H' || replay.length !== 60 || replay.start !== sampleIndex - 23 || replay.reveal !== 24 || !replay.indicatorEnabled || replay.mode !== 'blind') failures.push(`${entry}/${sampleIndex}: replay did not preserve sample and lesson setup`);
+      if (replay.professional !== (chartMode === 'professional')) failures.push(`${entry}/${sampleIndex}/${chartMode}: chart engine selection failed`);
+      if (!replay.readout.includes(expectedReadout)) failures.push(`${entry}/${sampleIndex}/${chartMode}: chart readout does not match the historical sample: ${replay.readout}`);
+      let zoomReadout = '';
+      if (chartMode === 'fallback') {
+        await target.evaluate(() => { state.chartZoom = 2; renderChart(); });
+        await target.mouse.move(4, 4); await target.waitForTimeout(40);
+        zoomReadout = await target.locator('#chartIndicatorValues').textContent();
+        if (!zoomReadout.includes(expectedReadout)) failures.push(`${entry}/${sampleIndex}/fallback zoom: readout lost its historical anchor: ${zoomReadout}`);
+      }
+      if (errors.length) failures.push(`${sampleIndex}/${chartMode}: ${errors.join('; ')}`);
+      results.push({ entry, indicator, sampleIndex, chartMode, metrics, setup, replay, zoomReadout, errors });
     } catch (error) {
       failures.push(`${sampleIndex}: ${error.message}`);
     } finally {
