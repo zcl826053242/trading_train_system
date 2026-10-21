@@ -1647,6 +1647,7 @@
               <button type="button" class="tool-btn" data-tool="fib" aria-label="斐波那契" title="斐波那契"><i data-lucide="git-commit-horizontal" aria-hidden="true"></i></button>
               <button type="button" class="tool-btn" data-tool="measure" aria-label="价格测量" title="价格测量"><i data-lucide="ruler" aria-hidden="true"></i></button>
               <button type="button" class="tool-btn" data-tool="rectangle" aria-label="区间框" title="区间框"><i data-lucide="square" aria-hidden="true"></i></button>
+              <button type="button" class="tool-btn" id="chartDrawingMagnet" aria-label="磁吸已关闭" aria-pressed="false" title="磁吸：将新建和拖动的绘图锚点吸附到最近 K 线 OHLC"><i data-lucide="magnet" aria-hidden="true"></i></button>
               <button type="button" class="tool-btn" id="clearDrawings" aria-label="清除画线" title="清除画线"><i data-lucide="eraser" aria-hidden="true"></i></button>
               <button type="button" class="tool-btn" id="moreDrawingTools" aria-label="更多绘图工具" title="更多绘图工具" aria-expanded="false" aria-controls="advancedDrawingTools"><i data-lucide="ellipsis" aria-hidden="true"></i></button>
             </div>
@@ -2101,6 +2102,12 @@
     function saveChartTypePreference() {
       try { localStorage.setItem('trend-lab-chart-type', state.chartType); } catch (_) {}
     }
+    function loadChartDrawingMagnetPreference() {
+      try { return localStorage.getItem('trend-lab-drawing-magnet') === 'true'; } catch (_) { return false; }
+    }
+    function saveChartDrawingMagnetPreference() {
+      try { localStorage.setItem('trend-lab-drawing-magnet', String(Boolean(state.drawingMagnet))); } catch (_) {}
+    }
     function loadChartDisplayPreferences() {
       try {
         const saved = JSON.parse(localStorage.getItem('trend-lab-chart-display') || '{}');
@@ -2157,7 +2164,7 @@
       document.querySelectorAll('[data-ma]').forEach(input => { input.checked = state.sma[Number(input.dataset.ma)]; });
       document.querySelectorAll('[data-vol-ma]').forEach(input => { input.checked = state.volumeSma[Number(input.dataset.volMa)]; });
     }
-    const state = { scenario: 'up', timeframe: '1H', dataMode: 'live', chartType: loadChartTypePreference(), chartZoom: 1, chartOffset: 0, chartDragging: false, chartDragX: 0, chartTouchPoints: {}, chartTouchPinch: null, fallbackPriceScale: { auto: true, zoom: 1, offset: 0, baseMin: null, baseMax: null }, fallbackPriceDrag: null, ...loadChartOverlayPreferences(), chartDisplay: loadChartDisplayPreferences(), indicatorParams: loadIndicatorParams(), lesson: 0, tool: 'cursor', indicator: loadIndicatorPreferences(), drawings: [], pendingDraw: [], replayMode: false, replayPaused: false, revealCount: 24, sessionLength: 60, sessionStart: 0, liveRows: [], liveUpdatedAt: 0, liveLoading: false, liveError: '' };
+    const state = { scenario: 'up', timeframe: '1H', dataMode: 'live', chartType: loadChartTypePreference(), chartZoom: 1, chartOffset: 0, chartDragging: false, chartDragX: 0, chartTouchPoints: {}, chartTouchPinch: null, fallbackPriceScale: { auto: true, zoom: 1, offset: 0, baseMin: null, baseMax: null }, fallbackPriceDrag: null, ...loadChartOverlayPreferences(), chartDisplay: loadChartDisplayPreferences(), indicatorParams: loadIndicatorParams(), lesson: 0, tool: 'cursor', drawingMagnet: loadChartDrawingMagnetPreference(), indicator: loadIndicatorPreferences(), drawings: [], pendingDraw: [], replayMode: false, replayPaused: false, revealCount: 24, sessionLength: 60, sessionStart: 0, liveRows: [], liveUpdatedAt: 0, liveLoading: false, liveError: '' };
     const indicatorLibraryEntries = [
       { id: 'ema', code: 'EMA20 / 60', title: '指数移动平均', category: 'trend', summary: '比较短期与中期均线的位置和斜率。', observe: '先描述价格高低点，再看 EMA20 与 EMA60 是否同向；均线只作方向过滤。', confirm: '价格结构抬高且 EMA20 在 EMA60 上方，回踩时结构仍守住，才算多头假设得到配合。', caution: '均线交叉滞后，横盘时会反复交叉；不能把交叉本身当作入场信号。', action: 'ema', questionIndexes: [0, 7], sampleIds: ['trendExtension', 'pullbackContinuation'] },
       { id: 'structure', code: 'HH / HL', title: '摆动高低点结构', category: 'trend', summary: '用高点、低点的抬高或下移描述趋势。', observe: '比较连续摆动高点与低点：同步抬高、同步下移，或互相重叠。', confirm: '突破后观察是否出现新的摆动点，并结合回踩是否守住前一个结构位。', caution: '单根影线不一定构成有效摆动点；区间中部不要强行判趋势。', action: 'structure', questionIndexes: [0, 1] },
@@ -3639,22 +3646,23 @@
       const { x, y: pointerY } = drawingEventPoint(event);
       const surface = drawingSurface();
       const y = Math.max(0, Math.min(surface.chart.panes()[0].getHeight(), pointerY));
+      const snapped = state.drawingMagnet ? drawingCoordinatePoint(x, y, surface) : null;
       if (edit.kind === 'horizontal') {
-        const price = edit.part.owner.coordinateToPrice(y);
+        const price = Number.isFinite(snapped?.price) ? snapped.price : edit.part.owner.coordinateToPrice(y);
         if (!Number.isFinite(price)) return;
         edit.part.options = { ...edit.part.options, price };
         edit.part.item.applyOptions({ price });
         edit.nextPrice = price;
       } else if (edit.kind === 'trendline') {
         const series = surface.series;
-        const price = series.coordinateToPrice(y);
+        const price = Number.isFinite(snapped?.price) ? snapped.price : series.coordinateToPrice(y);
         const timeScale = surface.chart.timeScale();
-        const time = timeScale.coordinateToTime(x);
+        const time = snapped?.time ?? timeScale.coordinateToTime(x);
         if (!Number.isFinite(price) || time == null) return;
-        edit.drawing.edit.points[edit.pointIndex] = drawingPoint(time, price, timeScale.coordinateToLogical?.(x));
+        edit.drawing.edit.points[edit.pointIndex] = drawingPoint(time, price, snapped?.logicalCoordinate ?? timeScale.coordinateToLogical?.(x));
         renderDrawingOverlay();
       } else if (edit.kind === 'fibonacci') {
-        const price = edit.part.owner.coordinateToPrice(y);
+        const price = Number.isFinite(snapped?.price) ? snapped.price : edit.part.owner.coordinateToPrice(y);
         if (!Number.isFinite(price)) return;
         const points = edit.drawing.edit.points;
         if (edit.part.level === 0 || edit.part.level === 1) points[edit.part.level === 0 ? 1 : 0].price = price;
@@ -3671,22 +3679,22 @@
       } else if (edit.kind === 'anchor') {
         const series = surface.series;
         const timeScale = surface.chart.timeScale();
-        const time = timeScale.coordinateToTime(x);
+        const time = snapped?.time ?? timeScale.coordinateToTime(x);
         const type = edit.drawing.edit.type;
-        const price = type === 'verticalLine' ? edit.drawing.edit.points[0].price : series.coordinateToPrice(y);
+        const price = type === 'verticalLine' ? edit.drawing.edit.points[0].price : (Number.isFinite(snapped?.price) ? snapped.price : series.coordinateToPrice(y));
         if (time == null || !Number.isFinite(price)) return;
-        if (type === 'verticalLine') Object.assign(edit.drawing.edit.points[0], drawingPoint(time, price, timeScale.coordinateToLogical?.(x)));
-        else if (type === 'verticalRay') edit.drawing.edit.points[0] = drawingPoint(time, price, timeScale.coordinateToLogical?.(x));
+        if (type === 'verticalLine') Object.assign(edit.drawing.edit.points[0], drawingPoint(time, price, snapped?.logicalCoordinate ?? timeScale.coordinateToLogical?.(x)));
+        else if (type === 'verticalRay') edit.drawing.edit.points[0] = drawingPoint(time, price, snapped?.logicalCoordinate ?? timeScale.coordinateToLogical?.(x));
         else if (type === 'verticalSegment') {
           const anchorTime = edit.drawing.edit.points[0].time;
           edit.drawing.edit.points[edit.pointIndex].price = price;
           edit.drawing.edit.points.forEach(point => { point.time = anchorTime; });
         }
-        else if (type === 'horizontalRay') edit.drawing.edit.points[0] = drawingPoint(time, price, timeScale.coordinateToLogical?.(x));
+        else if (type === 'horizontalRay') edit.drawing.edit.points[0] = drawingPoint(time, price, snapped?.logicalCoordinate ?? timeScale.coordinateToLogical?.(x));
         else if (type === 'horizontalSegment') {
-          edit.drawing.edit.points[edit.pointIndex] = drawingPoint(time, price, timeScale.coordinateToLogical?.(x));
+          edit.drawing.edit.points[edit.pointIndex] = drawingPoint(time, price, snapped?.logicalCoordinate ?? timeScale.coordinateToLogical?.(x));
           edit.drawing.edit.points.forEach(point => { point.price = price; });
-        } else edit.drawing.edit.points[edit.pointIndex] = drawingPoint(time, price, timeScale.coordinateToLogical?.(x));
+        } else edit.drawing.edit.points[edit.pointIndex] = drawingPoint(time, price, snapped?.logicalCoordinate ?? timeScale.coordinateToLogical?.(x));
         renderDrawingOverlay();
       }
       if (proChart.fallback) renderDrawingOverlay();
@@ -3707,6 +3715,35 @@
       point.scenario = state.scenario;
       point.scenarioProgress = Math.max(0, Math.min(1, index / (rows.length - 1)));
       return point;
+    }
+    function drawingCoordinatePoint(x, y, surface = drawingSurface()) {
+      const timeScale = surface?.chart?.timeScale?.(), series = surface?.series;
+      if (!timeScale || !series) return null;
+      const rawTime = timeScale.coordinateToTime(x), rawPrice = series.coordinateToPrice(y);
+      const rawLogical = timeScale.coordinateToLogical?.(x);
+      if (rawTime == null || !Number.isFinite(rawPrice)) return null;
+      if (!state.drawingMagnet) return { time: rawTime, price: rawPrice, logicalCoordinate: rawLogical };
+      const rows = chartUsesHeikinAshi() && Array.isArray(proChart.heikinRows) ? proChart.heikinRows : proChart.visibleRows || [];
+      if (!rows.length) return { time: rawTime, price: rawPrice, logicalCoordinate: rawLogical };
+      let index = Number.isFinite(rawLogical) ? Math.round(rawLogical) : -1;
+      if (index < 0 || index >= rows.length) {
+        let nearestDistance = Infinity;
+        rows.forEach((row, rowIndex) => {
+          const candleX = timeScale.timeToCoordinate(row.time ?? barTime(row, rowIndex));
+          const distance = Number.isFinite(candleX) ? Math.abs(candleX - x) : Infinity;
+          if (distance < nearestDistance) { nearestDistance = distance; index = rowIndex; }
+        });
+      }
+      index = Math.max(0, Math.min(rows.length - 1, index));
+      const row = rows[index], prices = state.chartType === 'line' ? [row.close] : [row.open, row.high, row.low, row.close];
+      let nearestPrice = rawPrice, nearestPriceDistance = Infinity;
+      prices.filter(Number.isFinite).forEach(candidate => {
+        const candidateY = series.priceToCoordinate(candidate);
+        const distance = Number.isFinite(candidateY) ? Math.abs(candidateY - y) : Infinity;
+        if (distance < nearestPriceDistance) { nearestPriceDistance = distance; nearestPrice = candidate; }
+      });
+      if (nearestPriceDistance > 12) return { time: rawTime, price: rawPrice, logicalCoordinate: rawLogical };
+      return { time: row.time ?? barTime(row, index), price: nearestPrice, logicalCoordinate: index };
     }
     function drawingLogicalIndex(point) {
       const rows = proChart.visibleRows || [];
@@ -3825,18 +3862,18 @@
       const mainPaneHeight = surface.chart.panes()[0]?.getHeight?.();
       const series = surface.series;
       const timeScale = surface.chart.timeScale();
-      const time = timeScale.coordinateToTime(x);
-      const price = series.coordinateToPrice(y);
       if (!Number.isFinite(x) || !Number.isFinite(y)) return;
       if (y < 0 || x < 0 || x > timeScale.width() || Number.isFinite(mainPaneHeight) && y > mainPaneHeight) {
         document.getElementById('chartCoach').textContent = '绘图点需落在 K 线主图内；下方量能/指标副图不计入。已标记的点会保留。';
         return;
       }
+      const snappedPoint = drawingCoordinatePoint(x, y, surface);
+      const { time, price, logicalCoordinate } = snappedPoint || {};
       if (time == null || !Number.isFinite(price)) {
         document.getElementById('chartCoach').textContent = '请在有 K 线的主图区域落点；右侧价格轴不计入绘图。已标记的点会保留。';
         return;
       }
-      const point = drawingPoint(time, price, timeScale.coordinateToLogical?.(x));
+      const point = drawingPoint(time, price, logicalCoordinate);
       if (state.tool === 'horizontalRay') {
         registerDrawing(`水平射线 ${price.toFixed(2)}`, [], { type: 'horizontalRay', series, points: [point] });
         document.getElementById('chartCoach').textContent = `水平射线 ${price.toFixed(2)} 已添加，可拖动起点调整价位和起始时间。`;
@@ -5177,6 +5214,23 @@
         syncDrawingToolButtons();
         syncAnyWavesFinishControl(); document.getElementById('chartCoach').textContent = '自由折线草稿已取消。'; renderDrawingOverlay();
       }
+    });
+    function syncDrawingMagnetControl() {
+      const button = document.getElementById('chartDrawingMagnet');
+      if (!button) return;
+      button.classList.toggle('active', Boolean(state.drawingMagnet));
+      button.setAttribute('aria-pressed', String(Boolean(state.drawingMagnet)));
+      button.setAttribute('aria-label', state.drawingMagnet ? '磁吸已开启' : '磁吸已关闭');
+      button.title = state.drawingMagnet ? '磁吸已开启：锚点靠近 K 线时吸附到 OHLC；再次点击关闭' : '磁吸已关闭：点击开启 K 线 OHLC 吸附';
+    }
+    const chartDrawingMagnet = document.getElementById('chartDrawingMagnet');
+    syncDrawingMagnetControl();
+    chartDrawingMagnet.addEventListener('click', () => {
+      state.drawingMagnet = !state.drawingMagnet;
+      saveChartDrawingMagnetPreference(); syncDrawingMagnetControl();
+      document.getElementById('chartCoach').textContent = state.drawingMagnet
+        ? '磁吸已开启：新建或拖动锚点靠近 K 线时，会吸附到当前显示 K 线的 OHLC。'
+        : '磁吸已关闭：绘图锚点按自由价格位置放置。';
     });
     document.getElementById('clearDrawings').addEventListener('click', () => { state.drawings = []; state.pendingDraw = []; state.tool = 'cursor'; [...proChart.drawings].forEach(removeDrawing); proChart.drawings = []; proChart.selectedDrawingId = null; proChart.fibPoint = null; proChart.trendPoint = null; proChart.measurePoint = null; proChart.shapePoints = []; proChart.measurePreview = null; renderDrawingManager(); renderDrawingOverlay(); syncAnyWavesFinishControl(); syncDrawingToolButtons(); document.getElementById('chartCoach').textContent = coachText.cursor; renderChart(); });
     document.querySelectorAll('[data-indicator]').forEach(input => {
