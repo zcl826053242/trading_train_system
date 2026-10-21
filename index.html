@@ -3767,13 +3767,24 @@
       // SVG 使用 CSS 像素坐标；各面板单独预留 26px 图例，避免缩放后遮住数据。
       const available = Math.max(100, height - 28);
       const unit = available / (7 + 3.5 + paneCount * 2.1);
-      const mainHeight = unit * 7, volumeHeight = unit * 3.5;
-      const paneStep = unit * 2.1, paneStart = mainHeight + volumeHeight;
+      // 72px 面板扣除读数与间隔后仍有 35px 曲线；主图/量能至少保留198px总空间。
+      // 极短全屏按可用高度退让，不靠增加容器高度把时间轴推出视口。
+      const minimumPane = paneCount ? Math.max(0, Math.min(72, (available - 198) / paneCount)) : 0;
+      const paneStep = paneCount ? Math.max(unit * 2.1, minimumPane) : 0;
+      const paneStart = available - paneCount * paneStep;
+      const mainHeight = paneStart * 2 / 3, volumeHeight = paneStart / 3;
       return {
         plot: { x: 8, y: 36, w: Math.max(40, width - axisWidth - 8), h: Math.max(1, mainHeight - 44),
           volY: mainHeight + 32, volH: Math.max(1, volumeHeight - 38) },
         paneStep, paneStart, volumeTop: mainHeight + 3
       };
+    }
+    function fallbackIndicatorScale(name, values) {
+      const finite = values.filter(Number.isFinite);
+      let min = Math.min(0, ...finite), max = Math.max(name === 'macd' ? 0 : 100, ...finite);
+      // 横盘或MACD初值全为0时仍须有独立刻度，避免上下标签重合。
+      if (max - min < .000000001) { min -= 1; max += 1; }
+      return { min, max };
     }
     function renderChart() {
       hideChartTooltip();
@@ -3891,7 +3902,7 @@
       paneNames.forEach((name, paneIndex) => {
         const top = paneStart + paneIndex * paneStep, height = paneStep - 5;
         const pane = el('g', { 'data-indicator-pane': name }); svg.appendChild(pane);
-        let lines, minValue = 0, maxValue = 100;
+        let lines;
         if (name === 'rsi') lines = [calcRsi(sourceCloses, state.indicatorParams.rsi.period).map(item => item?.value).slice(start, start + visibleCount)];
         if (name === 'kdj') {
           const params = state.indicatorParams.kdj, values = calcKdj(sourceData, params.period, params.k, params.d).slice(start, start + visibleCount);
@@ -3902,12 +3913,22 @@
           lines = [values.dif, values.dea].map(values => values.slice(start, start + visibleCount));
         }
         const histogramValues = name === 'macd' ? lines[0].map((value, i) => value - lines[1][i]) : [];
-        const finite = [...lines.flat(), ...histogramValues].filter(Number.isFinite);
-        minValue = Math.min(minValue, ...finite); maxValue = Math.max(name === 'macd' ? 0 : maxValue, ...finite);
+        const { min: minValue, max: maxValue } = fallbackIndicatorScale(name, [...lines.flat(), ...histogramValues]);
         const range = Math.max(maxValue - minValue, .01);
         // 为 HTML 面板图例留出固定行高，不遮挡曲线和柱体。
         const paneY = value => top + height - (value - minValue) / range * Math.max(1, height - 32);
         pane.appendChild(el('line', { x1: plot.x, x2: plot.x + plot.w, y1: top, y2: top, stroke: colors.grid }));
+        const curveHeight = Math.max(1, height - 32);
+        const ticks = curveHeight >= 48 ? [maxValue, (maxValue + minValue) / 2, minValue] : [maxValue, minValue];
+        ticks.forEach(value => pane.appendChild(el('text', {
+          x: plot.x + plot.w + 7, y: paneY(value), 'dominant-baseline': 'middle', fill: colors.muted,
+          'data-pane-axis': name, 'data-axis-value': value
+        }, name === 'macd' ? value.toFixed(2) : value.toFixed(0))));
+        const guides = name === 'rsi' ? [30, 70] : name === 'kdj' ? [20, 80] : [0];
+        guides.filter(value => value >= minValue && value <= maxValue).forEach(value => pane.appendChild(el('line', {
+          x1: plot.x, x2: plot.x + plot.w, y1: paneY(value), y2: paneY(value),
+          stroke: colors.grid, 'stroke-dasharray': '3 4', 'data-pane-guide': name, 'data-guide-value': value
+        })));
         if (name === 'macd') lines[0].forEach((value, i) => {
           const histogram = value - lines[1][i];
           pane.appendChild(el('rect', { x: x(i) - 1.5, y: Math.min(paneY(0), paneY(histogram)), width: 3, height: Math.max(.5, Math.abs(paneY(0) - paneY(histogram))), fill: histogram >= 0 ? '#0ecb8177' : '#f6465d77' }));

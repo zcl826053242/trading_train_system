@@ -37,7 +37,7 @@ for (const width of [264, 334, 859, 1048, 1392]) {
       assert.ok(plot.volY >= volumeTop + 26 + 3, 'volume data stays below its legend');
       assert.ok(plot.volY + plot.volH <= paneStart, 'volume data stays in its pane');
       assert.ok(paneStart + count * paneStep <= height - 28 + 1e-6, 'panes stay above time axis');
-      const minimumCurveHeight = height >= 490 ? 18 : 9;
+      const minimumCurveHeight = height >= 442 ? 35 : height >= 394 ? 20 : 9;
       for (let i = 0; i < count; i++) {
         const top = paneStart + i * paneStep;
         const height = paneStep - 5;
@@ -47,6 +47,27 @@ for (const width of [264, 334, 859, 1048, 1392]) {
       }
     }
   }
+}
+// 短屏三副图在固定外框内保留35px曲线，同时保住主图/量能，不能用溢出来通过。
+for (const height of [444, 512, 537, 606, 617]) {
+  const layout = context.fallbackChartLayout(334, height, 3);
+  assert.ok(layout.paneStep - 37 >= 35);
+  assert.ok(layout.plot.h >= 88 && layout.plot.volH >= 28, 'main and volume remain readable');
+}
+const scaleStart = html.indexOf('    function fallbackIndicatorScale(');
+assert.notEqual(scaleStart, -1);
+vm.runInContext(html.slice(scaleStart, html.indexOf('\n    function ', scaleStart + 1)), context);
+for (const values of [[], [null, NaN, Infinity], [0, 0, 0], [-2, 3, 8], [-50, -1], [1, 20]]) {
+  const scale = context.fallbackIndicatorScale('macd', values);
+  assert.ok(Number.isFinite(scale.min) && Number.isFinite(scale.max) && scale.max > scale.min);
+  assert.ok(scale.min <= 0 && scale.max >= 0, 'MACD keeps its zero baseline');
+  assert.ok(values.filter(Number.isFinite).every(value => value >= scale.min && value <= scale.max));
+}
+for (const name of ['rsi', 'kdj']) {
+  const scale = context.fallbackIndicatorScale(name, [-12, 130]);
+  assert.ok(scale.min <= -12 && scale.max >= 130, 'KDJ overflow is not clipped');
+  const neutral = context.fallbackIndicatorScale(name, [50]);
+  assert.equal(neutral.min, 0); assert.equal(neutral.max, 100);
 }
 assert.match(html, /const H = container\.clientHeight \|\| 540;/);
 assert.match(html, /Math\.abs\(svg\.viewBox\.baseVal\.height - chart\.clientHeight\) > \.5/);
