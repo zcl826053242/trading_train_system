@@ -46,6 +46,12 @@ assert.match(html, /MACD\(12,26,9\) DIF \$\{metrics\.macd\.dif\.toFixed\(2\)\}/)
 assert.match(html, /BOLL\(20,2\) 上轨 \$\{metrics\.bollinger\.upper\.toFixed\(2\)\}/);
 assert.match(html, /SAR\(0\.02,0\.2\) \$\{metrics\.psar\.value\.toFixed\(2\)\}/);
 assert.match(html, /button\.dataset\.pinReplayIndicator = item\.action/);
+const triangle = rows[83];
+assert.equal(new Date(triangle.openTime).toISOString(), '2026-09-30T12:00:00.000Z');
+assert.deepEqual([triangle.open, triangle.high, triangle.low, triangle.close], [83915.17, 85514, 83768, 85290.32]);
+assert.match(html, /id: 'triangle-pattern',[^\n]+sampleIds: \['triangleCompressionBreakout'\]/);
+assert.match(html, /triangleCompressionBreakout: \{ index: 83,[^\n]+人工选取的触点/);
+assert.match(html, /形态标签不是自动识别或方向保证/);
 context.state.replayMode = true;
 context.state.sessionStart = 64;
 const visible = rows.slice(64, 88);

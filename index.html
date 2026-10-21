@@ -2109,7 +2109,7 @@
       { id: 'parallel-channel', code: 'Channel', title: '平行价格通道', category: 'channel', summary: '用三个锚点标记价格波动的平行边界。', observe: '先连两个同侧摆动点，再用第三点确定另一侧的偏移，检查边界是否覆盖主要波动。', confirm: '比较上下边界反应、通道中轴和突破后的收盘，不因一次穿越就确认趋势反转。', caution: '通道是人工拟合的观察框架；价格可以越界，不能将边界当成硬性约束。', action: 'tool:parallelogram' },
       { id: 'rsi-divergence', code: 'RSI + 结构', title: 'RSI 背离与结构确认', category: 'momentum', summary: '比较价格摆动极值与 RSI 极值是否不同步。', observe: '在相近周期对照两个价格高点/低点及其 RSI 读数，先确认比较的是对应摆动。', confirm: '背离只提示动能变化；等待关键结构被破坏或重新站回，再判断假设是否改变。', caution: '趋势中背离可以持续多次；周期错配、极值选择和数据差异都会造成误判。', action: 'rsi' },
       { id: 'macd-histogram', code: 'MACD 柱', title: 'MACD 柱体收缩与扩张', category: 'momentum', summary: '观察快慢线差值的变化速度，不把柱体颜色当买卖指令。', observe: '同时看零轴位置、柱体连续变化和价格结构，区分动能减速与趋势反转。', confirm: '柱体收缩后若价格仍守住结构，只能说明推进减慢；结合后续摆动确认方向变化。', caution: 'MACD 由均线计算且有滞后；单次交叉或柱体翻色不等于价格已经反转。', action: 'macd', sampleIds: ['macdPositiveCooling', 'macdBearCrossBelowZero'] },
-      { id: 'triangle-pattern', code: 'Triangle', title: '收敛三角形结构', category: 'pattern', summary: '标记高点与低点逐步收敛的区间，等待边界外收盘验证。', observe: '依次标出三个转折顶点，比较摆动幅度是否缩小，并检查两侧边界是否有多个触点。', confirm: '突破后观察收盘位置、量能和回踩；没有突破前仍按区间处理。', caution: '三个点只能画出几何形状，不能证明市场必然向某一侧突破。', action: 'tool:triangle' },
+      { id: 'triangle-pattern', code: 'Triangle', title: '收敛三角形结构', category: 'pattern', summary: '标记高点与低点逐步收敛的区间，等待边界外收盘验证。', observe: '依次标出三个转折顶点，比较摆动幅度是否缩小，并检查两侧边界是否有多个触点。', confirm: '突破后观察收盘位置、量能和回踩；没有突破前仍按区间处理。', caution: '三个点只能画出几何形状，不能证明市场必然向某一侧突破。', action: 'tool:triangle', sampleIds: ['triangleCompressionBreakout'] },
       { id: 'measured-move', code: 'Ruler', title: '价格与K线跨度测量', category: 'pattern', summary: '量化两点之间的价格变化、百分比和经过的K线数。', observe: '先选结构起点与终点，核对上涨/下跌方向和实际覆盖的时间范围。', confirm: '将测量值用于比较波段与计划空间，再单独定义失效位和风险。', caution: '历史波段长度不保证未来目标；测量结果不是胜率或价格预测。', action: 'tool:measure', questionIndexes: [11] },
       { id: 'wave-labels', code: 'Wave labels', title: '转折点顺序标注', category: 'pattern', summary: '按顺序记录波段转折，供复盘讨论结构，而非自动识别浪型。', observe: '在明显摆动点上添加自由折线，回看每个编号是否对应可解释的高低点。', confirm: '用价格结构、周期和失效条件复核标注，不从编号反推确定性方向。', caution: '自由折线只保存人工锚点；不会计算 Elliott 浪型，也不会验证浪数规则。', action: 'tool:anyWaves' },
       { id: 'volume-exhaustion', code: 'VOL + 收盘', title: '放量后的收盘位置', category: 'volume', summary: '联合观察成交量柱与K线收盘位置，区分活跃与有效推进。', observe: '比较高量K线的实体、影线、收盘位置和前后结构，不只看柱体大小。', confirm: '如果量能放大但收盘未能离开关键区，记录为推进受阻的证据，再等待后续确认。', caution: '成交量不标记买卖双方身份；单根放量也可能来自换手、消息或短时波动。', action: 'volume', questionIndexes: [8] },
@@ -2125,7 +2125,8 @@
       bollSqueezeExpansion: { index: 174, title: '窄带后上轨外收盘', prompt: 'BOLL(20,2) 带宽约 0.46%，收盘位于上轨外，随后带宽继续扩大。先区分波动扩张与方向确认；上轨外收盘不等于必须追多，也不等于马上反转。' },
       kdjOversoldDowntrend: { index: 242, title: '低位金叉发生在下跌结构中', prompt: 'K、D 位于 20 附近并出现金叉，但 EMA20 仍低于 EMA60。记录短线动能回升与大级别弱势并存，等待摆动高低点变化，不把低位金叉当作趋势反转。' },
       sarCountertrendFlip: { index: 255, title: 'SAR 翻到价格下方，均线仍为空头', prompt: 'SAR 翻到收盘价下方，但 EMA20 仍低于 EMA60。把它记为潜在状态切换，而不是直接做多；检查后续是否延续并突破摆动高点。' },
-      sarTrendResumption: { index: 265, title: 'SAR 再翻回上方且弱势延续', prompt: 'SAR 已翻到价格上方，EMA20 低于 EMA60，收盘也低于两条均线。对照前一案例：单次 SAR 翻转容易反复，价格结构和后续跟随更重要。' }
+      sarTrendResumption: { index: 265, title: 'SAR 再翻回上方且弱势延续', prompt: 'SAR 已翻到价格上方，EMA20 低于 EMA60，收盘也低于两条均线。对照前一案例：单次 SAR 翻转容易反复，价格结构和后续跟随更重要。' },
+      triangleCompressionBreakout: { index: 83, title: '收敛区间后的向上扩张（人工标注）', prompt: '复核前序 1H 摆动：高点从 84563.99 一带回落至 83521.98，低点由 82900 抬高至 83175.67；这些人工选取的触点只构成收敛假设。锚点 K 线收于 85290.32 并高于该区间，随后再观察是否回踩确认。形态标签不是自动识别或方向保证。' }
     };
     const indicatorCategoryLabels = { trend: '趋势', channel: '通道', momentum: '动量', sentiment: '情绪', volume: '量能', pattern: '形态' };
     let activeIndicatorCategory = 'all';

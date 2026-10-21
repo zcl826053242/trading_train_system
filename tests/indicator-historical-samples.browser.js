@@ -77,5 +77,37 @@ async (page) => {
       await context.close();
     }
   }
+  {
+    const context = await page.context().browser().newContext({ viewport: { width: 1440, height: 900 } });
+    const errors = [];
+    try {
+      await context.route('**/api/v5/**', route => route.abort());
+      await context.route('**/unpkg.com/**', route => route.abort());
+      const target = await context.newPage();
+      target.on('pageerror', error => errors.push(error.message));
+      target.on('dialog', dialog => dialog.accept());
+      await target.goto('http://127.0.0.1:4188/', { waitUntil: 'domcontentloaded' });
+      await target.waitForFunction(() => historicalReady && sessionPersistenceReady);
+      await target.evaluate(() => setWorkspace('indicators'));
+      await target.locator('[data-indicator-entry="triangle-pattern"]').click();
+      const card = target.locator('.indicator-market-sample:has([data-pin-replay-sample="83"])');
+      await card.waitFor();
+      const cardText = await card.textContent();
+      if (!cardText.includes('2026-09-30 12:00 UTC · 1H') || !cardText.includes('收敛区间后的向上扩张（人工标注）') || !cardText.includes('85290.32') || !cardText.includes('不是自动识别')) failures.push('triangle-pattern: source, anchor, or manual-label disclosure missing');
+      await card.locator('[data-pin-replay-sample]').click();
+      await target.locator('#confirmTrainingStart').click();
+      const replay = await target.evaluate(() => ({
+        workspace: activeWorkspace, timeframe: state.timeframe, length: state.sessionLength,
+        start: state.sessionStart, reveal: state.revealCount, mode: replayTraining.mode
+      }));
+      if (replay.workspace !== 'replay' || replay.timeframe !== '1H' || replay.length !== 60 || replay.start !== 60 || replay.reveal !== 24 || replay.mode !== 'blind') failures.push(`triangle-pattern: replay setup incorrect: ${JSON.stringify(replay)}`);
+      if (errors.length) failures.push(`triangle-pattern: ${errors.join('; ')}`);
+      results.push({ entry: 'triangle-pattern', sampleIndex: 83, replay, errors });
+    } catch (error) {
+      failures.push(`triangle-pattern: ${error.message}`);
+    } finally {
+      await context.close();
+    }
+  }
   return { passed: failures.length === 0, results, failures };
 }
