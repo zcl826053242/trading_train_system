@@ -3817,7 +3817,8 @@
       const data = sourceData.slice(start, start + visibleCount);
       // 所有指标先计算完整的已揭示数据，再裁切视窗，平移/缩放不改变历史指标值。
       const sourceCloses = sourceData.map(d => d.close);
-      const closes = data.map(d => d.close), e20 = ema(sourceCloses, 20).slice(start, start + visibleCount), e60 = ema(sourceCloses, 60).slice(start, start + visibleCount);
+      const sourceE20 = ema(sourceCloses, 20), sourceE60 = ema(sourceCloses, 60);
+      const closes = data.map(d => d.close), e20 = sourceE20.slice(start, start + visibleCount), e60 = sourceE60.slice(start, start + visibleCount);
       const psar = state.indicator.psar ? calcParabolicSar(sourceData, state.indicatorParams.psar.step, state.indicatorParams.psar.max).slice(start, start + visibleCount) : [];
       const smaValues = Object.fromEntries([5, 10, 20, 60, 120].filter(period => state.sma[period]).map(period => [period, sma(sourceCloses, period).slice(start, start + visibleCount)]));
       const bollinger = state.indicator.bb ? calcBollinger(sourceCloses, state.indicatorParams.bb).slice(start, start + visibleCount) : [];
@@ -3946,12 +3947,14 @@
         tooltip.style.opacity = '1';
         updateChartOhlc(d, start + idx, sourceData);
       };
+      // 视窗只影响绘制范围；离开检查时恢复当前已加载/已揭示数据的最新读数。
+      const restoreLatestReadout = () => updateChartOhlc(sourceData[sourceData.length - 1], sourceData.length - 1, sourceData);
       configureChartInspection(sourceData, start, start + data.length - 1, index => {
         const rect = svg.getBoundingClientRect(), localIndex = index - start;
         updateCrosshair({ clientX: rect.left + x(localIndex) / W * rect.width, clientY: rect.top + y(data[localIndex].close) / H * rect.height });
       }, () => {
         hideChartTooltip(); crosshair.setAttribute('opacity', '0');
-        updateChartOhlc(data[data.length - 1], start + data.length - 1, sourceData);
+        restoreLatestReadout();
       });
       const overlay = el('rect', { x: plot.x, y: plot.y, width: plot.w, height: H - plot.y - 36, fill: 'transparent', 'data-overlay': 'true' });
       // 捕获交给稳定容器，重绘替换 SVG 后仍能接收整次拖动及松开事件。
@@ -3976,7 +3979,7 @@
       container.onpointerup = endDrag; container.onpointercancel = endDrag;
       container.onlostpointercapture = () => { state.chartDragging = false; };
       overlay.addEventListener('wheel', evt => { evt.preventDefault(); zoomChart(evt.deltaY < 0 ? 1.18 : .85); }, { passive: false });
-      container.onpointerleave = () => { if (!state.chartDragging) { hideChartTooltip(); crosshair.setAttribute('opacity', '0'); updateChartOhlc(data[data.length - 1], start + data.length - 1, sourceData); } };
+      container.onpointerleave = () => { if (!state.chartDragging) { hideChartTooltip(); crosshair.setAttribute('opacity', '0'); restoreLatestReadout(); } };
       container.onclick = evt => {
         if (container.dataset.dragMoved || state.tool === 'cursor') return;
         handleDrawingToolClick(evt);
@@ -3989,8 +3992,8 @@
       proChart.drawings.forEach(drawing => drawing.parts.filter(part => part.type === 'price').forEach(part => { part.owner = proChart.fallback.series; }));
       renderDrawingOverlay();
       const intervalLabel = document.getElementById('chartIntervalLabel'); if (intervalLabel) intervalLabel.textContent = state.timeframe;
-      updateChartOhlc(data[data.length - 1], start + data.length - 1, sourceData);
-      updateSummary(data, e20, e60);
+      restoreLatestReadout();
+      updateSummary(sourceData, sourceE20, sourceE60);
       if (window.lucide) lucide.createIcons({ attrs: { width: 15, height: 15, 'stroke-width': 1.8 } });
     }
     function downModeFor(scenario) { return ['down', 'breakdown'].includes(scenario); }
