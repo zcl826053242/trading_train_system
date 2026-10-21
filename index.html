@@ -2531,13 +2531,14 @@
       const drawingOverlay = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
       drawingOverlay.id = 'chartDrawingOverlay'; drawingOverlay.setAttribute('aria-hidden', 'true');
       document.getElementById('chart').append(drawingOverlay);
-      const candles = chart.addSeries(L.CandlestickSeries, { upColor: '#0ecb81', downColor: '#f6465d', borderUpColor: '#0ecb81', borderDownColor: '#f6465d', wickUpColor: '#0ecb81', wickDownColor: '#f6465d', priceLineVisible: true, lastValueVisible: true });
-      const line = chart.addSeries(L.LineSeries, { color: '#f0b90b', lineWidth: 2, priceLineVisible: true, lastValueVisible: true });
-      const psarSeries = chart.addSeries(L.LineSeries, { color: '#f0b90b', lineVisible: false, pointMarkersVisible: true, pointMarkersRadius: 2, priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: true });
-      const ema20 = chart.addSeries(L.LineSeries, { color: '#f0b90b', lineWidth: 1, priceLineVisible: false, lastValueVisible: false });
-      const ema60 = chart.addSeries(L.LineSeries, { color: '#5b8def', lineWidth: 1, priceLineVisible: false, lastValueVisible: false });
+      const mainPriceFormat = chartPriceFormat();
+      const candles = chart.addSeries(L.CandlestickSeries, { priceFormat: mainPriceFormat, upColor: '#0ecb81', downColor: '#f6465d', borderUpColor: '#0ecb81', borderDownColor: '#f6465d', wickUpColor: '#0ecb81', wickDownColor: '#f6465d', priceLineVisible: true, lastValueVisible: true });
+      const line = chart.addSeries(L.LineSeries, { priceFormat: mainPriceFormat, color: '#f0b90b', lineWidth: 2, priceLineVisible: true, lastValueVisible: true });
+      const psarSeries = chart.addSeries(L.LineSeries, { priceFormat: mainPriceFormat, color: '#f0b90b', lineVisible: false, pointMarkersVisible: true, pointMarkersRadius: 2, priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: true });
+      const ema20 = chart.addSeries(L.LineSeries, { priceFormat: mainPriceFormat, color: '#f0b90b', lineWidth: 1, priceLineVisible: false, lastValueVisible: false });
+      const ema60 = chart.addSeries(L.LineSeries, { priceFormat: mainPriceFormat, color: '#5b8def', lineWidth: 1, priceLineVisible: false, lastValueVisible: false });
       const smaColors = { 5: '#f0b90b', 10: '#d86b9a', 20: '#5b8def', 60: '#0ecb81', 120: '#b28be3' };
-      const smaSeries = Object.fromEntries(Object.entries(smaColors).map(([period, color]) => [period, chart.addSeries(L.LineSeries, { color, lineWidth: 1, priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false })]));
+      const smaSeries = Object.fromEntries(Object.entries(smaColors).map(([period, color]) => [period, chart.addSeries(L.LineSeries, { priceFormat: mainPriceFormat, color, lineWidth: 1, priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false })]));
       const volumePane = chart.addPane();
       chart.panes()[0].setStretchFactor(7);
       const volume = chart.addSeries(L.HistogramSeries, { priceFormat: { type: 'volume' }, priceScaleId: 'right' }, volumePane.paneIndex());
@@ -2586,7 +2587,7 @@
     function updateChartOhlc(bar, index, rows) {
       const ohlc = document.getElementById('chartOhlc');
       if (!ohlc || !bar) return;
-      ohlc.textContent = `开 ${bar.open.toFixed(2)}  高 ${bar.high.toFixed(2)}  低 ${bar.low.toFixed(2)}  收 ${bar.close.toFixed(2)}`;
+      ohlc.textContent = `开 ${formatChartPrice(bar.open)}  高 ${formatChartPrice(bar.high)}  低 ${formatChartPrice(bar.low)}  收 ${formatChartPrice(bar.close)}`;
       ohlc.classList.toggle('up', bar.close >= bar.open); ohlc.classList.toggle('down', bar.close < bar.open);
       const sourceRows = rows || proChart.visibleRows || [];
       const rowIndex = Number.isInteger(index) ? index : sourceRows.indexOf(bar);
@@ -2598,6 +2599,13 @@
       const summary = document.getElementById('chartIndicatorValues');
       summary.textContent = Object.values(groups).flat().map(item => `${item.label} ${item.value}`).join(' · ') || '指标已关闭';
       renderChartPaneLegends(groups);
+    }
+    function formatChartPrice(value) {
+      const price = Number(value);
+      return Number.isFinite(price) ? price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—';
+    }
+    function chartPriceFormat() {
+      return { type: 'custom', minMove: 0.01, formatter: formatChartPrice };
     }
     function calcMacd(closes, params) {
       const fast = ema(closes, params.fast), slow = ema(closes, params.slow);
@@ -2930,7 +2938,14 @@
         else proChart.markers.setMarkers(markers);
       } else if (proChart.markers) proChart.markers.setMarkers([]);
       const bb = state.indicator.bb;
-      if (bb && !proChart.bb) proChart.bb = [proChart.chart.addSeries(window.LightweightCharts.LineSeries, { color: '#c084fc', lineWidth: 1, lineStyle: window.LightweightCharts.LineStyle.Dashed, priceLineVisible: false, lastValueVisible: false }), proChart.chart.addSeries(window.LightweightCharts.LineSeries, { color: '#c084fc', lineWidth: 1, lineStyle: window.LightweightCharts.LineStyle.Dashed, priceLineVisible: false, lastValueVisible: false }), proChart.chart.addSeries(window.LightweightCharts.LineSeries, { color: '#c084fc88', lineWidth: 1, priceLineVisible: false, lastValueVisible: false })];
+      if (bb && !proChart.bb) {
+        const priceFormat = chartPriceFormat();
+        proChart.bb = [
+          proChart.chart.addSeries(window.LightweightCharts.LineSeries, { priceFormat, color: '#c084fc', lineWidth: 1, lineStyle: window.LightweightCharts.LineStyle.Dashed, priceLineVisible: false, lastValueVisible: false }),
+          proChart.chart.addSeries(window.LightweightCharts.LineSeries, { priceFormat, color: '#c084fc', lineWidth: 1, lineStyle: window.LightweightCharts.LineStyle.Dashed, priceLineVisible: false, lastValueVisible: false }),
+          proChart.chart.addSeries(window.LightweightCharts.LineSeries, { priceFormat, color: '#c084fc88', lineWidth: 1, priceLineVisible: false, lastValueVisible: false })
+        ];
+      }
       if (proChart.bb) {
         if (bb) {
           const values = calcBollinger(closes, state.indicatorParams.bb), upper = [], lower = [], middle = [];
@@ -3809,7 +3824,7 @@
       for (let n = 0; n <= 4; n++) {
         const yy = plot.y + plot.h * n / 4; const val = hi - (hi - lo) * n / 4;
         svg.appendChild(el('line', { x1: plot.x, x2: plot.x + plot.w, y1: yy, y2: yy, stroke: colors.grid, 'stroke-width': 1 }));
-        svg.appendChild(el('text', { x: plot.x + plot.w + 7, y: yy + 4, fill: colors.muted }, Math.round(val).toLocaleString()));
+        svg.appendChild(el('text', { x: plot.x + plot.w + 7, y: yy + 4, fill: colors.muted }, formatChartPrice(val)));
       }
       for (let n = 0; n < 5; n++) {
         const idx = Math.floor((data.length - 1) * n / 4), xx = x(idx);
@@ -3858,7 +3873,7 @@
           const yy = y(price);
           if (yy >= plot.y && yy <= plot.y + plot.h) {
             svg.appendChild(el('line', { x1: plot.x, x2: plot.x + plot.w, y1: yy, y2: yy, stroke: color, 'stroke-width': 1.4, 'stroke-dasharray': '5 4' }));
-            svg.appendChild(el('text', { x: plot.x + plot.w - 3, y: yy - 4, 'text-anchor': 'end', fill: color }, `${label} ${price.toFixed(1)}`));
+            svg.appendChild(el('text', { x: plot.x + plot.w - 3, y: yy - 4, 'text-anchor': 'end', fill: color }, `${label} ${formatChartPrice(price)}`));
           }
         });
       }
@@ -3904,12 +3919,12 @@
         const cx = x(idx), cy = Math.max(plot.y, Math.min(plot.y + plot.h, py)); const price = hi - (cy - plot.y) / plot.h * (hi - lo);
         crosshair.setAttribute('opacity', '1'); crossV.setAttribute('x1', cx); crossV.setAttribute('x2', cx); crossH.setAttribute('y1', cy); crossH.setAttribute('y2', cy);
         crossPriceBg.setAttribute('x', plot.x + plot.w + 3); crossPriceBg.setAttribute('y', cy - 9);
-        crossPrice.setAttribute('x', plot.x + plot.w + 32); crossPrice.setAttribute('y', cy + 4); crossPrice.textContent = price.toFixed(1);
+        crossPrice.setAttribute('x', plot.x + plot.w + 32); crossPrice.setAttribute('y', cy + 4); crossPrice.textContent = formatChartPrice(price);
         const timeX = Math.max(plot.x, Math.min(plot.x + plot.w - 58, cx - 29));
         crossTimeBg.setAttribute('x', timeX); crossTimeBg.setAttribute('y', H - 33);
         crossTime.setAttribute('x', timeX + 29); crossTime.setAttribute('y', H - 20);
         crossTime.textContent = d.openTime && !state.replayMode ? new Date(d.openTime).toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' }) : `${start + idx + 1}`;
-        tooltip.innerHTML = `<strong>${live ? '实盘' : '样本'} ${start + idx + 1} · ${state.timeframe}</strong>${d.openTime && !state.replayMode ? `<span>${formatLiveTime(d.openTime)}</span><br>` : ''}<span>开 ${d.open.toFixed(1)}</span><span>收 ${d.close.toFixed(1)}</span><br><span>高 ${d.high.toFixed(1)}</span><span>低 ${d.low.toFixed(1)}</span>`;
+        tooltip.innerHTML = `<strong>${live ? '实盘' : '样本'} ${start + idx + 1} · ${state.timeframe}</strong>${d.openTime && !state.replayMode ? `<span>${formatLiveTime(d.openTime)}</span><br>` : ''}<span>开 ${formatChartPrice(d.open)}</span><span>收 ${formatChartPrice(d.close)}</span><br><span>高 ${formatChartPrice(d.high)}</span><span>低 ${formatChartPrice(d.low)}</span>`;
         const currentSar = psar[idx];
         if (state.indicator.psar) tooltip.innerHTML += `<br><span>SAR ${currentSar ? currentSar.value.toFixed(2) : '—'}</span>`;
         tooltip.hidden = false;
@@ -3973,7 +3988,7 @@
       const first = data[0].close, last = data[data.length - 1].close, pct = (last - first) / first * 100;
       updateMarketPerformance(data);
       updateAccountSummary(visibleClose());
-      document.getElementById('lastPrice').textContent = last.toLocaleString(undefined, { maximumFractionDigits: 1 });
+      document.getElementById('lastPrice').textContent = formatChartPrice(last);
       const change = document.getElementById('priceChange'); change.innerHTML = `<i data-lucide="${pct >= 0 ? 'trending-up' : 'trending-down'}" aria-hidden="true"></i><span>${pct >= 0 ? '+' : ''}${pct.toFixed(2)}% · 近 ${data.length} 根</span>`;
       const regime = document.getElementById('regime'), desc = document.getElementById('regimeDesc'), conf = document.getElementById('confidence'), hint = document.getElementById('candleHint'), box = document.getElementById('statusBox');
       if (state.dataMode === 'live' && state.liveRows.length) {
