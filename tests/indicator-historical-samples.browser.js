@@ -109,5 +109,37 @@ async (page) => {
       await context.close();
     }
   }
+  for (const sample of [
+    { id: 113, time: '2026-10-01 18:00 UTC · 1H', title: '前高区域的长上影阴线', fact: '上影约 365.65，实体约 105.98', start: 90 },
+    { id: 138, time: '2026-10-02 19:00 UTC · 1H', title: '区间低位附近的长下影阳线', fact: '下影约 286.43，实体约 53.27', start: 115 }
+  ]) {
+    const context = await page.context().browser().newContext({ viewport: { width: 1440, height: 900 } });
+    const errors = [];
+    try {
+      await context.route('**/api/v5/**', route => route.abort());
+      await context.route('**/unpkg.com/**', route => route.abort());
+      const target = await context.newPage();
+      target.on('pageerror', error => errors.push(error.message));
+      target.on('dialog', dialog => dialog.accept());
+      await target.goto('http://127.0.0.1:4188/', { waitUntil: 'domcontentloaded' });
+      await target.waitForFunction(() => historicalReady && sessionPersistenceReady);
+      await target.evaluate(() => setWorkspace('indicators'));
+      await target.locator('[data-indicator-entry="candles"]').click();
+      const card = target.locator(`.indicator-market-sample:has([data-pin-replay-sample="${sample.id}"])`);
+      await card.waitFor();
+      const cardText = await card.textContent();
+      if (!cardText.includes(sample.time) || !cardText.includes(sample.title) || !cardText.includes(sample.fact) || !cardText.includes('Binance 现货 K 线')) failures.push(`candles/${sample.id}: anchor or candle facts missing`);
+      await card.locator('[data-pin-replay-sample]').click();
+      await target.locator('#confirmTrainingStart').click();
+      const replay = await target.evaluate(() => ({ workspace: activeWorkspace, timeframe: state.timeframe, length: state.sessionLength, start: state.sessionStart, reveal: state.revealCount, mode: replayTraining.mode }));
+      if (replay.workspace !== 'replay' || replay.timeframe !== '1H' || replay.length !== 60 || replay.start !== sample.start || replay.reveal !== 24 || replay.mode !== 'blind') failures.push(`candles/${sample.id}: replay setup incorrect: ${JSON.stringify(replay)}`);
+      if (errors.length) failures.push(`candles/${sample.id}: ${errors.join('; ')}`);
+      results.push({ entry: 'candles', sampleIndex: sample.id, replay, errors });
+    } catch (error) {
+      failures.push(`candles/${sample.id}: ${error.message}`);
+    } finally {
+      await context.close();
+    }
+  }
   return { passed: failures.length === 0, results, failures };
 }

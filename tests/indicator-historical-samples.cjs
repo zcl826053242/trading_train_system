@@ -52,6 +52,18 @@ assert.deepEqual([triangle.open, triangle.high, triangle.low, triangle.close], [
 assert.match(html, /id: 'triangle-pattern',[^\n]+sampleIds: \['triangleCompressionBreakout'\]/);
 assert.match(html, /triangleCompressionBreakout: \{ index: 83,[^\n]+人工选取的触点/);
 assert.match(html, /形态标签不是自动识别或方向保证/);
+const upperWick = rows[113], lowerWick = rows[138];
+assert.equal(new Date(upperWick.openTime).toISOString(), '2026-10-01T18:00:00.000Z');
+assert.deepEqual([upperWick.open, upperWick.high, upperWick.low, upperWick.close], [84908, 85273.65, 84671.01, 84802.02]);
+assert.ok(Math.abs((upperWick.high - Math.max(upperWick.open, upperWick.close)) - 365.65) < 1e-8);
+assert.ok(Math.abs(Math.abs(upperWick.close - upperWick.open) - 105.98) < 1e-8);
+assert.equal(new Date(lowerWick.openTime).toISOString(), '2026-10-02T19:00:00.000Z');
+assert.deepEqual([lowerWick.open, lowerWick.high, lowerWick.low, lowerWick.close], [84262.01, 84354.57, 83975.58, 84315.28]);
+assert.ok(Math.abs((Math.min(lowerWick.open, lowerWick.close) - lowerWick.low) - 286.43) < 1e-8);
+assert.ok(Math.abs(Math.abs(lowerWick.close - lowerWick.open) - 53.27) < 1e-8);
+assert.match(html, /id: 'candles',[^\n]+sampleIds: \['upperWickAtPriorHigh', 'lowerWickNearRangeLow'\]/);
+assert.match(html, /upperWickAtPriorHigh: \{ index: 113,[^\n]+不能单凭此K线做方向判断/);
+assert.match(html, /lowerWickNearRangeLow: \{ index: 138,[^\n]+不能单凭此K线做方向判断/);
 context.state.replayMode = true;
 context.state.sessionStart = 64;
 const visible = rows.slice(64, 88);
