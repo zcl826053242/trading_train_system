@@ -16,15 +16,20 @@ function functionSource(name) {
 }
 
 const context = vm.createContext({
-  state: { replayMode: false, dataMode: 'live', timeframe: '1H' },
+  state: { replayMode: false, replayMarket: 'spot', dataMode: 'live', timeframe: '1H' },
   liveMarket: { instrument: 'ETH-USDT-SWAP' },
   liveSymbols: { 'BTC-USDT-SWAP': 'BTCUSDT', 'ETH-USDT-SWAP': 'ETHUSDT', 'SOL-USDT-SWAP': 'SOLUSDT' },
+  activeHistoricalMarket: 'spot',
   historicalDatasetInfo: {
     '1H': { source: 'Binance Spot API', intervalMs: 3600000, rowCount: 499, firstOpenTime: 1, lastClosedTime: 3600000 }
+  },
+  historicalDatasetInfoByMarket: {
+    spot: {},
+    swap: { '1H': { source: 'Binance USDⓈ-M Futures API', sourceId: 'binance-usdm-historical-snapshot', marketType: '永续', rowCount: 499, firstOpenTime: 2, lastClosedTime: 3600001 } }
   }
 });
 vm.runInContext(`const dataSourceProfiles = ${profiles[1]};\n${[
-  'sourceProfileForMode', 'sourceProfileForSession', 'sourceAttribution'
+  'profileForHistoricalMarket', 'historicalInfoForMarket', 'sourceProfileForMode', 'sourceProfileForSession', 'sourceAttribution'
 ].map(functionSource).join('\n')}`, context);
 
 const live = context.sourceProfileForMode('live');
@@ -39,9 +44,17 @@ assert.equal(historical.marketType, '现货');
 assert.equal(historical.symbol, 'BTCUSDT');
 assert.equal(historical.rowCount, 499);
 assert.equal(historical.lastClosedTime, 3600000);
+const perpetualHistorical = context.sourceProfileForMode('replay', '1H', 'swap');
+assert.equal(perpetualHistorical.id, 'binance-usdm-historical-snapshot');
+assert.equal(perpetualHistorical.marketType, '永续');
+assert.equal(perpetualHistorical.rowCount, 499);
+assert.match(context.sourceAttribution(perpetualHistorical), /Binance 永续 · BTCUSDT/);
 
 const replaySession = context.sourceProfileForSession({ timeframe: '1H' });
 assert.equal(replaySession.id, 'binance-spot-snapshot', 'legacy replay sessions resolve to the known local spot snapshot');
+const perpetualSession = context.sourceProfileForSession({ sourceId: 'binance-usdm-historical-snapshot', market: 'swap', timeframe: '1H' });
+assert.equal(perpetualSession.marketType, '永续');
+assert.equal(perpetualSession.source, 'Binance USDⓈ-M Futures API');
 const liveSession = context.sourceProfileForSession({ sourceId: live.id, sourceLabel: live.label, venue: live.venue, marketType: live.marketType, symbol: live.symbol });
 assert.equal(liveSession.symbol, 'ETHUSDT');
 const teaching = context.sourceProfileForMode('sim');

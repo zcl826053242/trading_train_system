@@ -1898,7 +1898,7 @@
 
     <dialog class="workspace-records" id="workspaceRecordsDialog" aria-labelledby="workspaceRecordsTitle">
       <div class="workspace-dialog-head"><h2 id="workspaceRecordsTitle">训练记录</h2><button type="button" data-close-dialog="workspaceRecordsDialog" aria-label="关闭训练记录">关闭</button></div>
-      <p>Binance BTCUSDT 现货历史；训练进度、模拟交易和判断仅保存在当前浏览器。</p>
+      <p>训练样本可选 Binance BTCUSDT 现货或 USDⓈ-M 永续历史；训练进度、模拟交易和判断仅保存在当前浏览器。</p>
       <div class="replay-toolbar"><div><strong id="replaySessionLabel">匿名样本 · 1H 双盲判断</strong><span id="replaySessionStatus"> · 未来 K 线隐藏</span></div><div class="replay-controls"><button type="button" id="replayPrev">查看事件记录</button></div></div>
       <div class="replay-layout"><aside class="surface-card"><div id="replayTradeDock">
         <div class="daily-panel replay-trade-panel">
@@ -2073,7 +2073,8 @@
   <dialog class="training-setup" id="trainingSetup" aria-labelledby="setupTitle">
     <div class="setup-head"><div><h2 id="setupTitle">开始一场历史训练</h2><p>品种与日期匿名，专注逐根判断和模拟执行。</p></div><button class="setup-close" type="button" id="closeTrainingSetup" aria-label="关闭">×</button></div>
     <div class="setup-body">
-      <div class="setup-field"><strong>训练样本</strong><div class="setup-info"><span>匿名历史样本</span><span>·</span><span>训练中不显示品种和日期</span></div></div>
+      <div class="setup-field"><strong>训练样本</strong><div class="setup-info"><span>匿名 BTCUSDT 历史样本</span><span>·</span><span>训练中不显示品种和日期</span></div></div>
+      <div class="setup-field"><strong>市场类型</strong><div class="setup-options" role="group" aria-label="训练市场类型"><button type="button" class="setup-option" data-setup-market="swap" aria-pressed="true">USDTⓈ-M 永续（推荐）</button><button type="button" class="setup-option" data-setup-market="spot" aria-pressed="false">现货历史（课程样本）</button></div><div class="setup-info"><span id="setupMarketHint">与公开行情同为 Binance USDⓈ-M 永续；成交量口径一致。</span></div></div>
       <div class="setup-field"><strong>周期</strong><div class="setup-options" role="group" aria-label="训练周期"><button type="button" class="setup-option" data-setup-time="1m" aria-pressed="false">1 分钟</button><button type="button" class="setup-option" data-setup-time="5m" aria-pressed="false">5 分钟</button><button type="button" class="setup-option" data-setup-time="1H" aria-pressed="true">1 小时</button><button type="button" class="setup-option" data-setup-time="1D" aria-pressed="false" disabled title="本地尚未载入可复核的日线历史样本">1 日（待数据）</button><button type="button" class="setup-option" data-setup-time="1W" aria-pressed="false" disabled title="本地尚未载入可复核的周线历史样本">1 周（待数据）</button><button type="button" class="setup-option" data-setup-time="1M" aria-pressed="false" disabled title="本地尚未载入可复核的月线历史样本">1 月（待数据）</button></div></div>
       <div class="setup-field"><strong>训练长度</strong><div class="setup-options" role="group" aria-label="训练长度"><button type="button" class="setup-option" data-setup-length="60" aria-pressed="true">60 根</button><button type="button" class="setup-option" data-setup-length="120" aria-pressed="false">120 根</button><button type="button" class="setup-option" data-setup-length="300" aria-pressed="false">300 根</button><label class="setup-custom-length"><span>自定义</span><input id="setupLengthCustom" type="number" min="10" max="475" step="1" inputmode="numeric" aria-label="自定义训练长度" placeholder="10–475"><span>根</span></label></div><div class="setup-info"><span id="setupLengthHint">当前可选 10–475 根；额外保留 24 根历史用于指标预热。短场次保留最后 2 根未来 K 线。</span></div></div>
       <div class="setup-field"><strong>训练模式</strong><div class="setup-options" role="group" aria-label="训练模式"><button type="button" class="setup-option" data-setup-mode="blind" aria-pressed="true">双盲判断</button><button type="button" class="setup-option" data-setup-mode="free" aria-pressed="false">逐根自由操盘</button></div><div class="setup-info"><span id="setupModeHint">未来 K 线隐藏；每次揭示前先记录判断。</span></div></div>
@@ -2164,7 +2165,7 @@
       document.querySelectorAll('[data-ma]').forEach(input => { input.checked = state.sma[Number(input.dataset.ma)]; });
       document.querySelectorAll('[data-vol-ma]').forEach(input => { input.checked = state.volumeSma[Number(input.dataset.volMa)]; });
     }
-    const state = { scenario: 'up', timeframe: '1H', dataMode: 'live', chartType: loadChartTypePreference(), chartZoom: 1, chartOffset: 0, chartDragging: false, chartDragX: 0, chartTouchPoints: {}, chartTouchPinch: null, fallbackPriceScale: { auto: true, zoom: 1, offset: 0, baseMin: null, baseMax: null }, fallbackPriceDrag: null, ...loadChartOverlayPreferences(), chartDisplay: loadChartDisplayPreferences(), indicatorParams: loadIndicatorParams(), lesson: 0, tool: 'cursor', drawingMagnet: loadChartDrawingMagnetPreference(), indicator: loadIndicatorPreferences(), drawings: [], pendingDraw: [], replayMode: false, replayPaused: false, revealCount: 24, sessionLength: 60, sessionStart: 0, liveRows: [], liveUpdatedAt: 0, liveLoading: false, liveError: '' };
+    const state = { scenario: 'up', timeframe: '1H', dataMode: 'live', replayMarket: 'swap', chartType: loadChartTypePreference(), chartZoom: 1, chartOffset: 0, chartDragging: false, chartDragX: 0, chartTouchPoints: {}, chartTouchPinch: null, fallbackPriceScale: { auto: true, zoom: 1, offset: 0, baseMin: null, baseMax: null }, fallbackPriceDrag: null, ...loadChartOverlayPreferences(), chartDisplay: loadChartDisplayPreferences(), indicatorParams: loadIndicatorParams(), lesson: 0, tool: 'cursor', drawingMagnet: loadChartDrawingMagnetPreference(), indicator: loadIndicatorPreferences(), drawings: [], pendingDraw: [], replayMode: false, replayPaused: false, revealCount: 24, sessionLength: 60, sessionStart: 0, liveRows: [], liveUpdatedAt: 0, liveLoading: false, liveError: '' };
     const indicatorLibraryEntries = [
       { id: 'ema', code: 'EMA20 / 60', title: '指数移动平均', category: 'trend', summary: '比较短期与中期均线的位置和斜率。', observe: '先描述价格高低点，再看 EMA20 与 EMA60 是否同向；均线只作方向过滤。', confirm: '价格结构抬高且 EMA20 在 EMA60 上方，回踩时结构仍守住，才算多头假设得到配合。', caution: '均线交叉滞后，横盘时会反复交叉；不能把交叉本身当作入场信号。', action: 'ema', questionIndexes: [0, 7], sampleIds: ['trendExtension', 'pullbackContinuation'] },
       { id: 'structure', code: 'HH / HL', title: '摆动高低点结构', category: 'trend', summary: '用高点、低点的抬高或下移描述趋势。', observe: '比较连续摆动高点与低点：同步抬高、同步下移，或互相重叠。', confirm: '突破后观察是否出现新的摆动点，并结合回踩是否守住前一个结构位。', caution: '单根影线不一定构成有效摆动点；区间中部不要强行判趋势。', action: 'structure', questionIndexes: [0, 1] },
@@ -2221,7 +2222,7 @@
     let activeIndicatorPractice = null;
     const TRAINING_LENGTH_MIN = 10;
     const TRAINING_WARMUP = 24;
-    const trainingSetupState = { timeframe: '1H', length: 60, lengthMode: 'preset' };
+    const trainingSetupState = { market: 'swap', timeframe: '1H', length: 60, lengthMode: 'preset' };
     let pendingReplaySampleIndex = null;
     const replayTraining = { id: '', mode: 'blind', decisions: [], saved: false };
     const trainingModeState = { mode: 'blind' };
@@ -2238,29 +2239,63 @@
     let historicalRows = [];
     let historicalLoadError = '';
     let historicalReady = false;
+    const historicalReadyByMarket = { spot: false, swap: false };
+    const historicalLoadErrorsByMarket = { spot: '', swap: '' };
     const historicalByTimeframe = {};
-    const historicalDatasetConfig = {
-      '1m': { file: './btc-usdt-1m.json', intervalMs: 60000, snapshotRows: 500, excludeTrailingRows: 1 },
-      '5m': { file: './btc-usdt-5m.json', intervalMs: 300000, snapshotRows: 500, excludeTrailingRows: 1 },
-      '1H': { file: './btc-usdt-1h.json', intervalMs: 3600000, snapshotRows: 500, excludeTrailingRows: 1 }
+    const historicalByMarket = { spot: {}, swap: {} };
+    const historicalDatasetInfo = {};
+    const historicalDatasetInfoByMarket = { spot: {}, swap: {} };
+    let activeHistoricalMarket = 'swap';
+    const historicalDatasetConfigs = {
+      spot: {
+        '1m': { file: './btc-usdt-1m.json', intervalMs: 60000, snapshotRows: 500, excludeTrailingRows: 1 },
+        '5m': { file: './btc-usdt-5m.json', intervalMs: 300000, snapshotRows: 500, excludeTrailingRows: 1 },
+        '1H': { file: './btc-usdt-1h.json', intervalMs: 3600000, snapshotRows: 500, excludeTrailingRows: 1 }
+      },
+      swap: {
+        '1m': { file: './btc-usdt-swap-1m.json', intervalMs: 60000, snapshotRows: 500, excludeTrailingRows: 1 },
+        '5m': { file: './btc-usdt-swap-5m.json', intervalMs: 300000, snapshotRows: 500, excludeTrailingRows: 1 },
+        '1H': { file: './btc-usdt-swap-1h.json', intervalMs: 3600000, snapshotRows: 500, excludeTrailingRows: 1 }
+      }
     };
-    // 每条行情都带可追溯的来源标识；实时 Binance USDⓈ-M 永续与历史 Binance 现货仍是不同市场，必须明确区分。
+    // 保留旧名称供课程样本和回归测试使用，默认映射为现货；普通回放可选择永续同源快照。
+    const historicalDatasetConfig = historicalDatasetConfigs.spot;
+    // 每条行情都带可追溯的来源标识；实时和历史分别标记市场类型，避免把现货量能当成永续量能。
     const dataSourceProfiles = {
-      live: { id: 'binance-usdm-public-swap', label: 'Binance USDⓈ-M Futures 公开永续行情', venue: 'Binance', marketType: '永续', symbol: 'BTCUSDT', note: '公开只读、非交易账户；历史训练使用现货快照' },
-      replay: { id: 'binance-spot-snapshot', label: 'Binance BTCUSDT 现货历史快照', venue: 'Binance', marketType: '现货', symbol: 'BTCUSDT', note: '本地闭合快照，未来 K 线逐根隐藏' },
+      live: { id: 'binance-usdm-public-swap', label: 'Binance USDⓈ-M Futures 公开永续行情', venue: 'Binance', marketType: '永续', symbol: 'BTCUSDT', note: '公开只读、非交易账户；训练可选择同源永续历史快照' },
+      replay: { id: 'binance-spot-snapshot', label: 'Binance BTCUSDT 现货历史快照', venue: 'Binance', marketType: '现货', symbol: 'BTCUSDT', note: '本地闭合快照，未来 K 线逐根隐藏；成交量为现货口径' },
+      replaySwap: { id: 'binance-usdm-historical-snapshot', label: 'Binance USDⓈ-M BTCUSDT 永续历史快照', venue: 'Binance', marketType: '永续', symbol: 'BTCUSDT', note: '本地闭合快照，与公开永续行情同市场；不含资金费率与持仓量' },
       sim: { id: 'synthetic-teaching', label: '模拟教学情景', venue: '本地生成', marketType: '合成', symbol: 'BTC-USDT-TEACHING', note: '非真实行情' }
     };
-    const historicalDatasetInfo = {};
-    function sourceProfileForMode(mode = state.dataMode, timeframe = state.timeframe) {
-      if (state.replayMode || mode === 'replay') return { ...dataSourceProfiles.replay, ...(historicalDatasetInfo[timeframe] || {}) };
+    function profileForHistoricalMarket(market = activeHistoricalMarket) {
+      return market === 'swap' ? dataSourceProfiles.replaySwap : dataSourceProfiles.replay;
+    }
+    function setActiveHistoricalMarket(market = 'swap') {
+      activeHistoricalMarket = market === 'spot' ? 'spot' : 'swap';
+      state.replayMarket = activeHistoricalMarket;
+      return activeHistoricalMarket;
+    }
+    function historicalInfoForMarket(market, timeframe) {
+      const loaded = typeof historicalDatasetInfoByMarket !== 'undefined' ? historicalDatasetInfoByMarket[market]?.[timeframe] : null;
+      return loaded || (market === 'spot' ? historicalDatasetInfo[timeframe] : {}) || {};
+    }
+    function historicalRowsFor(market, timeframe) {
+      return historicalByMarket[market === 'spot' ? 'spot' : 'swap']?.[timeframe] || [];
+    }
+    function sourceProfileForMode(mode = state.dataMode, timeframe = state.timeframe, market = state.replayMarket || 'spot') {
+      if (state.replayMode || mode === 'replay') {
+        const selectedMarket = market === 'spot' || market === 'swap' ? market : 'spot';
+        return { ...profileForHistoricalMarket(selectedMarket), ...historicalInfoForMarket(selectedMarket, timeframe) };
+      }
       if (mode === 'live') return { ...dataSourceProfiles.live, symbol: liveSymbols[liveMarket.instrument] || liveMarket.instrument };
       return { ...dataSourceProfiles.sim };
     }
     function sourceProfileForSession(session) {
       if (session?.sourceId === dataSourceProfiles.live.id) return { ...dataSourceProfiles.live, id: session.sourceId, label: session.sourceLabel || dataSourceProfiles.live.label, venue: session.venue || dataSourceProfiles.live.venue, marketType: session.marketType || dataSourceProfiles.live.marketType, symbol: session.symbol || dataSourceProfiles.live.symbol };
       if (session?.sourceId === dataSourceProfiles.sim.id) return { ...dataSourceProfiles.sim, id: session.sourceId, label: session.sourceLabel || dataSourceProfiles.sim.label, venue: session.venue || dataSourceProfiles.sim.venue, marketType: session.marketType || dataSourceProfiles.sim.marketType, symbol: session.symbol || dataSourceProfiles.sim.symbol };
-      const historical = historicalDatasetInfo[session?.timeframe] || {};
-      return { ...dataSourceProfiles.replay, ...historical, id: session?.sourceId || historical.sourceId || dataSourceProfiles.replay.id, label: session?.sourceLabel || historical.label || dataSourceProfiles.replay.label, venue: session?.venue || historical.venue || dataSourceProfiles.replay.venue, marketType: session?.marketType || historical.marketType || dataSourceProfiles.replay.marketType, symbol: session?.symbol || historical.symbol || dataSourceProfiles.replay.symbol };
+      const market = session?.market === 'swap' || session?.sourceId === dataSourceProfiles.replaySwap.id ? 'swap' : 'spot';
+      const profile = profileForHistoricalMarket(market), historical = historicalInfoForMarket(market, session?.timeframe);
+      return { ...profile, ...historical, id: session?.sourceId || historical.sourceId || profile.id, label: session?.sourceLabel || historical.label || profile.label, venue: session?.venue || historical.venue || profile.venue, marketType: session?.marketType || historical.marketType || profile.marketType, symbol: session?.symbol || historical.symbol || profile.symbol };
     }
     function sourceAttribution(profile, includeNote = true) {
       if (!profile) return '来源待补充';
@@ -2405,6 +2440,7 @@
       instrument.querySelector('[value="BTC-USDT-HISTORY"]').hidden = !state.replayMode;
       instrument.querySelector('[value="BTC-USDT-TEACHING"]').hidden = live || state.replayMode;
       instrument.value = state.replayMode ? 'BTC-USDT-HISTORY' : live ? liveMarket.instrument : 'BTC-USDT-TEACHING';
+      instrument.querySelector('[value="BTC-USDT-HISTORY"]').textContent = state.replayMarket === 'swap' ? 'BTC/USDT 永续历史' : 'BTC/USDT 现货历史';
       instrument.disabled = !live;
       const label = document.getElementById('dataSourceLabel');
       const hint = document.getElementById('dataSourceHint');
@@ -2425,16 +2461,17 @@
         hint.textContent = state.liveError ? `读取失败：${state.liveError}` : state.liveUpdatedAt ? `Binance Futures · 更新于 ${formatLiveTime(state.liveUpdatedAt)} · 仅用于对比训练` : 'Binance Futures · 点击刷新读取最新 K 线';
       } else if (state.replayMode) {
         if (topBadge) topBadge.textContent = '真实历史 · 模拟交易';
-        if (instrumentHint) instrumentHint.textContent = 'Binance BTCUSDT 现货历史 · 不含永续资金费率与持仓量';
-        label.textContent = 'Binance BTCUSDT · 现货历史';
-        hint.textContent = `${state.timeframe} 已收盘快照 · 未来行情逐根揭示 · 非实时永续行情`;
+        const source = sourceProfileForMode('replay', state.timeframe, state.replayMarket);
+        if (instrumentHint) instrumentHint.textContent = state.replayMarket === 'swap' ? 'Binance USDⓈ-M BTCUSDT 永续历史 · 不含资金费率与持仓量' : 'Binance BTCUSDT 现货历史 · 成交量为现货口径，不含永续资金费率与持仓量';
+        label.textContent = source.label;
+        hint.textContent = `${state.timeframe} 已收盘快照 · 未来行情逐根揭示 · ${state.replayMarket === 'swap' ? '与 Binance USDⓈ-M 永续公开行情同市场' : '非永续合约行情'}`;
       } else {
         if (topBadge) topBadge.textContent = '模拟数据 · 不连接交易所';
         if (instrumentHint) instrumentHint.textContent = '趋势样本 · 选择不同情景观察结构变化';
         label.textContent = '模拟教学情景';
         hint.textContent = '用于先练结构与指标顺序';
       }
-      if (meta) meta.textContent = sourceAttribution(sourceProfileForMode(live ? 'live' : state.replayMode ? 'replay' : 'sim'), true);
+      if (meta) meta.textContent = sourceAttribution(sourceProfileForMode(live ? 'live' : state.replayMode ? 'replay' : 'sim', state.timeframe, state.replayMarket), true);
       syncChartTimeframeControls();
       syncReplayWorkspace();
     }
@@ -2544,12 +2581,14 @@
     function syncChartTimeframeControls() {
       document.querySelectorAll('[data-time]').forEach(button => {
         const timeframe = button.dataset.time;
-        const unavailable = state.replayMode && !(historicalByTimeframe[timeframe]?.length);
+        const legacyLength = historicalByTimeframe[timeframe]?.length;
+        const marketRows = typeof historicalRowsFor === 'function' ? historicalRowsFor(state.replayMarket, timeframe) : (historicalByTimeframe[timeframe] || []);
+        const unavailable = state.replayMode && !(marketRows.length || (!state.replayMarket && legacyLength));
         button.classList.toggle('active', timeframe === state.timeframe);
         if (button.getAttribute('role') === 'tab') button.setAttribute('aria-selected', String(timeframe === state.timeframe));
         else button.setAttribute('aria-pressed', String(timeframe === state.timeframe));
         button.disabled = unavailable;
-        button.title = unavailable ? `${timeframe} 暂无历史快照，不能用于回放` : state.replayMode && timeframe !== state.timeframe ? `在训练设置中切换到 ${timeframe}，将开始新场次` : `切换到 ${timeframe}`;
+        button.title = unavailable ? `${timeframe} 暂无${state.replayMarket === 'swap' ? '永续' : '现货'}历史快照，不能用于回放` : state.replayMode && timeframe !== state.timeframe ? `在训练设置中切换到 ${timeframe}，将开始新场次` : `切换到 ${timeframe}`;
       });
       const moreIntervals = document.getElementById('chartMoreIntervals');
       if (moreIntervals) moreIntervals.dataset.active = String(Boolean(moreIntervals.querySelector('[data-time].active')));
@@ -2557,7 +2596,8 @@
     function selectChartTimeframe(timeframe) {
       if (!Object.hasOwn(liveBars, timeframe)) return false;
       if (state.replayMode) {
-        if (!historicalByTimeframe[timeframe]?.length || timeframe === state.timeframe) return false;
+        const marketRows = typeof historicalRowsFor === 'function' ? historicalRowsFor(state.replayMarket, timeframe) : (historicalByTimeframe[timeframe] || []);
+        if (!marketRows.length || timeframe === state.timeframe) return false;
         openTrainingSetup({ timeframe, mode: replayTraining.mode });
         return false;
       }
@@ -4192,7 +4232,7 @@
       const maxVol = Math.max(1, ...data.map(d => d.volume));
       const x = i => plot.x + (i + .5) * plot.w / data.length;
       const y = v => plot.y + (hi - v) / (hi - lo) * plot.h;
-      const sourceLabel = state.replayMode ? 'Binance BTCUSDT 现货历史' : live ? `${liveMarket.instrument.replace('-SWAP', '').replace('-', '/')} Binance 永续只读实盘` : '模拟 BTC 永续教学';
+      const sourceLabel = state.replayMode ? sourceProfileForMode('replay', state.timeframe, state.replayMarket).label : live ? `${liveMarket.instrument.replace('-SWAP', '').replace('-', '/')} Binance 永续只读实盘` : '模拟 BTC 永续教学';
       container.dataset.chartType = state.chartType;
       svg.dataset.chartType = state.chartType;
       svg.replaceChildren(el('title', { id: 'chartTitle' }, `${sourceLabel} · ${chartUsesHeikinAshi() ? 'Heikin Ashi 合成K线图' : '基础 K 线图'}`), el('desc', { id: 'chartDesc' }, chartUsesHeikinAshi() ? '合成蜡烛仅用于视觉观察；成交量、指标、账户和训练判断使用原始 K 线，指标只计算已揭示的行情。' : '图表库不可用时使用基础图表，指标按已揭示的行情计算。'));
@@ -4813,7 +4853,7 @@
     function renderSessionReport() {
       const current = replayTraining.decisions.length && (!replayTraining.saved || replayTraining.completedAt) ? replayTraining : replayHistory[0];
       const decisions = current?.decisions || [];
-      const reportSource = current ? sourceProfileForSession(current) : state.replayMode ? sourceProfileForMode('replay', state.timeframe) : sourceProfileForMode(state.dataMode);
+      const reportSource = current ? sourceProfileForSession(current) : state.replayMode ? sourceProfileForMode('replay', state.timeframe, state.replayMarket) : sourceProfileForMode(state.dataMode);
       const sourceNode = document.getElementById('sessionReportSource');
       if (sourceNode) sourceNode.textContent = sourceAttribution(reportSource, true);
       if (current?.mode === 'free') {
@@ -4870,7 +4910,7 @@
       replayTraining.saved = true;
       touchTrainingDay(); trainingMeta.completedSessions += 1; saveTrainingMeta();
       const source = sourceProfileForMode('replay', state.timeframe);
-      const entry = { id: replayTraining.id, mode: replayTraining.mode, timeframe: state.timeframe, length: state.sessionLength, completedAt: new Date().toISOString(), sourceId: source.id, sourceLabel: source.label, venue: source.venue, marketType: source.marketType, symbol: source.symbol, sourceNote: source.note, intervalMs: source.intervalMs, dataFirstOpenTime: source.firstOpenTime, dataLastClosedTime: source.lastClosedTime, trades: sim.trades.filter(trade => trade.sessionId === replayTraining.id), decisions: replayTraining.decisions };
+      const entry = { id: replayTraining.id, mode: replayTraining.mode, market: state.replayMarket, timeframe: state.timeframe, length: state.sessionLength, completedAt: new Date().toISOString(), sourceId: source.id, sourceLabel: source.label, venue: source.venue, marketType: source.marketType, symbol: source.symbol, sourceNote: source.note, intervalMs: source.intervalMs, dataFirstOpenTime: source.firstOpenTime, dataLastClosedTime: source.lastClosedTime, trades: sim.trades.filter(trade => trade.sessionId === replayTraining.id), decisions: replayTraining.decisions };
       replayTraining.completedAt = entry.completedAt;
       replayHistory.unshift(entry); replayHistory.splice(20);
       try { localStorage.setItem('trend-lab-replay-history', JSON.stringify(replayHistory)); } catch (_) {}
@@ -5347,6 +5387,7 @@
       const c = draft.context, a = draft.account, r = draft.replay;
       if (!['sim', 'live'].includes(c.dataMode) || !['1m', '3m', '5m', '15m', '30m', '1H', '2H', '4H', '6H', '8H', '12H', '1D', '3D', '1W', '1M'].includes(c.timeframe)
         || (c.replayMode && !['1m', '5m', '1H'].includes(c.timeframe))
+        || (c.replayMarket != null && !['spot', 'swap'].includes(c.replayMarket))
         || !['up', 'range', 'down', 'breakout', 'pullback', 'reversalUp', 'exhaustion', 'falseBreak', 'squeeze', 'volatility', 'breakdown', 'breakRetest'].includes(c.scenario)
         || (c.chartType != null && !['candles', 'heikin', 'line'].includes(c.chartType))
         || typeof c.replayMode !== 'boolean' || typeof c.replayPaused !== 'boolean'
@@ -5369,7 +5410,7 @@
       if (!Array.isArray(a.trades) || a.trades.length > 500 || !a.trades.every(t => t && validNumber(t.pnl) && validNumber(t.entry) && validNumber(t.exit) && ['long', 'short'].includes(t.side))) throw new Error('草稿交易记录无效');
       const fields = Object.fromEntries(Object.entries(draft.fields || {}).filter(([key, value]) => sessionFieldIds.includes(key) && typeof value === 'string').map(([key, value]) => [key, value.slice(0, 4000)]));
       return { ...draft, context: { ...c }, account: { ...a, position, log: Array.isArray(a.log) ? a.log.filter(x => typeof x === 'string').slice(0, 6) : [] },
-        replay: { id: r.id, mode: r.mode, saved: r.saved, decisions: r.decisions, ...(typeof r.completedAt === 'string' ? { completedAt: r.completedAt } : {}) }, fields,
+        replay: { id: r.id, mode: r.mode, saved: r.saved, market: r.market === 'swap' ? 'swap' : 'spot', decisions: r.decisions, ...(typeof r.completedAt === 'string' ? { completedAt: r.completedAt } : {}) }, fields,
         evidence: Array.isArray(draft.evidence) ? draft.evidence.filter(x => ['结构', 'EMA', '量能', 'RSI'].includes(x)) : [],
         events: Array.isArray(draft.events) ? draft.events.slice(0, 100).filter(row => Array.isArray(row) && row.length === 4 && row.every(cell => typeof cell === 'string')).map(row => row.map(cell => cell.slice(0, 4000))) : [] };
     }
@@ -5433,7 +5474,7 @@
       });
     }
     function currentReplayDataset() {
-      const rows = historicalByTimeframe[state.timeframe] || [];
+      const rows = historicalRowsFor(state.replayMarket, state.timeframe);
       return rows.length ? { length: rows.length, first: rows[0].openTime, last: rows.at(-1).openTime, fingerprint: historicalDatasetFingerprint(rows) } : null;
     }
     function saveSessionDraft() {
@@ -5444,7 +5485,7 @@
           showSessionSaveProblem('另一页面已更新训练草稿。请重新加载后继续，避免覆盖较新的记录。', true); return;
         }
         const draft = { version: 1, savedAt: new Date().toISOString(), workspace: activeWorkspace,
-          context: { scenario: state.scenario, timeframe: state.timeframe, dataMode: state.dataMode, replayMode: state.replayMode, replayPaused: state.replayPaused,
+        context: { scenario: state.scenario, timeframe: state.timeframe, dataMode: state.dataMode, replayMode: state.replayMode, replayMarket: state.replayMarket, replayPaused: state.replayPaused,
             revealCount: state.revealCount, sessionLength: state.sessionLength, sessionStart: state.sessionStart, instrument: liveMarket.instrument, chartType: state.chartType },
           dataset: currentReplayDataset(),
           account: { balance: sim.balance, initialBalance: sim.initialBalance, realized: sim.realized, position: sim.position, side: sim.side, log: sim.log, trades: sim.trades.slice(-500) },
@@ -5470,18 +5511,25 @@
         if (!sessionLastSavedValue) return false;
         const draft = normalizeSessionDraft(JSON.parse(sessionLastSavedValue)), c = draft.context;
         if (c.replayMode) {
-          const rows = historicalByTimeframe[c.timeframe] || historicalByTimeframe['1H'] || [], d = draft.dataset;
+          const replayMarket = c.replayMarket || (draft.replay.market === 'swap' ? 'swap' : 'spot');
+          const rows = historicalRowsFor(replayMarket, c.timeframe) || historicalRowsFor(replayMarket, '1H'), d = draft.dataset;
           if (!d?.fingerprint) throw new Error('旧版回放草稿没有历史数据校验信息，无法确认原训练样本是否变化');
           if (!replayDatasetMatches(d, rows) || c.sessionStart + c.sessionLength + TRAINING_WARMUP > rows.length) throw new Error('本地历史数据校验不匹配，不能安全续接原回放');
         }
-        Object.assign(state, { scenario: c.scenario, timeframe: c.timeframe, dataMode: c.dataMode, replayMode: c.replayMode, replayPaused: c.replayPaused,
+        const replayMarket = c.replayMarket || (draft.replay.market === 'swap' ? 'swap' : 'spot');
+        Object.assign(state, { scenario: c.scenario, timeframe: c.timeframe, dataMode: c.dataMode, replayMode: c.replayMode, replayMarket, replayPaused: c.replayPaused,
           revealCount: c.revealCount, sessionLength: c.sessionLength, sessionStart: c.sessionStart, chartType: ['candles', 'heikin', 'line'].includes(c.chartType) ? c.chartType : 'candles' });
         Object.assign(sim, { balance: draft.account.balance, initialBalance: draft.account.initialBalance, realized: draft.account.realized,
           position: draft.account.position, side: draft.account.side, log: draft.account.log, trades: draft.account.trades });
         Object.assign(replayTraining, draft.replay);
+        if (c.replayMode) {
+          const source = sourceProfileForMode('replay', c.timeframe, replayMarket);
+          Object.assign(replayTraining, { market: replayMarket, sourceId: source.id, sourceLabel: source.label, venue: source.venue, marketType: source.marketType, symbol: source.symbol, sourceNote: source.note, intervalMs: source.intervalMs, dataFirstOpenTime: source.firstOpenTime, dataLastClosedTime: source.lastClosedTime });
+        }
         liveMarket.instrument = c.instrument;
-        historicalRows = historicalByTimeframe[c.timeframe] || historicalByTimeframe['1H'] || [];
-        trainingSetupState.timeframe = historicalByTimeframe[c.timeframe] ? c.timeframe : '1H'; trainingSetupState.length = c.sessionLength;
+        setActiveHistoricalMarket(replayMarket);
+        historicalRows = historicalRowsFor(replayMarket, c.timeframe) || historicalRowsFor(replayMarket, '1H');
+        trainingSetupState.market = replayMarket; trainingSetupState.timeframe = historicalRowsFor(replayMarket, c.timeframe).length ? c.timeframe : '1H'; trainingSetupState.length = c.sessionLength;
         trainingSetupState.lengthMode = [60, 120, 300].includes(c.sessionLength) ? 'preset' : 'custom';
         const restoredLengthInput = document.getElementById('setupLengthCustom');
         if (restoredLengthInput) restoredLengthInput.value = String(c.sessionLength);
@@ -5723,7 +5771,7 @@
       });
     }
     function updateBlind() {
-      const rows = historicalByTimeframe[state.timeframe];
+      const rows = historicalRowsFor(state.replayMarket, state.timeframe);
       if (!rows?.length) return false;
       const range = document.getElementById('blindRange'), max = state.sessionLength, previous = state.revealCount;
       const value = Math.max(8, Math.min(max, Number(range.value) || previous));
@@ -5821,53 +5869,66 @@
       const customLength = document.getElementById('setupLengthCustom');
       const lengthHint = document.getElementById('setupLengthHint');
       const pinned = pendingReplaySampleIndex != null;
-      const rows = historicalByTimeframe[trainingSetupState.timeframe] || [];
+      const market = trainingSetupState.market === 'spot' ? 'spot' : 'swap';
+      const rows = historicalRowsFor(market, trainingSetupState.timeframe);
       const maxLength = Math.max(0, rows.length - TRAINING_WARMUP);
       const length = trainingLengthValue();
+      const marketReady = historicalReadyByMarket[market];
       const validLength = length != null && length >= TRAINING_LENGTH_MIN && length <= maxLength;
-      const canStart = historicalReady && validLength && rows.length >= length + TRAINING_WARMUP;
+      const canStart = marketReady && validLength && rows.length >= length + TRAINING_WARMUP;
       document.querySelectorAll('[data-setup-time]').forEach(button => {
-        const available = historicalReady && validLength && (historicalByTimeframe[button.dataset.setupTime]?.length || 0) >= length + TRAINING_WARMUP;
-        const unavailablePeriod = !historicalDatasetConfig[button.dataset.setupTime];
+        const available = marketReady && validLength && historicalRowsFor(market, button.dataset.setupTime).length >= length + TRAINING_WARMUP;
+        const unavailablePeriod = !historicalDatasetConfigs[market]?.[button.dataset.setupTime];
         button.disabled = unavailablePeriod || !available || (pinned && button.dataset.setupTime !== '1H');
-        button.title = pinned ? '课程历史样本固定使用 1 小时数据' : unavailablePeriod ? '本地尚未载入可复核的该周期历史样本' : available ? '' : '该周期可用数据不足，无法满足当前训练长度';
+        button.title = pinned ? '课程历史样本固定使用现货 1 小时数据' : unavailablePeriod ? '本地尚未载入可复核的该周期历史样本' : available ? '' : '该周期可用数据不足，无法满足当前训练长度';
       });
       document.querySelectorAll('[data-setup-length]').forEach(button => {
         const length = Number(button.dataset.setupLength);
-        const available = historicalReady && rows.length >= length + TRAINING_WARMUP;
+        const available = marketReady && rows.length >= length + TRAINING_WARMUP;
         button.disabled = !available || (pinned && length !== 60);
         button.title = pinned ? '课程历史样本固定使用 60 根双盲训练' : available ? '' : '当前周期可用数据不足';
       });
       if (customLength) {
-        customLength.disabled = pinned || !historicalReady || maxLength < TRAINING_LENGTH_MIN;
+        customLength.disabled = pinned || !marketReady || maxLength < TRAINING_LENGTH_MIN;
         customLength.min = String(TRAINING_LENGTH_MIN);
         customLength.max = String(maxLength);
         customLength.setAttribute('aria-invalid', String(!validLength));
       }
       if (lengthHint) lengthHint.textContent = pinned
         ? '课程样本固定为 60 根双盲训练。'
-        : historicalReady ? `当前周期可选 ${TRAINING_LENGTH_MIN}–${maxLength} 根；额外保留 ${TRAINING_WARMUP} 根历史用于指标预热。短场次保留最后 2 根未来 K 线。` : '历史数据加载后计算可用上限。';
+        : marketReady ? `当前周期可选 ${TRAINING_LENGTH_MIN}–${maxLength} 根；额外保留 ${TRAINING_WARMUP} 根历史用于指标预热。短场次保留最后 2 根未来 K 线。` : '历史数据加载后计算可用上限。';
       document.querySelectorAll('[data-setup-mode]').forEach(button => { button.disabled = pinned && button.dataset.setupMode !== 'blind'; button.title = pinned ? '课程指定历史样本只用于双盲判断' : ''; });
+      document.querySelectorAll('[data-setup-market]').forEach(button => {
+        const unavailableMarket = !historicalReadyByMarket[button.dataset.setupMarket];
+        button.disabled = unavailableMarket || (pinned && button.dataset.setupMarket !== 'spot');
+        button.title = pinned ? '课程固定锚点来自现货快照；永续历史不能套用该索引' : unavailableMarket ? '该市场类型尚无可用快照' : '';
+        button.setAttribute('aria-pressed', String(button.dataset.setupMarket === market));
+      });
+      const marketHint = document.getElementById('setupMarketHint');
+      if (marketHint) marketHint.textContent = pinned
+        ? '课程锚点只对应已复核的现货历史；不可切到永续后复用相同索引。'
+        : market === 'swap' ? 'Binance USDⓈ-M 永续快照，与公开永续行情同市场；不含资金费率和持仓量。' : 'Binance BTCUSDT 现货快照；现货成交量不等同永续合约成交量。';
       start.disabled = !canStart;
-      start.textContent = canStart ? '开始训练' : historicalReady ? '调整训练长度' : '正在准备';
-      status.textContent = historicalLoadError
-        ? `历史数据加载失败：${historicalLoadError}。请通过一键启动脚本打开本地服务后重试。`
-        : !historicalReady
+      start.textContent = canStart ? '开始训练' : marketReady ? '调整训练长度' : '正在准备';
+      status.textContent = !marketReady && historicalLoadErrorsByMarket[market]
+        ? `${profileForHistoricalMarket(market).label}加载失败：${historicalLoadErrorsByMarket[market]}。请通过一键启动脚本打开本地服务后重试。`
+        : !marketReady
           ? '历史行情加载中…'
           : canStart
-            ? pinned ? '指定历史位置已就绪 · Binance BTCUSDT 现货 · 后续走势仍隐藏' : `${trainingSetupState.timeframe} 已就绪 · ${rows.length} 根历史 K 线 · 可随机抽取训练片段`
+            ? pinned ? '指定历史位置已就绪 · Binance BTCUSDT 现货 · 后续走势仍隐藏' : `${profileForHistoricalMarket(market).label} · ${trainingSetupState.timeframe} 已就绪 · ${rows.length} 根闭合 K 线 · 可随机抽取训练片段`
             : length == null ? `请输入 ${TRAINING_LENGTH_MIN}–${maxLength} 之间的整数训练长度。` : `${trainingSetupState.timeframe} 当前支持 ${TRAINING_LENGTH_MIN}–${maxLength} 根训练（需保留 ${TRAINING_WARMUP} 根预热空间），请调整长度。`;
     }
     function setTrainingMode(mode) { trainingModeState.mode = mode === 'free' ? 'free' : 'blind'; document.querySelectorAll('[data-setup-mode]').forEach(item => item.setAttribute('aria-pressed', String(item.dataset.setupMode === trainingModeState.mode))); document.getElementById('setupModeHint').textContent = trainingModeState.mode === 'free' ? '逐根推进 K 线；可直接使用模拟开多、开空和平仓。' : '未来 K 线隐藏；每次揭示前先记录判断。'; }
     function openTrainingSetup({ mode, sampleIndex, timeframe, indicator } = {}) {
       if (sampleIndex != null && Number.isInteger(Number(sampleIndex))) {
-        pendingReplaySampleIndex = Number(sampleIndex); trainingSetupState.timeframe = '1H'; trainingSetupState.length = 60; trainingSetupState.lengthMode = 'preset';
+        pendingReplaySampleIndex = Number(sampleIndex); trainingSetupState.market = 'spot'; trainingSetupState.timeframe = '1H'; trainingSetupState.length = 60; trainingSetupState.lengthMode = 'preset';
         document.getElementById('setupLengthCustom').value = '60'; setTrainingMode('blind');
       } else {
         pendingReplaySampleIndex = null;
         if (mode) setTrainingMode(mode);
         const requested = timeframe || state.timeframe;
-        trainingSetupState.timeframe = Object.hasOwn(historicalDatasetConfig, requested) ? requested : '1H';
+        trainingSetupState.market = state.replayMode ? state.replayMarket : 'swap';
+        trainingSetupState.timeframe = Object.hasOwn(historicalDatasetConfigs[trainingSetupState.market], requested) ? requested : '1H';
       }
       const pinnedNotice = document.getElementById('setupPinnedSample');
       pinnedNotice.hidden = pendingReplaySampleIndex == null;
@@ -5884,20 +5945,22 @@
     }
     document.getElementById('trainingSetup').addEventListener('close', () => { if (pendingReplaySampleIndex != null) { pendingReplaySampleIndex = null; document.getElementById('setupPinnedSample').hidden = true; updateTrainingSetupAvailability(); } });
     function beginHistoricalTraining() {
-      const dialog = document.getElementById('trainingSetup'), rows = historicalByTimeframe[trainingSetupState.timeframe] || [], pinnedIndex = pendingReplaySampleIndex;
+      const dialog = document.getElementById('trainingSetup'), pinnedIndex = pendingReplaySampleIndex;
+      const market = pinnedIndex == null ? (trainingSetupState.market === 'spot' ? 'spot' : 'swap') : 'spot';
+      const rows = historicalRowsFor(market, trainingSetupState.timeframe);
       const length = trainingLengthValue(), maxLength = Math.max(0, rows.length - TRAINING_WARMUP);
-      if (!historicalReady || length == null || length < TRAINING_LENGTH_MIN || length > maxLength || rows.length < length + TRAINING_WARMUP) { updateTrainingSetupAvailability(); return; }
+      if (!historicalReadyByMarket[market] || length == null || length < TRAINING_LENGTH_MIN || length > maxLength || rows.length < length + TRAINING_WARMUP) { updateTrainingSetupAvailability(); return; }
       if (!confirmReplayReset()) return;
-      state.timeframe = trainingSetupState.timeframe; state.sessionLength = length; historicalRows = rows; state.replayMode = true;
+      state.timeframe = trainingSetupState.timeframe; state.sessionLength = length; historicalRows = rows; state.replayMode = true; setActiveHistoricalMarket(market);
       const maxStart = Math.max(0, historicalRows.length - state.sessionLength - TRAINING_WARMUP);
       state.sessionStart = pinnedIndex == null ? Math.floor(Math.random() * (maxStart + 1)) : Math.max(0, Math.min(maxStart, pinnedIndex - 23));
       pendingReplaySampleIndex = null; document.getElementById('setupPinnedSample').hidden = true;
       state.revealCount = initialReplayReveal(state.sessionLength); state.replayPaused = false; replayTraining.id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`; replayTraining.mode = trainingModeState.mode;
       const source = sourceProfileForMode('replay', state.timeframe);
-      Object.assign(replayTraining, { sourceId: source.id, sourceLabel: source.label, venue: source.venue, marketType: source.marketType, symbol: source.symbol, sourceNote: source.note, intervalMs: source.intervalMs, dataFirstOpenTime: source.firstOpenTime, dataLastClosedTime: source.lastClosedTime });
+      Object.assign(replayTraining, { market, sourceId: source.id, sourceLabel: source.label, venue: source.venue, marketType: source.marketType, symbol: source.symbol, sourceNote: source.note, intervalMs: source.intervalMs, dataFirstOpenTime: source.firstOpenTime, dataLastClosedTime: source.lastClosedTime });
       sim.balance = 10000; sim.realized = 0; sim.position = null; sim.log = []; state.dataMode = 'sim'; stopLiveMarket(); replayTraining.decisions = []; replayTraining.saved = false; delete replayTraining.completedAt;
       document.getElementById('replayPause').textContent = '暂停揭示'; document.getElementById('blindRange').max = String(state.sessionLength); document.getElementById('blindRange').value = String(state.revealCount); document.getElementById('resetBlind').textContent = '重置本题'; document.getElementById('simLog').textContent = '训练记录会显示在这里。'; document.getElementById('replayEvents').innerHTML = '<tr><td colspan="4" class="review-table-empty">开始回放后，揭示和订单事件会显示在这里。</td></tr>';
-      document.getElementById('replaySessionLabel').textContent = `匿名样本 · ${state.timeframe} · ${state.sessionLength} 根${trainingModeState.mode === 'free' ? '自由操盘' : '双盲判断'}`; clearReplayDecision(); if (dialog.open) dialog.close(); updateDataSourceUI(); document.getElementById('chartCoach').textContent = `Binance BTCUSDT 现货历史回放 · ${state.timeframe} · 来源标识 ${source.id}：先记录结构、指标证据与失效位，再揭示下一根 K 线；样本不代表永续合约行情。`; updateReplayGate(); updateBlind(); updateStats(); renderReplayHistory(); setWorkspace('replay');
+      document.getElementById('replaySessionLabel').textContent = `匿名样本 · ${state.timeframe} · ${state.sessionLength} 根${trainingModeState.mode === 'free' ? '自由操盘' : '双盲判断'}`; clearReplayDecision(); if (dialog.open) dialog.close(); updateDataSourceUI(); document.getElementById('chartCoach').textContent = `${source.label} · ${state.timeframe} · 来源标识 ${source.id}：先记录结构、指标证据与失效位，再揭示下一根 K 线；${market === 'spot' ? '现货成交量不等同永续合约量。' : '历史回放不含资金费率与持仓量。'}`; updateReplayGate(); updateBlind(); updateStats(); renderReplayHistory(); setWorkspace('replay');
     }
     document.getElementById('homeContinue').addEventListener('click', continueTrainingRoute);
     document.getElementById('homeLoopSteps').addEventListener('click', event => {
@@ -5922,6 +5985,12 @@
     document.querySelectorAll('[data-close-dialog]').forEach(button => button.addEventListener('click', () => document.getElementById(button.dataset.closeDialog).close()));
     document.getElementById('closeTrainingSetup').addEventListener('click', () => document.getElementById('trainingSetup').close());
     document.getElementById('cancelTrainingSetup').addEventListener('click', () => document.getElementById('trainingSetup').close());
+    document.querySelectorAll('[data-setup-market]').forEach(button => button.addEventListener('click', () => {
+      if (button.disabled || pendingReplaySampleIndex != null) return;
+      trainingSetupState.market = button.dataset.setupMarket === 'spot' ? 'spot' : 'swap';
+      document.querySelectorAll('[data-setup-market]').forEach(item => item.setAttribute('aria-pressed', String(item === button)));
+      updateTrainingSetupAvailability();
+    }));
     document.querySelectorAll('[data-setup-time]').forEach(button => button.addEventListener('click', () => { if (button.disabled) return; trainingSetupState.timeframe = button.dataset.setupTime; document.querySelectorAll('[data-setup-time]').forEach(item => item.setAttribute('aria-pressed', String(item === button))); updateTrainingSetupAvailability(); }));
     document.querySelectorAll('[data-setup-length]').forEach(button => button.addEventListener('click', () => { if (button.disabled) return; setTrainingLength(Number(button.dataset.setupLength), 'preset'); }));
     document.getElementById('setupLengthCustom').addEventListener('input', updateCustomTrainingLength);
@@ -5964,7 +6033,7 @@
     });
     document.getElementById('exportDecisionCsv').addEventListener('click', () => {
       const sessions = [...replayHistory];
-      if (replayTraining.decisions.length && !replayTraining.saved) sessions.unshift({ mode: replayTraining.mode, timeframe: state.timeframe, length: state.sessionLength, completedAt: '', decisions: replayTraining.decisions });
+      if (replayTraining.decisions.length && !replayTraining.saved) sessions.unshift({ mode: replayTraining.mode, market: state.replayMarket, sourceId: replayTraining.sourceId, sourceLabel: replayTraining.sourceLabel, venue: replayTraining.venue, marketType: replayTraining.marketType, symbol: replayTraining.symbol, timeframe: state.timeframe, length: state.sessionLength, completedAt: '', decisions: replayTraining.decisions });
       const escapeCsv = value => `"${String(value ?? '').replaceAll('"', '""')}"`;
       const rows = [['周期', '训练长度', '完成时间', '来源标识', '交易所', '市场类型', '品种', '揭示前根数', '参考价', '方向判断', '依据', '失效位', '目标价', '计划盈亏比R', '风险计划', '理由', '后续涨跌幅%', '方向对照']];
       sessions.forEach(session => {
@@ -6655,29 +6724,37 @@
     function updateRisk() { const lev = Number(document.getElementById('leverage').value), move = Number(document.getElementById('move').value), impact = lev * move; document.getElementById('leverageOut').textContent = `${lev}×`; document.getElementById('moveOut').textContent = `${move.toFixed(1)}%`; document.getElementById('marginImpact').textContent = `-${impact.toFixed(1)}%`; document.getElementById('riskFocus').textContent = impact >= 10 ? '先降杠杆' : impact >= 5 ? '控仓位' : '留余量'; }
     document.getElementById('leverage').addEventListener('input', updateRisk); document.getElementById('move').addEventListener('input', updateRisk);
     async function loadHistorical() {
-      try {
-        await Promise.all(Object.entries(historicalDatasetConfig).map(async ([tf, config]) => {
+      const jobs = Object.entries(historicalDatasetConfigs).flatMap(([market, configs]) => Object.entries(configs).map(async ([tf, config]) => {
+        try {
           const response = await fetch(config.file, { cache: 'no-store' });
           if (!response.ok) throw new Error(`HTTP ${response.status}`);
-          historicalByTimeframe[tf] = parseHistorical(await response.json(), config);
-          historicalDatasetInfo[tf] = { ...dataSourceProfiles.replay, source: 'Binance Spot API', sourceId: dataSourceProfiles.replay.id, intervalMs: config.intervalMs, rowCount: historicalByTimeframe[tf].length, excludedTrailingRows: config.excludeTrailingRows, firstOpenTime: historicalByTimeframe[tf][0].openTime, lastClosedTime: historicalByTimeframe[tf].at(-1).closeTime };
-        }));
-        historicalReady = Object.keys(historicalDatasetConfig).every(tf => historicalByTimeframe[tf]?.length);
-        if (!historicalReady) throw new Error('行情文件为空');
-        historicalLoadError = '';
-        historicalRows = historicalByTimeframe[state.timeframe] || historicalByTimeframe['1H'];
-        renderIndicatorLibrary();
-        updateTrainingSetupAvailability();
-        document.getElementById('chartCoach').textContent = `已准备 Binance BTCUSDT 现货 1m / 5m / 1H 历史 K 线（各 499 根闭合样本；采样时未收盘的末根已排除）。来源标识 ${dataSourceProfiles.replay.id}；现货量能不等同永续合约；当前 ${state.timeframe}，训练中逐根揭示未来。`;
-        renderPracticeChart(questions[trainingState.index]);
-        updateSimDisplay();
-        if (state.replayMode) renderChart();
-      } catch (error) {
-        historicalReady = false;
-        historicalLoadError = error.message || '未知错误';
-        updateTrainingSetupAvailability();
-        document.getElementById('chartCoach').textContent = '真实数据加载失败，当前仍可使用模拟教学。请确认已通过本地服务打开页面。';
+          const rows = parseHistorical(await response.json(), config);
+          historicalByMarket[market][tf] = rows;
+          const profile = profileForHistoricalMarket(market);
+          historicalDatasetInfoByMarket[market][tf] = { ...profile, source: market === 'swap' ? 'Binance USDⓈ-M Futures API' : 'Binance Spot API', sourceId: profile.id, intervalMs: config.intervalMs, rowCount: rows.length, excludedTrailingRows: config.excludeTrailingRows, firstOpenTime: rows[0].openTime, lastClosedTime: rows.at(-1).closeTime };
+        } catch (error) {
+          historicalLoadErrorsByMarket[market] = error?.message || '未知错误';
+        }
+      }));
+      await Promise.all(jobs);
+      for (const market of ['spot', 'swap']) {
+        historicalReadyByMarket[market] = Object.keys(historicalDatasetConfigs[market]).every(tf => historicalByMarket[market][tf]?.length);
       }
+      historicalReady = historicalReadyByMarket.spot;
+      historicalLoadError = historicalLoadErrorsByMarket.spot || '';
+      // 指标课程和固定锚点仍使用复核过的现货快照；通用回放按训练设置选择市场。
+      Object.assign(historicalByTimeframe, historicalByMarket.spot);
+      Object.assign(historicalDatasetInfo, historicalDatasetInfoByMarket.spot);
+      historicalRows = historicalByTimeframe[state.timeframe] || historicalByTimeframe['1H'] || [];
+      renderIndicatorLibrary();
+      updateTrainingSetupAvailability();
+      const availableMarkets = ['swap', 'spot'].filter(market => historicalReadyByMarket[market]).map(market => profileForHistoricalMarket(market).marketType).join('、');
+      document.getElementById('chartCoach').textContent = availableMarkets
+        ? `已准备 Binance BTCUSDT ${availableMarkets} 1m / 5m / 1H 历史 K 线（各 499 根闭合样本；采样时未收盘的末根已排除）。训练设置可选择市场类型，课程锚点固定使用现货；当前 ${state.timeframe}，训练中逐根揭示未来。`
+        : '真实数据加载失败，当前仍可使用模拟教学。请确认已通过本地服务打开页面。';
+      renderPracticeChart(questions[trainingState.index]);
+      updateSimDisplay();
+      if (state.replayMode) { setActiveHistoricalMarket(state.replayMarket); historicalRows = historicalRowsFor(state.replayMarket, state.timeframe); renderChart(); }
     }
     document.getElementById('retrySessionSave').addEventListener('click', () => {
       if (sessionPersistenceBlocked) { location.reload(); return; }

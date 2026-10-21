@@ -1,0 +1,96 @@
+{
+  "version": 1,
+  "generatedAt": "2026-10-21T23:04:36.3990626+00:00",
+  "symbol": "BTCUSDT",
+  "rule": "Each file contains 500 source rows; the newest row is excluded and the remaining 499 candles must be closed at capture.",
+  "markets": {
+    "spot": {
+      "1m": {
+        "file": "btc-usdt-1m.json",
+        "rows": 500,
+        "excludedTrailingRows": 1,
+        "intervalMs": 60000,
+        "capturedAtMs": null,
+        "capturedAt": null,
+        "firstOpenTime": 1792286820000,
+        "lastSourceOpenTime": 1792316760000,
+        "lastIncludedOpenTime": 1792316700000,
+        "lastIncludedCloseTime": 1792316759999,
+        "sha256": "346ad7904bee1167589835e18adf8009054b6a7639be3cfac01f4a72b20979de",
+        "endpoint": "Binance Spot public klines snapshot; original capture timestamp not recorded"
+      },
+      "5m": {
+        "file": "btc-usdt-5m.json",
+        "rows": 500,
+        "excludedTrailingRows": 1,
+        "intervalMs": 300000,
+        "capturedAtMs": null,
+        "capturedAt": null,
+        "firstOpenTime": 1792167000000,
+        "lastSourceOpenTime": 1792316700000,
+        "lastIncludedOpenTime": 1792316400000,
+        "lastIncludedCloseTime": 1792316699999,
+        "sha256": "73a82ebdb612ac19d61c5b0bf6365dc35fbf830542fb3a47ca1cb9181a416f09",
+        "endpoint": "Binance Spot public klines snapshot; original capture timestamp not recorded"
+      },
+      "1H": {
+        "file": "btc-usdt-1h.json",
+        "rows": 500,
+        "excludedTrailingRows": 1,
+        "intervalMs": 3600000,
+        "capturedAtMs": null,
+        "capturedAt": null,
+        "firstOpenTime": 1790470800000,
+        "lastSourceOpenTime": 1792267200000,
+        "lastIncludedOpenTime": 1792263600000,
+        "lastIncludedCloseTime": 1792267199999,
+        "sha256": "39cde8c7b534ce61b8e3d0402d142b354f877e51721484239a9133f4a424f1bc",
+        "endpoint": "Binance Spot public klines snapshot; original capture timestamp not recorded"
+      }
+    },
+    "swap": {
+      "1m": {
+        "file": "btc-usdt-swap-1m.json",
+        "rows": 500,
+        "excludedTrailingRows": 1,
+        "intervalMs": 60000,
+        "capturedAtMs": 1792623878051,
+        "capturedAt": "2026-10-21T23:04:38.0517304+00:00",
+        "firstOpenTime": 1792593840000,
+        "lastSourceOpenTime": 1792623780000,
+        "lastIncludedOpenTime": 1792623720000,
+        "lastIncludedCloseTime": 1792623779999,
+        "sha256": "6313946e64dfb43e25ed05213ab0168c159f900e9ed49ebdf2b0dc80dc34dea4",
+        "endpoint": "https://fapi.binance.com/fapi/v1/klines?symbol=BTCUSDT&interval=1m&limit=500&endTime=1792623876647"
+      },
+      "5m": {
+        "file": "btc-usdt-swap-5m.json",
+        "rows": 500,
+        "excludedTrailingRows": 1,
+        "intervalMs": 300000,
+        "capturedAtMs": 1792623879074,
+        "capturedAt": "2026-10-21T23:04:39.0746934+00:00",
+        "firstOpenTime": 1792473900000,
+        "lastSourceOpenTime": 1792623600000,
+        "lastIncludedOpenTime": 1792623300000,
+        "lastIncludedCloseTime": 1792623599999,
+        "sha256": "aaa5ce9e6b0e2ec5f0d48130f0839e854ab11cb94b7387d62bc082dd71a2b2a0",
+        "endpoint": "https://fapi.binance.com/fapi/v1/klines?symbol=BTCUSDT&interval=5m&limit=500&endTime=1792623878063"
+      },
+      "1H": {
+        "file": "btc-usdt-swap-1h.json",
+        "rows": 500,
+        "excludedTrailingRows": 1,
+        "intervalMs": 3600000,
+        "capturedAtMs": 1792623880074,
+        "capturedAt": "2026-10-21T23:04:40.0742009+00:00",
+        "firstOpenTime": 1790827200000,
+        "lastSourceOpenTime": 1792623600000,
+        "lastIncludedOpenTime": 1792620000000,
+        "lastIncludedCloseTime": 1792623599999,
+        "sha256": "fd8d91b79cc1c9c8b42f128579afab726ec1014de4b18214430525243640aa06",
+        "endpoint": "https://fapi.binance.com/fapi/v1/klines?symbol=BTCUSDT&interval=1h&limit=500&endTime=1792623879084"
+      }
+    }
+  }
+}
