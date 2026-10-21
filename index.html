@@ -1396,7 +1396,6 @@
     .chart-screen-reader { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
     .chart-axis-bar { display: flex; flex: 0 0 auto; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; padding: 2px 6px; border: 1px solid #2b3139; border-top: 0; background: #181a20; color: #848e9c; font: 11px/24px Arial, sans-serif; }
     .chart-axis-bar[hidden] { display: none; }
-    .chart-axis-bar.fallback-placeholder { visibility: hidden; }
     .chart-axis-hint { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .chart-axis-actions { display: flex; flex: 0 0 auto; gap: 3px; }
     .chart-axis-actions button { min-width: 32px; min-height: 28px; padding: 0 7px; border: 0; border-radius: 3px; background: transparent; color: #848e9c; cursor: pointer; font: inherit; }
@@ -2090,7 +2089,7 @@
       document.querySelectorAll('[data-ma]').forEach(input => { input.checked = state.sma[Number(input.dataset.ma)]; });
       document.querySelectorAll('[data-vol-ma]').forEach(input => { input.checked = state.volumeSma[Number(input.dataset.volMa)]; });
     }
-    const state = { scenario: 'up', timeframe: '1H', dataMode: 'live', chartType: 'candles', chartZoom: 1, chartOffset: 0, chartDragging: false, chartDragX: 0, chartTouchPoints: {}, chartTouchPinch: null, ...loadChartOverlayPreferences(), chartDisplay: loadChartDisplayPreferences(), indicatorParams: loadIndicatorParams(), lesson: 0, tool: 'cursor', indicator: loadIndicatorPreferences(), drawings: [], pendingDraw: [], replayMode: false, replayPaused: false, revealCount: 24, sessionLength: 60, sessionStart: 0, liveRows: [], liveUpdatedAt: 0, liveLoading: false, liveError: '' };
+    const state = { scenario: 'up', timeframe: '1H', dataMode: 'live', chartType: 'candles', chartZoom: 1, chartOffset: 0, chartDragging: false, chartDragX: 0, chartTouchPoints: {}, chartTouchPinch: null, fallbackPriceScale: { auto: true, zoom: 1, offset: 0, baseMin: null, baseMax: null }, fallbackPriceDrag: null, ...loadChartOverlayPreferences(), chartDisplay: loadChartDisplayPreferences(), indicatorParams: loadIndicatorParams(), lesson: 0, tool: 'cursor', indicator: loadIndicatorPreferences(), drawings: [], pendingDraw: [], replayMode: false, replayPaused: false, revealCount: 24, sessionLength: 60, sessionStart: 0, liveRows: [], liveUpdatedAt: 0, liveLoading: false, liveError: '' };
     const indicatorLibraryEntries = [
       { id: 'ema', code: 'EMA20 / 60', title: '指数移动平均', category: 'trend', summary: '比较短期与中期均线的位置和斜率。', observe: '先描述价格高低点，再看 EMA20 与 EMA60 是否同向；均线只作方向过滤。', confirm: '价格结构抬高且 EMA20 在 EMA60 上方，回踩时结构仍守住，才算多头假设得到配合。', caution: '均线交叉滞后，横盘时会反复交叉；不能把交叉本身当作入场信号。', action: 'ema', questionIndexes: [0, 7], sampleIds: ['trendExtension', 'pullbackContinuation'] },
       { id: 'structure', code: 'HH / HL', title: '摆动高低点结构', category: 'trend', summary: '用高点、低点的抬高或下移描述趋势。', observe: '比较连续摆动高点与低点：同步抬高、同步下移，或互相重叠。', confirm: '突破后观察是否出现新的摆动点，并结合回踩是否守住前一个结构位。', caution: '单根影线不一定构成有效摆动点；区间中部不要强行判趋势。', action: 'structure', questionIndexes: [0, 1] },
@@ -3048,13 +3047,28 @@
       scheduleChartOverlay();
     }
     function fitMarketChart() {
-      if (!proChart.chart) { state.chartZoom = 1; state.chartOffset = 0; renderChart(); return; }
+      if (!proChart.chart) { state.chartZoom = 1; state.chartOffset = 0; resetFallbackPriceScale(false); renderChart(); return; }
       proChart.chart.panes().forEach(pane => pane.priceScale('right').applyOptions({ autoScale: true }));
       syncChartAxisControls();
       const rowCount = proChart.visibleRows?.length || 0;
       if (!proChart.chart || rowCount < 2) return;
       proChart.chart.timeScale().setVisibleLogicalRange({ from: 0, to: rowCount - 1 });
       scheduleChartOverlay();
+    }
+    function setFallbackPriceScale(zoom, anchorFraction = .5, anchorPrice) {
+      const view = state.fallbackPriceScale, baseMin = view.baseMin, baseMax = view.baseMax;
+      if (!Number.isFinite(baseMin) || !Number.isFinite(baseMax) || baseMax <= baseMin) return;
+      const fraction = Math.max(0, Math.min(1, anchorFraction)), nextZoom = Math.max(.2, Math.min(8, zoom));
+      const span = (baseMax - baseMin) * nextZoom, centerBase = (baseMin + baseMax) / 2;
+      const anchor = Number.isFinite(anchorPrice) ? anchorPrice : centerBase + (view.auto ? 0 : view.offset);
+      const center = anchor - (.5 - fraction) * span;
+      view.auto = false; view.zoom = nextZoom; view.offset = center - centerBase;
+      renderChart();
+    }
+    function resetFallbackPriceScale(render = true) {
+      Object.assign(state.fallbackPriceScale, { auto: true, zoom: 1, offset: 0 });
+      syncChartAxisControls();
+      if (render) renderChart();
     }
     let drawingSequence = 0;
     function drawingSurface() {
@@ -3863,9 +3877,6 @@
         document.getElementById('chart').classList.remove('chart-fallback-mode');
         renderMarketChart(); return;
       }
-      const axisBar = document.getElementById('chartAxisBar');
-      axisBar.hidden = false;
-      axisBar.classList.add('fallback-placeholder');
       const container = document.getElementById('chart');
       // 清理旧版本残留尺寸，并按当前副图状态重算弹性布局。
       container.classList.remove('chart-fallback-mode');
@@ -3875,12 +3886,13 @@
       const W = Math.max(200, container.clientWidth || 900);
       const svg = el('svg', { class: 'chart-fallback', preserveAspectRatio: 'none', role: 'img', 'aria-labelledby': 'chartTitle chartDesc' });
       container.replaceChildren(svg);
+      syncChartAxisControls();
       const paneNames = ['rsi', 'macd', 'kdj'].filter(key => state.indicator[key]);
       container.classList.add('chart-fallback-mode');
       const H = container.clientHeight || 540;
       const { plot, paneStep, paneStart, volumeTop } = fallbackChartLayout(W, H, paneNames.length);
       svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-      svg.dataset.plotX = plot.x; svg.dataset.plotWidth = plot.w;
+      svg.dataset.plotX = plot.x; svg.dataset.plotWidth = plot.w; svg.dataset.plotY = plot.y; svg.dataset.plotHeight = plot.h;
       svg.dataset.paneTops = JSON.stringify({ main: 3, volume: volumeTop, ...Object.fromEntries(paneNames.map((name, i) => [name, paneStart + 3 + i * paneStep])) });
       const colors = chartColors;
       const sourceData = buildData(state.scenario, state.timeframe);
@@ -3903,7 +3915,13 @@
       const riskLevels = state.replayMode && sim.position ? [sim.position.stop, sim.position.target] : [];
       const indicatorPrices = [...psar.filter(Boolean).map(item => item.value), ...Object.values(smaValues).flat().filter(Number.isFinite), ...bollinger.filter(Boolean).flatMap(item => [item.upper, item.lower]), ...(state.show20 ? e20 : []), ...(state.show60 ? e60 : [])];
       const min = Math.min(...data.map(d => d.low), ...indicatorPrices, ...riskLevels), max = Math.max(...data.map(d => d.high), ...indicatorPrices, ...riskLevels);
-      const pad = Math.max(max - min, Math.abs(max) * .001, .01) * .10, lo = min - pad, hi = max + pad;
+      const pad = Math.max(max - min, Math.abs(max) * .001, .01) * .10;
+      const baseLo = min - pad, baseHi = max + pad, priceScale = state.fallbackPriceScale;
+      priceScale.baseMin = baseLo; priceScale.baseMax = baseHi;
+      const baseCenter = (baseLo + baseHi) / 2, baseSpan = baseHi - baseLo;
+      const visibleSpan = baseSpan * (priceScale.auto ? 1 : priceScale.zoom);
+      const offset = priceScale.auto ? 0 : priceScale.offset;
+      const lo = baseCenter + offset - visibleSpan / 2, hi = baseCenter + offset + visibleSpan / 2;
       const maxVol = Math.max(1, ...data.map(d => d.volume));
       const x = i => plot.x + (i + .5) * plot.w / data.length;
       const y = v => plot.y + (hi - v) / (hi - lo) * plot.h;
@@ -4048,6 +4066,15 @@
       // 捕获交给稳定容器，重绘替换 SVG 后仍能接收整次拖动及松开事件。
       container.onpointerdown = evt => {
         container.dataset.dragMoved = '';
+        const rect = svg.getBoundingClientRect(), localX = (evt.clientX - rect.left) * W / Math.max(1, rect.width), localY = (evt.clientY - rect.top) * H / Math.max(1, rect.height);
+        if (state.tool === 'cursor' && evt.button === 0 && localX >= plot.x + plot.w && localY >= plot.y && localY <= plot.y + plot.h) {
+          evt.preventDefault();
+          const fraction = Math.max(0, Math.min(1, (localY - plot.y) / plot.h));
+          state.fallbackPriceDrag = { pointerId: evt.pointerId, y: evt.clientY, fraction, anchor: hi - fraction * (hi - lo), zoom: priceScale.auto ? 1 : priceScale.zoom };
+          state.chartDragging = false;
+          container.setPointerCapture(evt.pointerId);
+          return;
+        }
         if (evt.pointerType === 'touch' && state.tool === 'cursor' && evt.target.closest?.('[data-overlay]')) {
           state.chartTouchPoints[evt.pointerId] = { x: evt.clientX, y: evt.clientY };
           try { container.setPointerCapture(evt.pointerId); } catch (_) {}
@@ -4069,6 +4096,11 @@
         if (evt.target.closest?.('[data-overlay]') && state.tool === 'cursor' && evt.button === 0) { state.chartDragging = true; state.chartDragX = evt.clientX; container.setPointerCapture(evt.pointerId); }
       };
       container.onpointermove = evt => {
+        if (state.fallbackPriceDrag?.pointerId === evt.pointerId) {
+          const drag = state.fallbackPriceDrag, zoom = drag.zoom * Math.exp((evt.clientY - drag.y) / 120);
+          setFallbackPriceScale(zoom, drag.fraction, drag.anchor);
+          return;
+        }
         if (evt.pointerType === 'touch' && Object.hasOwn(state.chartTouchPoints, evt.pointerId)) {
           state.chartTouchPoints[evt.pointerId] = { x: evt.clientX, y: evt.clientY };
           const points = Object.values(state.chartTouchPoints), pinch = state.chartTouchPinch;
@@ -4092,6 +4124,7 @@
       };
       const endDrag = evt => {
         if (proChart.editingDrawing) { container.dataset.dragMoved = 'true'; endDrawingEdit(evt); }
+        if (state.fallbackPriceDrag?.pointerId === evt.pointerId) state.fallbackPriceDrag = null;
         if (evt.pointerType === 'touch') {
           delete state.chartTouchPoints[evt.pointerId];
           const remaining = Object.values(state.chartTouchPoints);
@@ -4102,7 +4135,7 @@
         if (container.hasPointerCapture(evt.pointerId)) container.releasePointerCapture(evt.pointerId);
       };
       container.onpointerup = endDrag; container.onpointercancel = endDrag;
-      container.onlostpointercapture = () => { if (Object.keys(state.chartTouchPoints).length !== 1) state.chartDragging = false; };
+      container.onlostpointercapture = evt => { if (state.fallbackPriceDrag?.pointerId === evt.pointerId) state.fallbackPriceDrag = null; if (Object.keys(state.chartTouchPoints).length !== 1) state.chartDragging = false; };
       overlay.addEventListener('wheel', evt => {
         evt.preventDefault();
         const svgRect = svg.getBoundingClientRect();
@@ -4110,6 +4143,19 @@
         const anchor = Math.max(0, Math.min(1, (pointerX - plot.x) / plot.w));
         zoomFallbackAt(evt.deltaY < 0 ? 1.18 : .85, anchor);
       }, { passive: false });
+      container.onwheel = evt => {
+        const rect = svg.getBoundingClientRect(), localX = (evt.clientX - rect.left) * W / Math.max(1, rect.width), localY = (evt.clientY - rect.top) * H / Math.max(1, rect.height);
+        if (localX < plot.x + plot.w || localY < plot.y || localY > plot.y + plot.h) return;
+        evt.preventDefault();
+        const fraction = Math.max(0, Math.min(1, (localY - plot.y) / plot.h));
+        const anchor = hi - fraction * (hi - lo), zoom = (priceScale.auto ? 1 : priceScale.zoom) * Math.exp(evt.deltaY / 240);
+        setFallbackPriceScale(zoom, fraction, anchor);
+      };
+      container.ondblclick = evt => {
+        const rect = svg.getBoundingClientRect(), localX = (evt.clientX - rect.left) * W / Math.max(1, rect.width), localY = (evt.clientY - rect.top) * H / Math.max(1, rect.height);
+        if (localX < plot.x + plot.w || localY < plot.y || localY > plot.y + plot.h) return;
+        evt.preventDefault(); resetFallbackPriceScale();
+      };
       container.onpointerleave = () => { if (!state.chartDragging) { hideChartTooltip(); crosshair.setAttribute('opacity', '0'); restoreLatestReadout(); } };
       container.onclick = evt => {
         if (container.dataset.dragMoved || state.tool === 'cursor') return;
@@ -6013,9 +6059,19 @@
     }
     function syncChartAxisControls() {
       const available = Boolean(window.LightweightCharts && proChart.chart);
+      const fallback = !available && Boolean(document.querySelector('#chart svg.chart-fallback'));
       const axisBar = document.getElementById('chartAxisBar');
       axisBar.classList.remove('fallback-placeholder');
-      axisBar.hidden = !available;
+      axisBar.hidden = !available && !fallback;
+      document.querySelectorAll('[data-axis-mode]').forEach(button => { button.hidden = fallback; });
+      const priceMode = document.getElementById('chartPriceScaleMode');
+      if (priceMode) priceMode.disabled = fallback;
+      if (fallback) {
+        document.querySelector('.chart-axis-hint').textContent = '拖动价格轴缩放 · 滚轮缩放 · 双击恢复';
+        document.getElementById('chartAutoScale').setAttribute('aria-pressed', String(state.fallbackPriceScale.auto));
+        return;
+      }
+      document.querySelector('.chart-axis-hint').textContent = '拖动平移 · 滚轮缩放';
       if (!available) return;
       document.querySelectorAll('[data-axis-mode]').forEach(button => {
         button.setAttribute('aria-pressed', String(button.dataset.axisMode === state.chartDisplay.priceScaleMode));
@@ -6042,7 +6098,13 @@
       setChartPriceScaleMode(state.chartDisplay.priceScaleMode === button.dataset.axisMode ? 'normal' : button.dataset.axisMode);
     }));
     document.getElementById('chartAutoScale').addEventListener('click', () => {
-      if (!window.LightweightCharts || !proChart.chart) return;
+      if (!window.LightweightCharts || !proChart.chart) {
+        if (state.fallbackPriceScale.auto) {
+          Object.assign(state.fallbackPriceScale, { auto: false, zoom: 1, offset: 0 });
+          syncChartAxisControls(); renderChart();
+        } else resetFallbackPriceScale();
+        return;
+      }
       const scale = proChart.chart.panes()[0].priceScale('right');
       scale.applyOptions({ autoScale: !scale.options().autoScale });
       syncChartAxisControls(); scheduleChartOverlay();

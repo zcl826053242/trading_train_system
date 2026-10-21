@@ -5,9 +5,14 @@ const path = require('node:path');
 const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 
 assert.match(html, /#chart\.chart-fallback-mode\s*\{[^}]*height:\s*100%\s*!important;[^}]*min-height:\s*0\s*!important;[^}]*flex:\s*1 1 auto;/);
-assert.match(html, /\.chart-axis-bar\.fallback-placeholder\s*\{\s*visibility:\s*hidden;\s*\}/);
-assert.match(html, /axisBar\.hidden\s*=\s*false;\s*axisBar\.classList\.add\('fallback-placeholder'\);/);
-assert.match(html, /axisBar\.classList\.remove\('fallback-placeholder'\);\s*axisBar\.hidden\s*=\s*!available;/);
+assert.match(html, /const fallback = !available && Boolean\(document\.querySelector\('#chart svg\.chart-fallback'\)\);/);
+assert.match(html, /axisBar\.hidden\s*=\s*!available && !fallback;/);
+assert.match(html, /button\.hidden\s*=\s*fallback/);
+assert.match(html, /priceMode\.disabled\s*=\s*fallback/);
+assert.match(html, /function setFallbackPriceScale\(zoom, anchorFraction = \.5, anchorPrice\)/);
+assert.match(html, /container\.onwheel\s*=\s*evt\s*=>\s*\{[\s\S]*?setFallbackPriceScale\(zoom, fraction, anchor\)/);
+assert.match(html, /container\.ondblclick\s*=\s*evt\s*=>\s*\{[\s\S]*?resetFallbackPriceScale\(\)/);
+assert.doesNotMatch(html, /container\.addEventListener\('(wheel|dblclick)'/);
 assert.doesNotMatch(html, /setProperty\('--fallback-height'/);
 assert.match(html, /body\.market-terminal\s+#chart\s*\{\s*height:\s*max\(280px,\s*min\(45vh,\s*360px\)\)\s*!important;\s*min-height:\s*max\(280px,\s*min\(45vh,\s*360px\)\);/);
 assert.match(html, /#chart\.has-rsi-pane\.has-macd-pane\.has-kdj-pane\s*\{\s*height:\s*calc\(max\(280px,\s*min\(45vh,\s*360px\)\)\s*\+\s*144px\)\s*!important;/);
