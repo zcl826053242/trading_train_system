@@ -1594,9 +1594,9 @@
         <div class="chart-wrap">
         <div class="chart-tools" aria-label="图表绘图工具">
             <div class="tool-group" aria-label="常用绘图工具">
-              <button type="button" class="tool-btn active" data-tool="cursor" aria-label="指针" title="指针"><i data-lucide="mouse-pointer-2" aria-hidden="true"></i></button>
-              <button type="button" class="tool-btn" data-tool="hline" aria-label="水平线" title="水平线"><i data-lucide="minus" aria-hidden="true"></i></button>
-              <button type="button" class="tool-btn" data-tool="trendline" aria-label="趋势线" title="趋势线"><i data-lucide="trending-up" aria-hidden="true"></i></button>
+              <button type="button" class="tool-btn active" data-tool="cursor" aria-label="指针" title="指针 (Alt+C)"><i data-lucide="mouse-pointer-2" aria-hidden="true"></i></button>
+              <button type="button" class="tool-btn" data-tool="hline" aria-label="水平线" title="水平线 (Alt+H)"><i data-lucide="minus" aria-hidden="true"></i></button>
+              <button type="button" class="tool-btn" data-tool="trendline" aria-label="趋势线" title="趋势线 (Alt+T)"><i data-lucide="trending-up" aria-hidden="true"></i></button>
               <button type="button" class="tool-btn" data-tool="fib" aria-label="斐波那契" title="斐波那契"><i data-lucide="git-commit-horizontal" aria-hidden="true"></i></button>
               <button type="button" class="tool-btn" data-tool="measure" aria-label="价格测量" title="价格测量"><i data-lucide="ruler" aria-hidden="true"></i></button>
               <button type="button" class="tool-btn" data-tool="rectangle" aria-label="区间框" title="区间框"><i data-lucide="square" aria-hidden="true"></i></button>
@@ -1608,7 +1608,7 @@
                 <span class="tool-menu-label">基础线型</span>
                 <button type="button" class="tool-btn" data-tool="horizontalRay" aria-label="水平射线" title="水平射线"><i data-lucide="move-right" aria-hidden="true"></i>水平射线</button>
                 <button type="button" class="tool-btn" data-tool="horizontalSegment" aria-label="水平线段" title="水平线段"><i data-lucide="between-horizontal-start" aria-hidden="true"></i>水平线段</button>
-                <button type="button" class="tool-btn" data-tool="verticalLine" aria-label="垂直直线" title="垂直直线"><i data-lucide="move-up" aria-hidden="true"></i>垂直直线</button>
+                <button type="button" class="tool-btn" data-tool="verticalLine" aria-label="垂直直线" title="垂直直线 (Alt+V)"><i data-lucide="move-up" aria-hidden="true"></i>垂直直线</button>
                 <button type="button" class="tool-btn" data-tool="verticalRay" aria-label="垂直射线" title="垂直射线"><i data-lucide="move-down" aria-hidden="true"></i>垂直射线</button>
                 <button type="button" class="tool-btn" data-tool="verticalSegment" aria-label="垂直线段" title="垂直线段"><i data-lucide="between-vertical-start" aria-hidden="true"></i>垂直线段</button>
                 <button type="button" class="tool-btn" data-tool="straightLine" aria-label="直线" title="直线"><i data-lucide="move-diagonal" aria-hidden="true"></i>直线</button>
@@ -4756,13 +4756,24 @@
     window.addEventListener('scroll', event => {
       if (event.target === document || event.target === document.documentElement || event.target === document.body) closeAdvancedDrawingTools();
     }, true);
-    document.querySelectorAll('[data-tool]').forEach(btn => btn.addEventListener('click', () => {
-      const fromAdvancedMenu = Boolean(btn.closest('#advancedDrawingTools'));
-      state.tool = btn.dataset.tool; state.pendingDraw = []; proChart.measurePoint = null; proChart.shapePoints = []; proChart.measurePreview = null; proChart.fibPoint = null; proChart.trendPoint = null;
+    function activateDrawingTool(tool, fromAdvancedMenu = false) {
+      if (![...document.querySelectorAll('[data-tool]')].some(button => button.dataset.tool === tool)) return false;
+      state.tool = tool; state.pendingDraw = []; proChart.measurePoint = null; proChart.shapePoints = []; proChart.measurePreview = null; proChart.fibPoint = null; proChart.trendPoint = null;
       syncAnyWavesFinishControl(); syncDrawingToolButtons();
       if (fromAdvancedMenu) closeAdvancedDrawingTools(true);
       document.getElementById('chartCoach').textContent = coachText[state.tool]; renderDrawingOverlay();
-    }));
+      return true;
+    }
+    document.querySelectorAll('[data-tool]').forEach(btn => btn.addEventListener('click', () => activateDrawingTool(btn.dataset.tool, Boolean(btn.closest('#advancedDrawingTools')))));
+    const drawingToolShortcuts = { t: 'trendline', h: 'hline', v: 'verticalLine', c: 'cursor' };
+    document.addEventListener('keydown', event => {
+      if (!document.body.classList.contains('market-terminal') || !event.altKey || event.ctrlKey || event.metaKey || event.shiftKey
+        || event.defaultPrevented || document.querySelector('dialog[open]')
+        || event.target.closest('input, textarea, select, [contenteditable]:not([contenteditable="false"])')) return;
+      const tool = drawingToolShortcuts[event.key.toLowerCase()];
+      if (!tool || !activateDrawingTool(tool)) return;
+      event.preventDefault();
+    });
     document.getElementById('finishAnyWaves').addEventListener('click', finishAnyWaves);
     document.addEventListener('keydown', event => {
       if (state.tool !== 'anyWaves' || !proChart.shapePoints.length) return;
