@@ -2544,7 +2544,7 @@
       const volume = chart.addSeries(L.HistogramSeries, { priceFormat: { type: 'volume' }, priceScaleId: 'right' }, volumePane.paneIndex());
       const volumeSmaColors = { 5: '#f0b90b', 10: '#5b8def', 20: '#0ecb81' };
       const volumeSmaSeries = Object.fromEntries(Object.entries(volumeSmaColors).map(([period, color]) => [period, chart.addSeries(L.LineSeries, { color, lineWidth: 1, priceScaleId: 'right', priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false }, volumePane.paneIndex())]));
-      volumePane.setStretchFactor(1.4);
+      volumePane.setStretchFactor(3.5);
       volumePane.priceScale('right').applyOptions({ visible: true, ticksVisible: true, scaleMargins: { top: .12, bottom: 0 }, borderVisible: true, borderColor: '#2b3139' });
       Object.assign(proChart, { chart, candles, line, ema20, ema60, psarSeries, smaSeries, volume, volumeSmaSeries, volumePane, drawingOverlay });
       chart.subscribeCrosshairMove(param => {
@@ -3784,19 +3784,19 @@
       for (const name of ['rsi', 'macd', 'kdj']) container.classList.toggle(`has-${name}-pane`, Boolean(state.indicator[name]));
       // SVG 随可用宽度排版，坐标文字不再把桌面 900px 等比压进手机。
       const W = Math.max(200, container.clientWidth || 900);
-      const plot = { x: 8, y: 48, w: W - 72, h: 248, volY: 338, volH: 56 };
-      const svg = el('svg', { class: 'chart-fallback', viewBox: '0 0 900 430', preserveAspectRatio: 'none', role: 'img', 'aria-labelledby': 'chartTitle chartDesc' });
+      const plot = { x: 8, y: 48, w: W - 72, h: 230, volY: 296, volH: 120 };
+      const svg = el('svg', { class: 'chart-fallback', viewBox: '0 0 900 454', preserveAspectRatio: 'none', role: 'img', 'aria-labelledby': 'chartTitle chartDesc' });
       container.replaceChildren(svg);
       const paneNames = ['rsi', 'macd', 'kdj'].filter(key => state.indicator[key]);
       // 备用 SVG 与专业图保持同样的副图可读高度；三副图时每个面板约 60px。
       const paneStep = 104;
-      const H = 430 + paneNames.length * paneStep;
+      const H = 454 + paneNames.length * paneStep;
       container.classList.add('chart-fallback-mode');
       // 备用图作为 chart-stage 的弹性子项填满父级分配空间，避免将上一次
       // 测量高度写成 min-height 后反向撑大 stage，桌面尺寸会随重绘累积。
       svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
       svg.dataset.plotX = plot.x; svg.dataset.plotWidth = plot.w;
-      svg.dataset.paneTops = JSON.stringify({ main: 12, volume: 306, ...Object.fromEntries(paneNames.map((name, i) => [name, 406 + i * paneStep])) });
+      svg.dataset.paneTops = JSON.stringify({ main: 12, volume: plot.volY + 3, ...Object.fromEntries(paneNames.map((name, i) => [name, 430 + i * paneStep])) });
       const colors = chartColors;
       const sourceData = buildData(state.scenario, state.timeframe);
       const live = state.dataMode === 'live' && state.liveRows.length > 0;
@@ -3878,7 +3878,7 @@
         });
       }
       paneNames.forEach((name, paneIndex) => {
-        const top = 406 + paneIndex * paneStep, height = 100;
+        const top = 430 + paneIndex * paneStep, height = 100;
         const pane = el('g', { 'data-indicator-pane': name }); svg.appendChild(pane);
         let lines, minValue = 0, maxValue = 100;
         if (name === 'rsi') lines = [calcRsi(sourceCloses, state.indicatorParams.rsi.period).map(item => item?.value).slice(start, start + visibleCount)];

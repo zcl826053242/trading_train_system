@@ -21,5 +21,8 @@ assert.match(html, /@media\s*\(max-width:\s*560px\)\s*and\s*\(min-height:\s*780p
 assert.match(html, /#chart\.has-rsi-pane\.has-macd-pane\.has-kdj-pane\s*\{\s*height:\s*calc\(min\(56vh,\s*480px\)\s*\+\s*144px\)\s*!important;/);
 assert.match(html, /const paneStep = 104;/);
 assert.match(html, /pane\.setStretchFactor\(2\.1\);/);
-assert.match(html, /const top = 406 \+ paneIndex \* paneStep, height = 100;/);
+assert.match(html, /volumePane\.setStretchFactor\(3\.5\);/);
+assert.match(html, /const plot = \{ x: 8, y: 48, w: W - 72, h: 230, volY: 296, volH: 120 \};/);
+assert.match(html, /const H = 454 \+ paneNames\.length \* paneStep;/);
+assert.match(html, /const top = 430 \+ paneIndex \* paneStep, height = 100;/);
 console.log('PASS: responsive stage sizing, compact short phones, chart-first tall phones, scrollable readouts, and the axis-bar layout slot remain consistent.');
