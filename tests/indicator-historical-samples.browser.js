@@ -110,31 +110,55 @@ async (page) => {
     }
   }
   for (const sample of [
-    { id: 113, time: '2026-10-01 18:00 UTC · 1H', title: '前高区域的长上影阴线', fact: '上影约 365.65，实体约 105.98', start: 90 },
-    { id: 138, time: '2026-10-02 19:00 UTC · 1H', title: '区间低位附近的长下影阳线', fact: '下影约 286.43，实体约 53.27', start: 115 }
-  ]) {
-    const context = await page.context().browser().newContext({ viewport: { width: 1440, height: 900 } });
+    { entry: 'candles', id: 113, time: '2026-10-01 18:00 UTC · 1H', title: '前高区域的长上影阴线', fact: '上影约 365.65，实体约 105.98', start: 90 },
+    { entry: 'candles', id: 138, time: '2026-10-02 19:00 UTC · 1H', title: '区间低位附近的长下影阳线', fact: '下影约 286.43，实体约 53.27', start: 115 },
+    { entry: 'double-top-bottom', id: 81, time: '2026-09-30 10:00 UTC · 1H', title: '相近双低收盘越过颈线（人工标注）', fact: '中间高点 N 83849.00', start: 58, points: [63, 70, 78] },
+    { entry: 'double-top-bottom', id: 276, time: '2026-10-08 13:00 UTC · 1H', title: '相近双高收盘跌破颈线（人工标注）', fact: '中间低点 N 82227.56', start: 253, points: [255, 267, 270] }
+  ]) for (const chartMode of ['professional', 'fallback']) for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 667 }]) {
+    const context = await page.context().browser().newContext({ viewport });
     const errors = [];
     try {
       await context.route('**/api/v5/**', route => route.abort());
       await context.route('**/unpkg.com/**', route => route.abort());
+      if (chartMode === 'fallback') await context.route('**/vendor/lightweight-charts.standalone.production.js', route => route.fulfill({ status: 200, contentType: 'application/javascript', body: '' }));
       const target = await context.newPage();
       target.on('pageerror', error => errors.push(error.message));
       target.on('dialog', dialog => dialog.accept());
       await target.goto('http://127.0.0.1:4188/', { waitUntil: 'domcontentloaded' });
       await target.waitForFunction(() => historicalReady && sessionPersistenceReady);
       await target.evaluate(() => setWorkspace('indicators'));
-      await target.locator('[data-indicator-entry="candles"]').click();
+      await target.locator(`[data-indicator-entry="${sample.entry}"]`).click();
       const card = target.locator(`.indicator-market-sample:has([data-pin-replay-sample="${sample.id}"])`);
       await card.waitFor();
       const cardText = await card.textContent();
-      if (!cardText.includes(sample.time) || !cardText.includes(sample.title) || !cardText.includes(sample.fact) || !cardText.includes('Binance 现货 K 线')) failures.push(`candles/${sample.id}: anchor or candle facts missing`);
+      if (!cardText.includes(sample.time) || !cardText.includes(sample.title) || !cardText.includes(sample.fact) || !cardText.includes('Binance 现货 K 线')) failures.push(`${sample.entry}/${sample.id}: anchor or candle facts missing`);
+      if (sample.points) {
+        const annotations = await card.locator('svg').evaluate(svg => {
+          const anchors = [...svg.querySelectorAll('[data-sample-anchor]')].map(node => ({ index: Number(node.dataset.sampleAnchor), x: Number(node.getAttribute('cx')), y: Number(node.getAttribute('cy')) }));
+          const labels = [...svg.querySelectorAll('text')].filter(node => ['A', 'N', 'B'].includes(node.textContent)).map(node => ({ label: node.textContent, x: Number(node.getAttribute('x')), y: Number(node.getAttribute('y')) }));
+          const neck = svg.querySelector('[data-sample-neckline]');
+          return { viewBox: svg.getAttribute('viewBox'), anchors, labels, neck: neck && { index: Number(neck.dataset.sampleNeckline), y: Number(neck.getAttribute('y1')), y2: Number(neck.getAttribute('y2')) } };
+        });
+        const expectedX = sample.points.map(index => 8 + (index - sample.id + 23.5) * 304 / 24);
+        const annotationsMatch = JSON.stringify(annotations.anchors.map(anchor => anchor.index)) === JSON.stringify(sample.points)
+          && annotations.labels.map(label => label.label).join('') === 'ANB'
+          && annotations.anchors.every((anchor, index) => Math.abs(anchor.x - expectedX[index]) < 0.001)
+          && annotations.labels.every((label, index) => Math.abs(label.x - expectedX[index]) < 0.001 && label.y > 0 && label.y < 86)
+          && annotations.neck?.index === sample.points[1]
+          && Math.abs(annotations.neck.y - annotations.neck.y2) < 0.001
+          && Math.abs(annotations.neck.y - annotations.anchors[1].y) < 0.001
+          && annotations.viewBox === '0 0 320 86';
+        if (!annotationsMatch) failures.push(`${sample.entry}/${sample.id}: manual A/N/B labels or neckline projection incorrect: ${JSON.stringify(annotations)}`);
+      }
       await card.locator('[data-pin-replay-sample]').click();
       await target.locator('#confirmTrainingStart').click();
-      const replay = await target.evaluate(() => ({ workspace: activeWorkspace, timeframe: state.timeframe, length: state.sessionLength, start: state.sessionStart, reveal: state.revealCount, mode: replayTraining.mode }));
+      const replay = await target.evaluate(() => ({ workspace: activeWorkspace, timeframe: state.timeframe, length: state.sessionLength, start: state.sessionStart, reveal: state.revealCount, mode: replayTraining.mode, professional: Boolean(window.LightweightCharts), lastClose: proChart.visibleRows.at(-1)?.close }));
       if (replay.workspace !== 'replay' || replay.timeframe !== '1H' || replay.length !== 60 || replay.start !== sample.start || replay.reveal !== 24 || replay.mode !== 'blind') failures.push(`candles/${sample.id}: replay setup incorrect: ${JSON.stringify(replay)}`);
+      if (replay.professional !== (chartMode === 'professional')) failures.push(`${sample.entry}/${sample.id}: wrong chart engine`);
+      const expectedClose = sample.id === 81 ? 83918.01 : sample.id === 276 ? 82182.01 : sample.id === 113 ? 84802.02 : 84315.28;
+      if (replay.lastClose !== expectedClose) failures.push(`${sample.entry}/${sample.id}: last revealed price is not the anchor`);
       if (errors.length) failures.push(`candles/${sample.id}: ${errors.join('; ')}`);
-      results.push({ entry: 'candles', sampleIndex: sample.id, replay, errors });
+      results.push({ entry: sample.entry, sampleIndex: sample.id, chartMode, viewport, replay, errors });
     } catch (error) {
       failures.push(`candles/${sample.id}: ${error.message}`);
     } finally {

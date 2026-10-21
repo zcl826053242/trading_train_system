@@ -64,6 +64,30 @@ assert.ok(Math.abs(Math.abs(lowerWick.close - lowerWick.open) - 53.27) < 1e-8);
 assert.match(html, /id: 'candles',[^\n]+sampleIds: \['upperWickAtPriorHigh', 'lowerWickNearRangeLow'\]/);
 assert.match(html, /upperWickAtPriorHigh: \{ index: 113,[^\n]+不能单凭此K线做方向判断/);
 assert.match(html, /lowerWickNearRangeLow: \{ index: 138,[^\n]+不能单凭此K线做方向判断/);
+const catalogStart = html.indexOf('    const indicatorHistoricalSampleCatalog = ');
+vm.runInContext(html.slice(catalogStart, html.indexOf('\n    const indicatorCategoryLabels', catalogStart)).replace('const indicatorHistoricalSampleCatalog', 'var sampleCatalog'), context);
+for (const [id, anchor, first, neck, second, field, neckField, prices] of [
+  ['doubleBottomNecklineBreak', 81, 63, 70, 78, 'low', 'high', [82900, 83849, 82956.11, 83918.01]],
+  ['doubleTopNecklineBreak', 276, 255, 267, 270, 'high', 'low', [83681.91, 82227.56, 83283.28, 82182.01]]
+]) {
+  const entry = context.sampleCatalog[id];
+  assert.equal(entry.index, anchor);
+  assert.deepEqual([rows[first][field], rows[neck][neckField], rows[second][field], rows[anchor].close], prices);
+  assert.ok(first < neck && neck < second && second + 3 <= anchor, `${id}: selected turns are confirmable before the anchor`);
+  assert.ok(first >= anchor - 23 && second <= anchor, `${id}: all manual points are visible in the initial window`);
+  assert.equal(rows[anchor].close > rows[neck][neckField], field === 'low');
+  assert.ok(context.indicatorSampleMetrics(anchor), `${id}: sample has enough warmup`);
+  assert.deepEqual(JSON.parse(JSON.stringify(entry.annotations)), [{ index: first, field, label: 'A' }, { index: neck, field: neckField, label: 'N' }, { index: second, field, label: 'B' }]);
+  assert.match(entry.prompt, /不代表自动识别或反转保证/);
+}
+context.el = (tag, attributes, text) => ({ tag, attributes, text, children: [], append(...nodes) { this.children.push(...nodes); } });
+vm.runInContext(extract('renderIndicatorSampleChart'), context);
+const sampleEntry = context.sampleCatalog.doubleBottomNecklineBreak;
+const originalChart = context.renderIndicatorSampleChart(rows, 81, sampleEntry.annotations);
+const modifiedFuture = rows.map((row, i) => i > 81 ? { ...row, high: 999999, low: 1, close: 999999 } : row);
+assert.equal(JSON.stringify(context.renderIndicatorSampleChart(modifiedFuture, 81, sampleEntry.annotations)), JSON.stringify(originalChart), 'preview must not change when future rows change');
+const extraFuturePoint = [...sampleEntry.annotations, { index: 82, field: 'high', label: 'future' }];
+assert.equal(JSON.stringify(context.renderIndicatorSampleChart(rows, 81, extraFuturePoint)), JSON.stringify(originalChart), 'preview must ignore future manual points');
 context.state.replayMode = true;
 context.state.sessionStart = 64;
 const visible = rows.slice(64, 88);
