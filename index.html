@@ -2788,8 +2788,11 @@
     }
     function barTime(row, index) {
       if (row.openTime > 1000000000000) return Math.floor(row.openTime / 1000);
+      const rowIndex = Number(row.i ?? index);
+      if (state.timeframe === '1M') return Date.UTC(2025, rowIndex, 1) / 1000;
+      if (state.timeframe === '1W') return (Date.UTC(2024, 11, 30) + rowIndex * 7 * 86400000) / 1000;
       const interval = timeframeSeconds(state.timeframe);
-      return 1735689600 + (Number(row.i ?? index) * interval);
+      return 1735689600 + rowIndex * interval;
     }
     function calcRsi(values, period = 14) {
       if (values.length <= period) return values.map(() => null);

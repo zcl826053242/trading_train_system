@@ -25,13 +25,24 @@ function functionSource(name) {
   assert.ok(end >= 0, `Missing boundary for ${name}`);
   return body.slice(0, end + 5);
 }
-const context = vm.createContext({ state: { replayMode: false, dataMode: 'sim', liveRows: [] } });
-vm.runInContext(['seeded', 'timeframeSeconds', 'buildData'].map(functionSource).join('\n'), context);
+const context = vm.createContext({ state: { replayMode: false, dataMode: 'sim', liveRows: [], timeframe: '1H' } });
+vm.runInContext(['seeded', 'timeframeSeconds', 'barTime', 'buildData'].map(functionSource).join('\n'), context);
 for (const timeframe of expected) {
+  context.state.timeframe = timeframe;
   const seconds = context.timeframeSeconds(timeframe);
   assert.ok(Number.isFinite(seconds) && seconds > 0, `${timeframe} has a drawing/replay interval`);
   const rows = context.buildData('range', timeframe);
   assert.ok(rows.length >= 24, `${timeframe} supplies a usable simulated chart window`);
   assert.ok(rows.every(row => [row.open, row.high, row.low, row.close, row.volume].every(Number.isFinite)));
+  const times = rows.slice(0, 3).map((row, index) => context.barTime(row, index));
+  assert.ok(times[0] < times[1] && times[1] < times[2], `${timeframe} simulation timestamps increase`);
 }
-console.log('PASS: 15 live/simulation intervals map cleanly; chart data and timestamp intervals are valid; unavailable replay periods stay gated.');
+context.state.timeframe = '1W';
+assert.equal(new Date(context.barTime({ i: 0 }, 0) * 1000).getUTCDay(), 1, 'simulated weekly candles start on Monday UTC');
+context.state.timeframe = '1M';
+const monthly = [0, 1, 2].map(i => new Date(context.barTime({ i }, i) * 1000));
+assert.deepEqual(monthly.map(date => [date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()]),
+  [[2025, 0, 1], [2025, 1, 1], [2025, 2, 1]], 'simulated monthly candles follow calendar month boundaries');
+assert.equal((context.barTime({ i: 1 }, 1) - context.barTime({ i: 0 }, 0)) / 86400, 31,
+  'monthly timestamp spacing reflects the actual month length');
+console.log('PASS: 15 live/simulation intervals map cleanly; simulated weeks/months use calendar boundaries; unavailable replay periods stay gated.');
