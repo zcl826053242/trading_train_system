@@ -39,11 +39,17 @@ function harness() {
   const sim = { initialBalance: 10000, balance: 9749, realized: -1, position: { side: 'long', entry: 100 },
     log: ['opened'], trades: [{ id: 'saved-trade', sessionId: 'old-session' }] };
   const replayTraining = { id: 'session-1', mode: 'blind', decisions: [{ direction: 'up' }], saved: false, completedAt: 123 };
+  const drawingButtons = ['cursor', 'trendline'].map(tool => {
+    const button = new Element(tool); button.dataset.tool = tool; button.attributes = {};
+    button.classList = { toggle() {} }; button.setAttribute = () => {};
+    return button;
+  });
   const c = vm.createContext({
     state, sim, replayTraining, liveRefreshTimer: 7,
+    proChart: { editingDrawing: {}, measurePoint: {}, shapePoints: [{}], measurePreview: {}, fibPoint: {}, trendPoint: {} },
     liveBars: { '1m': '1m', '5m': '5m', '15m': '15m', '1H': '1H', '4H': '4H', '1D': '1D' },
     historicalByTimeframe: { '1H': [{}], '5m': [{}], '1m': [{}] },
-    document: { getElementById: get, querySelectorAll: selector => selector === '[name="decisionEvidence"]' ? evidence : [],
+    document: { getElementById: get, querySelectorAll: selector => selector === '[name="decisionEvidence"]' ? evidence : selector === '[data-tool]' ? drawingButtons : [],
       querySelector: selector => selector === '.layout .side' ? get('side') : null },
     window: { confirm: message => { calls.push(['confirm', message]); return c.accept; } }, accept: false,
     setInterval: () => 8, clearInterval: () => {},
@@ -55,12 +61,14 @@ function harness() {
       for (const id of ['decisionDirection', 'decisionInvalidation', 'decisionTarget', 'decisionRisk', 'decisionReason']) get(id).value = '';
       evidence.forEach(input => input.checked = false);
     },
+    syncAnyWavesFinishControl: () => {},
+    syncDrawingToolButtons: () => {},
     renderReplayHistory: () => {}, updateReplayGate: () => {},
     questions: [{ tag: '样本', period: '1H', title: '题目', body: '说明', chips: [['EMA', '向上', 'green']] }],
     trainingState: {}, stageState: { mode: 'guided' }, renderPracticeChart: () => {},
     setPracticeStep: () => {}, updateTrainingCoach: () => {}, renderKnowledgeChain: () => {}, updateAiCoach: () => {}
   });
-  vm.runInContext(['setDataMode', 'confirmSimulationContextChange', 'resetSimulationContext', 'selectChartTimeframe',
+  vm.runInContext(['setDataMode', 'confirmSimulationContextChange', 'resetSimulationContext', 'cancelPendingDrawingDraft', 'selectChartTimeframe',
     'setScenario', 'renderQuestion', 'syncReplayWorkspace', 'openWorkspaceRecords', 'dockWorkspaceControls'].map(source).join('\n'), c);
   return { c, get, calls, evidence, snapshot: () => JSON.stringify({ state, sim, replayTraining,
     draft: ['decisionDirection', 'decisionReason'].map(id => get(id).value), evidence: evidence.map(input => input.checked) }) };
@@ -109,6 +117,15 @@ for (const accept of [false, true]) {
   assert.equal(c.selectChartTimeframe('5m'), true);
   assert.equal(JSON.stringify(c.sim), account); assert.equal(c.state.liveRows.length, 0);
   assert.deepEqual(calls.map(call => call[0]), ['timeframes', 'load']);
+}
+{
+  const { c } = harness(); c.state.replayMode = false; c.state.dataMode = 'live';
+  c.state.tool = 'trendline'; c.state.pendingDraw = ['unfinished'];
+  assert.equal(c.selectChartTimeframe('5m'), true);
+  assert.equal(c.state.tool, 'cursor'); assert.equal(c.state.pendingDraw.length, 0);
+  assert.equal(JSON.stringify([c.proChart.editingDrawing, c.proChart.measurePoint, c.proChart.shapePoints,
+    c.proChart.measurePreview, c.proChart.fibPoint, c.proChart.trendPoint]), JSON.stringify([null, null, [], null, null, null]),
+  'timeframe changes clear unfinished drawing anchors while leaving committed drawings intact');
 }
 
 // 切源取消须完整保留状态与表单，确认只重置当前账户，不删除成交档案。

@@ -76,6 +76,18 @@ async (page) => {
       });
       check(cleared.expected.every(value => cleared.ohlc.includes(value)), 'leaving chart did not restore latest OHLC');
       checks.push({ action: 'crosshair-leave', ...cleared });
+      // 切换周期会重建数据；未完成的绘图锚点不能串到新周期。
+      await target.locator('[data-tool="trendline"]').click();
+      const draftFrame = await frame();
+      await target.mouse.click(draftFrame.left + draftFrame.width * .4, draftFrame.top + draftFrame.height * .55);
+      const draftBefore = await target.evaluate(() => ({ pending: Boolean(proChart.trendPoint), tool: state.tool }));
+      await target.locator('[data-time="5m"]').click();
+      await target.waitForTimeout(120);
+      const draftAfter = await target.evaluate(() => ({ pending: Boolean(proChart.trendPoint), tool: state.tool, timeframe: state.timeframe }));
+      check(draftBefore.pending && draftAfter.timeframe === '5m' && !draftAfter.pending && draftAfter.tool === 'cursor', 'timeframe switch kept an unfinished drawing anchor');
+      checks.push({ action: 'timeframe-cancels-drawing-draft', draftBefore, draftAfter });
+      await target.locator('[data-time="1H"]').click();
+      await target.waitForTimeout(120);
       await target.locator('[data-tool="trendline"]').click();
       await target.locator('#chart').scrollIntoViewIfNeeded();
       const drawingFrame = await frame();

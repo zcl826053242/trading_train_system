@@ -2381,10 +2381,17 @@
       sim.balance = sim.initialBalance; sim.realized = 0; sim.position = null; sim.log = [];
       replayTraining.id = ''; replayTraining.decisions = []; replayTraining.saved = false; delete replayTraining.completedAt;
       state.replayPaused = false;
+      cancelPendingDrawingDraft();
       document.getElementById('replayPause').textContent = '暂停揭示';
       document.getElementById('simLog').textContent = '已切换行情环境，模拟账户重新开始。';
       document.getElementById('replayEvents').innerHTML = '<tr><td colspan="4" class="review-table-empty">开始回放后，揭示和订单事件会显示在这里。</td></tr>';
       clearReplayDecision();
+    }
+    function cancelPendingDrawingDraft() {
+      state.tool = 'cursor'; state.pendingDraw = [];
+      proChart.editingDrawing = null; proChart.measurePoint = null; proChart.shapePoints = [];
+      proChart.measurePreview = null; proChart.fibPoint = null; proChart.trendPoint = null;
+      syncAnyWavesFinishControl(); syncDrawingToolButtons();
     }
     function syncChartTimeframeControls() {
       document.querySelectorAll('[data-time]').forEach(button => {
@@ -2407,6 +2414,8 @@
         if (!confirmSimulationContextChange('sim')) return false;
         resetSimulationContext();
       }
+      // 未完成锚点属于当前周期的临时草稿，切换周期后不能与新数据拼接。
+      cancelPendingDrawingDraft();
       state.timeframe = timeframe;
       syncChartTimeframeControls();
       const hint = document.getElementById('chartCoach');
