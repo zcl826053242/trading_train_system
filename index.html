@@ -996,11 +996,12 @@
     body.market-terminal .topbar { display: none; }
     body.market-terminal .layout { height: calc(100dvh - 81px); min-height: 0; grid-template-columns: minmax(0, 1fr) 320px; gap: 0; align-items: stretch; overflow: hidden; background: #1b1b1b; }
     body.market-terminal .footer-note { min-height: 28px; margin: 0; padding: 5px 12px; align-items: center; background: #202630; color: #848e9c; font-size: 10px; line-height: 18px; }
-    body.market-terminal .chart-card { display: grid; min-height: 0; grid-template-columns: max-content auto max-content auto auto minmax(0, 1fr); grid-template-rows: 42px auto minmax(0, 1fr); column-gap: 8px; padding: 8px 12px 4px; border: 0; border-right: 1px solid #2b3139; border-radius: 0; background: #1b1b1b; color: #eaecef; }
+    body.market-terminal .chart-card { display: grid; min-height: 0; grid-template-columns: max-content auto max-content auto auto minmax(0, 1fr); grid-template-rows: 42px 16px minmax(0, 1fr); column-gap: 8px; padding: 8px 12px 4px; border: 0; border-right: 1px solid #2b3139; border-radius: 0; background: #1b1b1b; color: #eaecef; }
     body.market-terminal .chart-head, body.market-terminal #chartToolbar { display: contents; }
     body.market-terminal .instrument { grid-column: 1; grid-row: 1; min-width: 0; min-height: 42px; gap: 7px; }
     body.market-terminal .instrument h2 { color: #eaecef; font-size: 15px; }
-    body.market-terminal .instrument p { color: #848e9c; font-size: 10px; }
+    /* Binance-style terminal header keeps the symbol row single-line; the longer teaching hint remains in the side task card. */
+    body.market-terminal .instrument p { display: none; }
     body.market-terminal .coin { width: 28px; height: 28px; background: #f0b90b; color: #202630; }
     body.market-terminal .price-block { grid-column: 2; grid-row: 1; text-align: left; }
     body.market-terminal .price { color: #eaecef; font-size: 16px; }
@@ -2431,7 +2432,7 @@
         if (ohlcLabel) ohlcLabel.textContent = `暂无 ${state.timeframe} 行情`;
         if (chartStatus) { chartStatus.hidden = false; chartStatus.classList.add('failed'); chartStatus.textContent = state.liveRows.length ? `${state.timeframe} 行情读取失败，保留上次行情（非最新数据）` : `${state.timeframe} 行情读取失败，暂无可用实盘数据；可切换模拟教学`; }
         if (!state.liveRows.length && state.dataMode === 'live' && typeof renderChart === 'function') renderChart();
-        if (!quiet && state.dataMode === 'live') document.getElementById('chartCoach').textContent = '实盘行情暂时读取失败。你可以继续使用模拟教学，稍后再点“刷新行情”。';
+        if (!quiet && state.dataMode === 'live') document.getElementById('chartCoach').textContent = '行情暂不可用 · 切换模拟教学或稍后重试';
       } finally {
         clearTimeout(timeout);
         if (requestId !== liveRequestId) return;
@@ -2440,7 +2441,7 @@
         if (!state.liveError && chartStatus) { chartStatus.hidden = true; chartStatus.classList.remove('failed'); }
         updateMarketPerformance(state.liveRows);
         if (state.dataMode === 'live' && !state.liveRows.length && typeof renderChartEmptyState === 'function') renderChartEmptyState();
-        if (state.dataMode === 'live' && !state.liveError) document.getElementById('chartCoach').textContent = `实盘教学：先独立写下结构 → EMA/量能证据 → 失效位，再与下一次刷新后的行情对照。当前 ${state.timeframe}，数据源为 ${liveMarket.source}。`;
+        if (state.dataMode === 'live' && !state.liveError) document.getElementById('chartCoach').textContent = 'Binance 永续行情 · 记结构、量能与失效位，刷新后核对。';
       }
     }
     function setDataMode(mode) {
@@ -2457,7 +2458,7 @@
         clearInterval(liveRefreshTimer);
         liveRefreshTimer = setInterval(() => { if (state.dataMode === 'live') loadLiveMarket({ quiet: true }); }, 30000);
         updateDataSourceUI();
-        document.getElementById('chartCoach').textContent = '正在读取公开实盘行情。读取后先写判断，再打开指标验证，不要把实时价格当成下单信号。';
+        document.getElementById('chartCoach').textContent = 'Binance 永续行情加载中 · 仅供学习';
         state.liveRows = []; state.liveError = ''; state.liveUpdatedAt = 0;
         renderChart();
         updateSimDisplay();
