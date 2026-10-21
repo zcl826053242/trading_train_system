@@ -2,7 +2,7 @@
 // 隔离 context；比较专业图与备用图的可视逻辑范围、中心锚点和重置行为。
 async (page) => {
   const failures = [], results = [];
-  const viewports = [{ width: 1440, height: 900 }, { width: 390, height: 844 }];
+  const viewports = [{ width: 1440, height: 900 }, { width: 390, height: 844 }, { width: 320, height: 667 }];
   const read = target => target.evaluate(() => {
     const rows = proChart.visibleRows;
     if (proChart.chart) {
@@ -96,9 +96,19 @@ async (page) => {
       const reset = await read(target);
       if (Math.abs(reset.count - reset.loaded) > 1 || reset.first < -1 || reset.last > reset.loaded) failures.push(`${name}: reset did not fit the loaded data`);
       if (twiceZoomed.count >= initial.count) failures.push(`${name}: repeated zoom-in did not reduce visible range`);
+      await target.locator('[data-time="5m"]').click();
+      await target.waitForFunction(() => state.timeframe === '5m');
+      await settle(target);
+      const fiveMinute = await read(target);
+      if (fiveMinute.loaded <= reset.loaded || Math.abs(fiveMinute.count - fiveMinute.loaded) > 1 || fiveMinute.first < -1) failures.push(`${name}: switching to 5m did not fit its loaded data`);
+      await target.locator('[data-time="1H"]').click();
+      await target.waitForFunction(() => state.timeframe === '1H');
+      await settle(target);
+      const backToOneHour = await read(target);
+      if (Math.abs(backToOneHour.count - backToOneHour.loaded) > 1 || backToOneHour.first < -1) failures.push(`${name}: switching back to 1H kept a stale zoom range`);
       if (errors.length) failures.push(`${name}: page errors ${errors.join('; ')}`);
       results.push({ name, initial, zoomed, zoomInFactor, centerDriftIn, restored, wheelBefore, wheelAfter,
-        wheelAnchorDrift: Math.abs(wheelAfter.logical - wheelBefore.logical), twiceZoomed, reset, errors });
+        wheelAnchorDrift: Math.abs(wheelAfter.logical - wheelBefore.logical), twiceZoomed, reset, fiveMinute, backToOneHour, errors });
     } catch (error) {
       failures.push(`${name}: ${error.message}`);
     } finally {
