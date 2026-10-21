@@ -6,7 +6,8 @@ async (page) => {
     { entry: 'macd', indicator: 'macd', indices: [{ index: 87, expectedReadout: 'DIF 199.25' }, { index: 276, expectedReadout: 'DIF -401.29' }], metricCount: 3 },
     { entry: 'bollinger', indicator: 'bb', indices: [{ index: 174, expectedReadout: '上 85057.67' }], metricCount: 4 },
     { entry: 'kdj', indicator: 'kdj', indices: [{ index: 242, expectedReadout: 'K 18.9' }], metricCount: 3 },
-    { entry: 'psar', indicator: 'psar', indices: [{ index: 255, expectedReadout: 'SAR(0.02,0.2) 82787.25' }, { index: 265, expectedReadout: 'SAR(0.02,0.2) 83681.91' }], metricCount: 1 }
+    { entry: 'psar', indicator: 'psar', indices: [{ index: 255, expectedReadout: 'SAR(0.02,0.2) 82787.25' }, { index: 265, expectedReadout: 'SAR(0.02,0.2) 83681.91' }], metricCount: 1 },
+    { entry: 'rsi-divergence', indicator: 'rsi', indices: [{ index: 431, expectedReadout: 'RSI(14) 33.3' }], metricCount: 1 }
   ];
   for (const { entry, indicator, indices, metricCount } of cases) for (const { index: sampleIndex, expectedReadout } of indices) for (const chartMode of ['professional', 'fallback']) {
     const context = await page.context().browser().newContext({ viewport: { width: 1440, height: 900 } });
@@ -48,9 +49,9 @@ async (page) => {
         notice: document.querySelector('#setupPinnedSample').textContent
       }), indicator);
       if (!setup.open || !setup.pinned || setup.timeframe !== '1H' || setup.length !== '60' || setup.mode !== 'blind' || !setup.indicatorEnabled || !setup.savedIndicator) failures.push(`${entry}/${sampleIndex}: pinned replay setup or indicator preference incorrect`);
-      const expectedParams = indicator === 'macd' ? { fast: 12, slow: 26, signal: 9 } : indicator === 'bb' ? { period: 20, multiplier: 2 } : indicator === 'kdj' ? { period: 9, k: 3, d: 3 } : { step: .02, max: .2 };
+      const expectedParams = indicator === 'macd' ? { fast: 12, slow: 26, signal: 9 } : indicator === 'bb' ? { period: 20, multiplier: 2 } : indicator === 'kdj' ? { period: 9, k: 3, d: 3 } : indicator === 'psar' ? { step: .02, max: .2 } : { period: 14 };
       if (JSON.stringify(setup.params) !== JSON.stringify(expectedParams)) failures.push(`${entry}/${sampleIndex}: course default parameters were not applied`);
-      const parameterLabel = indicator === 'macd' ? 'MACD(12,26,9)' : indicator === 'bb' ? 'BOLL(20,2)' : indicator === 'kdj' ? 'KDJ(9,3,3)' : 'SAR(0.02,0.2)';
+      const parameterLabel = indicator === 'macd' ? 'MACD(12,26,9)' : indicator === 'bb' ? 'BOLL(20,2)' : indicator === 'kdj' ? 'KDJ(9,3,3)' : indicator === 'psar' ? 'SAR(0.02,0.2)' : 'RSI(14)';
       if (!setup.notice.includes(parameterLabel)) failures.push(`${entry}/${sampleIndex}: pinned setup does not disclose course parameters`);
       await target.locator('#confirmTrainingStart').click();
       await target.evaluate(() => updateChartOhlc(proChart.visibleRows.at(-1), proChart.visibleRows.length - 1, proChart.visibleRows));
@@ -113,7 +114,8 @@ async (page) => {
     { entry: 'candles', id: 113, time: '2026-10-01 18:00 UTC · 1H', title: '前高区域的长上影阴线', fact: '上影约 365.65，实体约 105.98', start: 90 },
     { entry: 'candles', id: 138, time: '2026-10-02 19:00 UTC · 1H', title: '区间低位附近的长下影阳线', fact: '下影约 286.43，实体约 53.27', start: 115 },
     { entry: 'double-top-bottom', id: 81, time: '2026-09-30 10:00 UTC · 1H', title: '相近双低收盘越过颈线（人工标注）', fact: '中间高点 N 83849.00', start: 58, points: [63, 70, 78] },
-    { entry: 'double-top-bottom', id: 276, time: '2026-10-08 13:00 UTC · 1H', title: '相近双高收盘跌破颈线（人工标注）', fact: '中间低点 N 82227.56', start: 253, points: [255, 267, 270] }
+    { entry: 'double-top-bottom', id: 276, time: '2026-10-08 13:00 UTC · 1H', title: '相近双高收盘跌破颈线（人工标注）', fact: '中间低点 N 82227.56', start: 253, points: [255, 267, 270] },
+    { entry: 'rsi-divergence', indicator: 'rsi', id: 431, time: '2026-10-15 00:00 UTC · 1H', title: '底背离候选仍待结构确认（人工标注）', fact: '价格低点更低约 0.23%', start: 408, points: [422, 431], labels: 'AB' }
   ]) for (const chartMode of ['professional', 'fallback']) for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 667 }]) {
     const context = await page.context().browser().newContext({ viewport });
     const errors = [];
@@ -141,21 +143,25 @@ async (page) => {
         });
         const expectedX = sample.points.map(index => 8 + (index - sample.id + 23.5) * 304 / 24);
         const annotationsMatch = JSON.stringify(annotations.anchors.map(anchor => anchor.index)) === JSON.stringify(sample.points)
-          && annotations.labels.map(label => label.label).join('') === 'ANB'
+          && annotations.labels.map(label => label.label).join('') === (sample.labels || 'ANB')
           && annotations.anchors.every((anchor, index) => Math.abs(anchor.x - expectedX[index]) < 0.001)
           && annotations.labels.every((label, index) => Math.abs(label.x - expectedX[index]) < 0.001 && label.y > 0 && label.y < 86)
-          && annotations.neck?.index === sample.points[1]
-          && Math.abs(annotations.neck.y - annotations.neck.y2) < 0.001
-          && Math.abs(annotations.neck.y - annotations.anchors[1].y) < 0.001
+          && (sample.labels === 'AB' ? annotations.neck === null : annotations.neck?.index === sample.points[1]
+            && Math.abs(annotations.neck.y - annotations.neck.y2) < 0.001
+            && Math.abs(annotations.neck.y - annotations.anchors[1].y) < 0.001)
           && annotations.viewBox === '0 0 320 86';
         if (!annotationsMatch) failures.push(`${sample.entry}/${sample.id}: manual A/N/B labels or neckline projection incorrect: ${JSON.stringify(annotations)}`);
       }
       await card.locator('[data-pin-replay-sample]').click();
       await target.locator('#confirmTrainingStart').click();
-      const replay = await target.evaluate(() => ({ workspace: activeWorkspace, timeframe: state.timeframe, length: state.sessionLength, start: state.sessionStart, reveal: state.revealCount, mode: replayTraining.mode, professional: Boolean(window.LightweightCharts), lastClose: proChart.visibleRows.at(-1)?.close }));
+      await target.evaluate(() => updateChartOhlc(proChart.visibleRows.at(-1), proChart.visibleRows.length - 1, proChart.visibleRows));
+      if (sample.indicator === 'rsi') await target.waitForFunction(() => document.querySelector('[data-pane-legend="rsi"]')?.getAttribute('aria-label')?.includes('RSI(14)'));
+      const replay = await target.evaluate(indicator => ({ workspace: activeWorkspace, timeframe: state.timeframe, length: state.sessionLength, start: state.sessionStart, reveal: state.revealCount, mode: replayTraining.mode, professional: Boolean(window.LightweightCharts), lastClose: proChart.visibleRows.at(-1)?.close, indicatorEnabled: indicator ? state.indicator[indicator] : undefined, readout: document.querySelector('[data-pane-legend="rsi"]')?.getAttribute('aria-label') || document.querySelector('#chartIndicatorValues').textContent }), sample.indicator || null);
       if (replay.workspace !== 'replay' || replay.timeframe !== '1H' || replay.length !== 60 || replay.start !== sample.start || replay.reveal !== 24 || replay.mode !== 'blind') failures.push(`candles/${sample.id}: replay setup incorrect: ${JSON.stringify(replay)}`);
       if (replay.professional !== (chartMode === 'professional')) failures.push(`${sample.entry}/${sample.id}: wrong chart engine`);
-      const expectedClose = sample.id === 81 ? 83918.01 : sample.id === 276 ? 82182.01 : sample.id === 113 ? 84802.02 : 84315.28;
+      if (sample.indicator && !replay.indicatorEnabled) failures.push(`${sample.entry}/${sample.id}: sample indicator was not enabled in replay`);
+      if (sample.indicator === 'rsi' && !replay.readout.includes('RSI(14) 33.3')) failures.push(`${sample.entry}/${sample.id}: replay RSI readout does not match the sample: ${replay.readout}`);
+      const expectedClose = sample.id === 81 ? 83918.01 : sample.id === 276 ? 82182.01 : sample.id === 113 ? 84802.02 : sample.id === 431 ? 81656.01 : 84315.28;
       if (replay.lastClose !== expectedClose) failures.push(`${sample.entry}/${sample.id}: last revealed price is not the anchor`);
       if (errors.length) failures.push(`candles/${sample.id}: ${errors.join('; ')}`);
       results.push({ entry: sample.entry, sampleIndex: sample.id, chartMode, viewport, replay, errors });

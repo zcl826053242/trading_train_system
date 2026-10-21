@@ -2107,7 +2107,7 @@
       { id: 'trendline', code: 'Trendline', title: '摆动趋势线', category: 'trend', summary: '连接至少两个有意义的摆动点，观察斜率与后续反应。', observe: '上涨结构连接逐步抬高的低点；下跌结构连接逐步降低的高点，先确认锚点再画线。', confirm: '观察价格是否多次在相近区域反应，并用收盘和摆动结构判断是否有效破坏。', caution: '线越贴近每根K线不代表越有效；触线不是自动进场信号，锚点选择带有主观性。', action: 'tool:trendline', questionIndexes: [4] },
       { id: 'fib-retracement', code: 'FIB', title: '斐波那契回撤区', category: 'channel', summary: '把一段已确认波段的回撤位置变成观察区，而非预测价位。', observe: '从波段起点到终点标记回撤线，观察价格接近比例线时的收盘、结构和成交量。', confirm: '只有出现可观察的止跌/受压结构，且失效位明确，回撤区才有练习价值。', caution: '比例线不是天然支撑阻力；起止点选择不同会改变结果，不把 38.2% 或 61.8% 当作保证。', action: 'tool:fib' },
       { id: 'parallel-channel', code: 'Channel', title: '平行价格通道', category: 'channel', summary: '用三个锚点标记价格波动的平行边界。', observe: '先连两个同侧摆动点，再用第三点确定另一侧的偏移，检查边界是否覆盖主要波动。', confirm: '比较上下边界反应、通道中轴和突破后的收盘，不因一次穿越就确认趋势反转。', caution: '通道是人工拟合的观察框架；价格可以越界，不能将边界当成硬性约束。', action: 'tool:parallelogram' },
-      { id: 'rsi-divergence', code: 'RSI + 结构', title: 'RSI 背离与结构确认', category: 'momentum', summary: '比较价格摆动极值与 RSI 极值是否不同步。', observe: '在相近周期对照两个价格高点/低点及其 RSI 读数，先确认比较的是对应摆动。', confirm: '背离只提示动能变化；等待关键结构被破坏或重新站回，再判断假设是否改变。', caution: '趋势中背离可以持续多次；周期错配、极值选择和数据差异都会造成误判。', action: 'rsi' },
+      { id: 'rsi-divergence', code: 'RSI + 结构', title: 'RSI 背离与结构确认', category: 'momentum', summary: '比较价格摆动极值与 RSI 极值是否不同步。', observe: '在相近周期对照两个价格高点/低点及其 RSI 读数，先确认比较的是对应摆动。', confirm: '背离只提示动能变化；等待关键结构被破坏或重新站回，再判断假设是否改变。', caution: '趋势中背离可以持续多次；周期错配、极值选择和数据差异都会造成误判。', action: 'rsi', sampleIds: ['rsiBullishDivergenceCandidate'] },
       { id: 'macd-histogram', code: 'MACD 柱', title: 'MACD 柱体收缩与扩张', category: 'momentum', summary: '观察快慢线差值的变化速度，不把柱体颜色当买卖指令。', observe: '同时看零轴位置、柱体连续变化和价格结构，区分动能减速与趋势反转。', confirm: '柱体收缩后若价格仍守住结构，只能说明推进减慢；结合后续摆动确认方向变化。', caution: 'MACD 由均线计算且有滞后；单次交叉或柱体翻色不等于价格已经反转。', action: 'macd', sampleIds: ['macdPositiveCooling', 'macdBearCrossBelowZero'] },
       { id: 'triangle-pattern', code: 'Triangle', title: '收敛三角形结构', category: 'pattern', summary: '标记高点与低点逐步收敛的区间，等待边界外收盘验证。', observe: '依次标出三个转折顶点，比较摆动幅度是否缩小，并检查两侧边界是否有多个触点。', confirm: '突破后观察收盘位置、量能和回踩；没有突破前仍按区间处理。', caution: '三个点只能画出几何形状，不能证明市场必然向某一侧突破。', action: 'tool:triangle', sampleIds: ['triangleCompressionBreakout'] },
       { id: 'double-top-bottom', code: 'W / M', title: '双顶与双底结构', category: 'pattern', summary: '比较相近的两次摆动高低点，并以中间回撤/反弹区域作为待验证颈线。', observe: '人工标注两次相近极值与中间摆动点，核对时间顺序、极值差异和颈线位置；不同锚点选择可能改变形态解释。', confirm: '只在收盘越过颈线后记录为突破候选，并继续检查后续是否站稳或收回。', caution: '双顶/双底是人工结构假设，不是自动识别、反转保证或独立交易信号；颈线突破可能失败。', action: 'candles', sampleIds: ['doubleBottomNecklineBreak', 'doubleTopNecklineBreak'] },
@@ -2131,7 +2131,8 @@
       upperWickAtPriorHigh: { index: 113, title: '前高区域的长上影阴线', prompt: '锚点开 84908.00、高 85273.65、低 84671.01、收 84802.02；上影约 365.65，实体约 105.98，收盘低于开盘。最高价越过此前 20 根高点区域 85078.85，收盘回到其下方；这只是潜在遇阻线索，继续观察后续收盘是否确认，不能单凭此K线做方向判断。' },
       lowerWickNearRangeLow: { index: 138, title: '区间低位附近的长下影阳线', prompt: '锚点开 84262.01、高 84354.57、低 83975.58、收 84315.28；下影约 286.43，实体约 53.27，收盘高于开盘。它接近此前 20 根低点区域，但单根下影只记录为承接线索；继续观察后续收盘是否确认，不能单凭此K线做方向判断。' },
       doubleBottomNecklineBreak: { index: 81, title: '相近双低收盘越过颈线（人工标注）', annotations: [{ index: 63, field: 'low', label: 'A' }, { index: 70, field: 'high', label: 'N' }, { index: 78, field: 'low', label: 'B' }], prompt: '人工选取低点 A 82900.00、低点 B 82956.11（相差约 0.07%），中间高点 N 83849.00 作为颈线；锚点收盘 83918.01，高于该颈线。此处只形成双底突破候选，需继续检查站稳或收回；锚点与触点选择带有主观性，不代表自动识别或反转保证。' },
-      doubleTopNecklineBreak: { index: 276, title: '相近双高收盘跌破颈线（人工标注）', annotations: [{ index: 255, field: 'high', label: 'A' }, { index: 267, field: 'low', label: 'N' }, { index: 270, field: 'high', label: 'B' }], prompt: '人工选取高点 A 83681.91、高点 B 83283.28（相差约 0.48%），中间低点 N 82227.56 作为颈线；锚点收盘 82182.01，低于该颈线。此处只形成双顶跌破候选，需继续检查是否站回或延续；锚点与触点选择带有主观性，不代表自动识别或反转保证。' }
+      doubleTopNecklineBreak: { index: 276, title: '相近双高收盘跌破颈线（人工标注）', annotations: [{ index: 255, field: 'high', label: 'A' }, { index: 267, field: 'low', label: 'N' }, { index: 270, field: 'high', label: 'B' }], prompt: '人工选取高点 A 83681.91、高点 B 83283.28（相差约 0.48%），中间低点 N 82227.56 作为颈线；锚点收盘 82182.01，低于该颈线。此处只形成双顶跌破候选，需继续检查是否站回或延续；锚点与触点选择带有主观性，不代表自动识别或反转保证。' },
+      rsiBullishDivergenceCandidate: { index: 431, title: '底背离候选仍待结构确认（人工标注）', annotations: [{ index: 422, field: 'low', label: 'A' }, { index: 431, field: 'low', label: 'B' }], prompt: '人工选取 A 低点 81588.88（RSI(14) 26.11）与 B 低点 81398.37（RSI(14) 33.33）：价格低点更低约 0.23%，RSI 高出约 7.22 点，只构成底背离候选。B 点收盘 81656.01 仍高于该低点，尚未形成明确的价格结构反转；请标出失效位置，等待后续收盘确认。背离不保证反转，锚点和极值选择均为人工观察，不代表自动识别。' }
     };
     const indicatorCategoryLabels = { trend: '趋势', channel: '通道', momentum: '动量', sentiment: '情绪', volume: '量能', pattern: '形态' };
     let activeIndicatorCategory = 'all';
@@ -5401,7 +5402,7 @@
       const pinnedNotice = document.getElementById('setupPinnedSample');
       pinnedNotice.hidden = pendingReplaySampleIndex == null;
       if (pendingReplaySampleIndex != null) {
-        const labels = { macd: 'MACD(12,26,9)', bb: 'BOLL(20,2)', kdj: 'KDJ(9,3,3)', psar: 'SAR(0.02,0.2)' };
+        const labels = { rsi: 'RSI(14)', macd: 'MACD(12,26,9)', bb: 'BOLL(20,2)', kdj: 'KDJ(9,3,3)', psar: 'SAR(0.02,0.2)' };
         pinnedNotice.textContent = `已选择课程历史位置；固定为 1 小时、60 根双盲，回放期间不显示日期或后续走势。${labels[indicator] ? `本课使用 ${labels[indicator]} 默认参数，已应用到图表设置。` : ''}`;
       }
       document.querySelectorAll('[data-setup-time]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.setupTime === trainingSetupState.timeframe)));
@@ -5603,8 +5604,7 @@
     function indicatorSampleMetrics(index, focusIndicator = '') {
       if (!historicalReady || !historicalByTimeframe['1H']?.[index] || index < 60) return null;
       const rows = historicalByTimeframe['1H'];
-      const warmupStart = Math.max(0, index - 82);
-      const closes = rows.slice(warmupStart, index + 1).map(row => row.close), e20 = ema(closes, 20), e60 = ema(closes, 60), rsi = calcRsi(closes);
+      const closes = rows.slice(0, index + 1).map(row => row.close), e20 = ema(closes, 20), e60 = ema(closes, 60), rsi = calcRsi(closes);
       const row = rows[index], prior = rows.slice(index - 20, index);
       const averageVolume = prior.reduce((sum, item) => sum + item.volume, 0) / prior.length;
       const prefix = rows.slice(0, index + 1), prefixCloses = prefix.map(item => item.close);
@@ -5651,7 +5651,7 @@
       const section = document.createElement('section'); section.className = 'indicator-market-samples'; section.setAttribute('aria-label', '历史行情样本');
       const heading = document.createElement('strong'); heading.textContent = '历史行情样本 · Binance BTCUSDT 现货'; section.append(heading);
       samples.forEach(sample => {
-        const hasIndicatorSample = ['macd', 'bb', 'kdj', 'psar'].includes(item.action);
+        const hasIndicatorSample = ['rsi', 'macd', 'bb', 'kdj', 'psar'].includes(item.action);
         const metrics = indicatorSampleMetrics(sample.index, hasIndicatorSample ? item.action : '');
         const card = document.createElement('article'); card.className = 'indicator-market-sample';
         const timestamp = metrics?.row.openTime ? new Date(metrics.row.openTime).toISOString().replace('T', ' ').slice(0, 16) + ' UTC' : '历史数据加载中';
@@ -5663,7 +5663,7 @@
         if (metrics) {
           const data = document.createElement('div'); data.className = 'indicator-sample-metrics';
           const values = [[`收盘 ${metrics.row.close.toFixed(2)}`], [`EMA20 ${metrics.e20.toFixed(2)}`], [`EMA60 ${metrics.e60.toFixed(2)}`]];
-          if (metrics.rsi != null) values.push([`RSI(14) ${metrics.rsi.toFixed(1)}`]);
+          if (metrics.rsi != null) values.push([`RSI(14) ${metrics.rsi.toFixed(1)}`, item.action === 'rsi' ? 'value' : '']);
           if (metrics.volumeRatio != null) values.push([`量 / 前20根均量 ${metrics.volumeRatio.toFixed(2)}×`]);
           if (metrics.macd) values.push([`MACD(12,26,9) DIF ${metrics.macd.dif.toFixed(2)}`, 'dif'], [`DEA ${metrics.macd.dea.toFixed(2)}`, 'dea'], [`柱 ${metrics.macd.histogram.toFixed(2)}`, 'histogram']);
           if (metrics.bollinger) values.push([`BOLL(20,2) 上轨 ${metrics.bollinger.upper.toFixed(2)}`, 'upper'], [`中轨 ${metrics.bollinger.mid.toFixed(2)}`, 'middle'], [`下轨 ${metrics.bollinger.lower.toFixed(2)}`, 'lower'], [`带宽 ${(metrics.bandWidth * 100).toFixed(2)}%`, 'width']);

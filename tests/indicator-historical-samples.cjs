@@ -28,6 +28,7 @@ const cases = [
   { indicator: 'macd', index: 276, time: '2026-10-08T13:00:00.000Z', close: 82182.01, values: { dif: -401.28543988708407, dea: -388.26315444459414, histogram: -13.022285442489931 }, title: 'macdBearCrossBelowZero' },
   { indicator: 'bb', index: 174, time: '2026-10-04T07:00:00.000Z', close: 85106, values: { upper: 85057.66749970253, middle: 84862.28300000001, lower: 84666.8985002975, bandWidth: 0.004604742950469888 }, title: 'bollSqueezeExpansion' },
   { indicator: 'kdj', index: 242, time: '2026-10-07T03:00:00.000Z', close: 84150.39, values: { k: 18.907641908186704, d: 18.203287731595843, j: 20.316350261368427 }, title: 'kdjOversoldDowntrend' },
+  { indicator: 'rsi', index: 431, time: '2026-10-15T00:00:00.000Z', close: 81656.01, values: { rsi: 33.33138467629682 }, title: 'rsiBullishDivergenceCandidate' },
   { indicator: 'psar', index: 255, time: '2026-10-07T16:00:00.000Z', close: 83386.09, values: { value: 82787.25, rising: true }, title: 'sarCountertrendFlip' },
   { indicator: 'psar', index: 265, time: '2026-10-08T02:00:00.000Z', close: 83168.01, values: { value: 83681.91, rising: false }, title: 'sarTrendResumption' }
 ];
@@ -37,7 +38,7 @@ for (const sample of cases) {
   assert.equal(row.close, sample.close);
   assert.equal(metrics.row, row);
   for (const [field, expected] of Object.entries(sample.values)) {
-    const actual = sample.indicator === 'macd' ? metrics.macd[field] : sample.indicator === 'bb' ? field === 'bandWidth' ? metrics.bandWidth : metrics.bollinger[field === 'middle' ? 'mid' : field] : sample.indicator === 'kdj' ? metrics.kdj[field] : metrics.psar[field];
+    const actual = sample.indicator === 'macd' ? metrics.macd[field] : sample.indicator === 'bb' ? field === 'bandWidth' ? metrics.bandWidth : metrics.bollinger[field === 'middle' ? 'mid' : field] : sample.indicator === 'kdj' ? metrics.kdj[field] : sample.indicator === 'psar' ? metrics.psar[field] : metrics.rsi;
     assert.ok(Math.abs(actual - expected) < 1e-8, `${sample.title} ${field}: ${actual} != ${expected}`);
   }
   assert.ok(html.includes(`${sample.title}: { index: ${sample.index},`), `${sample.title} catalog entry`);
@@ -80,6 +81,21 @@ for (const [id, anchor, first, neck, second, field, neckField, prices] of [
   assert.deepEqual(JSON.parse(JSON.stringify(entry.annotations)), [{ index: first, field, label: 'A' }, { index: neck, field: neckField, label: 'N' }, { index: second, field, label: 'B' }]);
   assert.match(entry.prompt, /不代表自动识别或反转保证/);
 }
+const divergence = context.sampleCatalog.rsiBullishDivergenceCandidate;
+const divergenceA = context.indicatorSampleMetrics(422), divergenceB = context.indicatorSampleMetrics(431), divergenceEnd = context.indicatorSampleMetrics(431);
+assert.equal(divergence.index, 431);
+assert.deepEqual([rows[422].low, rows[431].low, rows[439].low, rows[431].close], [81588.88, 81398.37, 81180.59, 81656.01]);
+assert.ok(rows[422].low < rows[421].low && rows[422].low <= rows[423].low);
+assert.ok(rows[431].low < rows[430].low && rows[431].low <= rows[432].low);
+assert.ok(Math.abs((rows[431].low / rows[422].low - 1) * 100 + 0.2335) < 0.001);
+assert.ok(Math.abs(divergenceA.rsi - 26.114658632535054) < 1e-8);
+assert.ok(Math.abs(divergenceB.rsi - 33.33138467629682) < 1e-8);
+assert.ok(divergenceB.rsi > divergenceA.rsi);
+assert.ok(Math.abs(divergenceB.rsi - divergenceA.rsi - 7.216726043761766) < 1e-8);
+assert.ok(rows[439].low < rows[431].low && divergenceEnd.row === rows[431]);
+assert.deepEqual(JSON.parse(JSON.stringify(divergence.annotations)), [{ index: 422, field: 'low', label: 'A' }, { index: 431, field: 'low', label: 'B' }]);
+assert.match(divergence.prompt, /不保证反转/);
+assert.doesNotMatch(divergence.prompt, /81180\.59|81380\.29/);
 context.el = (tag, attributes, text) => ({ tag, attributes, text, children: [], append(...nodes) { this.children.push(...nodes); } });
 vm.runInContext(extract('renderIndicatorSampleChart'), context);
 const sampleEntry = context.sampleCatalog.doubleBottomNecklineBreak;
@@ -95,4 +111,4 @@ const calculation = context.indicatorCalculationContext(visible);
 assert.equal(calculation.offset, 64);
 assert.equal(calculation.rows.length, 88, 'indicator warmup must stop at the last revealed row');
 assert.equal(calculation.rows.at(-1).close, rows[87].close);
-console.log('PASS: MACD/BOLL/KDJ/SAR samples match the closed snapshot; replay indicator warmup stops at the reveal boundary.');
+console.log('PASS: indicator, candle-pattern, and RSI divergence anchors match closed Binance spot data; manual points stay in-window and replay warmup stops at the reveal boundary.');
