@@ -3820,6 +3820,9 @@
       menu.style.left = `${left}px`;
       menu.style.top = `${top}px`;
     }
+    document.querySelector('#advancedDrawingTools .tool-menu-advanced').addEventListener('toggle', () => {
+      requestAnimationFrame(positionAdvancedDrawingTools);
+    });
     function finishAnyWaves() {
       if (state.tool !== 'anyWaves' || proChart.shapePoints.length < 2) return;
       registerDrawing('自由折线', [], { type: 'anyWaves', points: [...proChart.shapePoints] });
