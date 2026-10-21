@@ -15,7 +15,7 @@ assert.match(html, /\.chart-pane-legend\s*\{[^}]*overflow-x:\s*auto;[^}]*scrollb
 assert.match(html, /\.chart-pane-legend::\-webkit-scrollbar\s*\{\s*display:\s*none;\s*\}/);
 assert.match(html, /body\.market-terminal \.chart-indicator-values\s*\{[^}]*overflow-x:\s*auto;[^}]*scrollbar-width:\s*none;/);
 assert.match(html, /body\.market-terminal \.chart-indicator-values::\-webkit-scrollbar\s*\{\s*display:\s*none;\s*\}/);
-assert.match(html, /@media\s*\(min-width:\s*901px\)\s*and\s*\(max-width:\s*1100px\)\s*\{\s*body\.market-terminal\s+\.chart-wrap\s*\{\s*height:\s*540px;\s*min-height:\s*540px;\s*flex:\s*0 0 540px;\s*\}\s*body\.market-terminal\s+#chart\s*\{\s*height:\s*100%\s*!important;\s*min-height:\s*0\s*!important;/);
+assert.match(html, /@media\s*\(min-width:\s*561px\)\s*and\s*\(max-width:\s*1100px\)\s*\{\s*body\.market-terminal\s+\.chart-wrap\s*\{\s*height:\s*680px;\s*min-height:\s*680px;\s*flex:\s*0 0 680px;\s*\}\s*body\.market-terminal\s+#chart\s*\{\s*height:\s*100%\s*!important;\s*min-height:\s*0\s*!important;/);
 assert.match(html, /@media\s*\(max-width:\s*720px\)\s*\{\s*body\.market-terminal\s+#workspaceTaskDock\s*\{\s*grid-column:\s*1;\s*grid-row:\s*2;\s*\}\s*body\.market-terminal\s+\.chart-card\s*\{\s*grid-column:\s*1;\s*grid-row:\s*1;\s*\}\s*body\.market-terminal\s+\.side\s*\{\s*grid-column:\s*1;\s*grid-row:\s*3;/);
 assert.match(html, /@media\s*\(max-width:\s*560px\)\s*and\s*\(min-height:\s*780px\)\s*\{\s*body\.market-terminal\s+#chart\s*\{\s*height:\s*min\(56vh,\s*480px\)\s*!important;\s*min-height:\s*min\(56vh,\s*480px\);/);
 assert.match(html, /#chart\.has-rsi-pane\.has-macd-pane\.has-kdj-pane\s*\{\s*height:\s*calc\(min\(56vh,\s*480px\)\s*\+\s*144px\)\s*!important;/);
@@ -25,10 +25,10 @@ const start = html.indexOf('    function fallbackChartLayout(');
 assert.notEqual(start, -1);
 const context = vm.createContext({});
 vm.runInContext(html.slice(start, html.indexOf('\n    function ', start + 1)), context);
-for (const width of [264, 334, 1048]) {
-  for (const height of [280, 300, 396, 444, 606, 617, 900]) {
+for (const width of [264, 334, 859, 1048, 1392]) {
+  for (const height of [280, 300, 396, 444, 497, 537, 606, 617, 900]) {
     for (let count = 0; count <= 3; count++) {
-      // 最小手机基础图高280px，每开一个副图至少增加48px。
+      // 各视口需保留足够空间供图例和振荡曲线同时辨读。
       if (height < 280 + count * 48) continue;
       const {plot, volumeTop, paneStart, paneStep} = context.fallbackChartLayout(width, height, count);
       assert.ok(plot.w > 0 && plot.x + plot.w + 64 <= width);
@@ -37,12 +37,13 @@ for (const width of [264, 334, 1048]) {
       assert.ok(plot.volY >= volumeTop + 26 + 3, 'volume data stays below its legend');
       assert.ok(plot.volY + plot.volH <= paneStart, 'volume data stays in its pane');
       assert.ok(paneStart + count * paneStep <= height - 28 + 1e-6, 'panes stay above time axis');
+      const minimumCurveHeight = height >= 490 ? 18 : 9;
       for (let i = 0; i < count; i++) {
         const top = paneStart + i * paneStep;
         const height = paneStep - 5;
         const curveTop = top + height - Math.max(1, height - 32);
         assert.ok(curveTop >= top + 3 + 26 + 3 - 1e-6, 'oscillator curves clear the legend');
-        assert.ok(height - 32 >= 9, 'short-screen oscillators retain usable drawing height');
+        assert.ok(height - 32 >= minimumCurveHeight, 'oscillators retain a viewport-appropriate usable drawing height');
       }
     }
   }
