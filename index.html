@@ -589,6 +589,11 @@
     .setup-options { display: flex; gap: 7px; flex-wrap: wrap; }
     .setup-option { min-width: 62px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); color: var(--muted); padding: 8px 10px; font-size: 11px; }
     .setup-option[aria-pressed="true"] { border-color: var(--blue); background: var(--blue-soft); color: var(--blue); }
+    .setup-custom-length { display: inline-flex; align-items: center; gap: 5px; min-height: 31px; border: 1px solid var(--line); border-radius: 7px; padding: 0 8px; color: var(--muted); font-size: 11px; }
+    .setup-custom-length input { width: 58px; min-height: 25px; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; background: transparent; color: var(--ink); text-align: center; font: inherit; }
+    .setup-custom-length input:focus-visible { outline: 2px solid var(--blue); outline-offset: 1px; }
+    .setup-custom-length input:disabled { color: var(--muted); opacity: .55; }
+    .setup-custom-length:has(input:disabled) { opacity: .55; }
     .setup-info { display: flex; gap: 8px; padding: 10px; border-radius: 8px; background: var(--surface-2); color: var(--muted); font-size: 10px; }
     .setup-footer { display: flex; justify-content: flex-end; gap: 8px; padding: 13px 22px 18px; border-top: 1px solid var(--line); }
     .setup-start { border: 0; border-radius: 7px; background: var(--blue); color: #fff; padding: 9px 14px; font-size: 11px; }
@@ -2014,8 +2019,8 @@
     <div class="setup-head"><div><h2 id="setupTitle">开始一场历史训练</h2><p>品种与日期匿名，专注逐根判断和模拟执行。</p></div><button class="setup-close" type="button" id="closeTrainingSetup" aria-label="关闭">×</button></div>
     <div class="setup-body">
       <div class="setup-field"><strong>训练样本</strong><div class="setup-info"><span>匿名历史样本</span><span>·</span><span>训练中不显示品种和日期</span></div></div>
-      <div class="setup-field"><strong>周期</strong><div class="setup-options" role="group" aria-label="训练周期"><button type="button" class="setup-option" data-setup-time="1m" aria-pressed="false">1 分钟</button><button type="button" class="setup-option" data-setup-time="5m" aria-pressed="false">5 分钟</button><button type="button" class="setup-option" data-setup-time="1H" aria-pressed="true">1 小时</button></div></div>
-      <div class="setup-field"><strong>训练长度</strong><div class="setup-options" role="group" aria-label="训练长度"><button type="button" class="setup-option" data-setup-length="60" aria-pressed="true">60 根</button><button type="button" class="setup-option" data-setup-length="120" aria-pressed="false">120 根</button><button type="button" class="setup-option" data-setup-length="300" aria-pressed="false">300 根</button></div></div>
+      <div class="setup-field"><strong>周期</strong><div class="setup-options" role="group" aria-label="训练周期"><button type="button" class="setup-option" data-setup-time="1m" aria-pressed="false">1 分钟</button><button type="button" class="setup-option" data-setup-time="5m" aria-pressed="false">5 分钟</button><button type="button" class="setup-option" data-setup-time="1H" aria-pressed="true">1 小时</button><button type="button" class="setup-option" data-setup-time="1D" aria-pressed="false" disabled title="本地尚未载入可复核的日线历史样本">1 日（待数据）</button><button type="button" class="setup-option" data-setup-time="1W" aria-pressed="false" disabled title="本地尚未载入可复核的周线历史样本">1 周（待数据）</button><button type="button" class="setup-option" data-setup-time="1M" aria-pressed="false" disabled title="本地尚未载入可复核的月线历史样本">1 月（待数据）</button></div></div>
+      <div class="setup-field"><strong>训练长度</strong><div class="setup-options" role="group" aria-label="训练长度"><button type="button" class="setup-option" data-setup-length="60" aria-pressed="true">60 根</button><button type="button" class="setup-option" data-setup-length="120" aria-pressed="false">120 根</button><button type="button" class="setup-option" data-setup-length="300" aria-pressed="false">300 根</button><label class="setup-custom-length"><span>自定义</span><input id="setupLengthCustom" type="number" min="10" max="475" step="1" inputmode="numeric" aria-label="自定义训练长度" placeholder="10–475"><span>根</span></label></div><div class="setup-info"><span id="setupLengthHint">当前可选 10–475 根；额外保留 24 根历史用于指标预热。短场次保留最后 2 根未来 K 线。</span></div></div>
       <div class="setup-field"><strong>训练模式</strong><div class="setup-options" role="group" aria-label="训练模式"><button type="button" class="setup-option" data-setup-mode="blind" aria-pressed="true">双盲判断</button><button type="button" class="setup-option" data-setup-mode="free" aria-pressed="false">逐根自由操盘</button></div><div class="setup-info"><span id="setupModeHint">未来 K 线隐藏；每次揭示前先记录判断。</span></div></div>
       <div class="setup-info"><span>训练规则</span><span>品种与日期匿名。所有交易均为模拟，不会连接交易所账户。</span></div>
     </div>
@@ -2144,7 +2149,9 @@
       } catch (_) { return new Set(); }
     })();
     let activeIndicatorPractice = null;
-    const trainingSetupState = { timeframe: '1H', length: 60 };
+    const TRAINING_LENGTH_MIN = 10;
+    const TRAINING_WARMUP = 24;
+    const trainingSetupState = { timeframe: '1H', length: 60, lengthMode: 'preset' };
     let pendingReplaySampleIndex = null;
     const replayTraining = { id: '', mode: 'blind', decisions: [], saved: false };
     const trainingModeState = { mode: 'blind' };
@@ -2410,7 +2417,7 @@
         .some(id => document.getElementById(id).value.trim())
         || [...document.querySelectorAll('[name="decisionEvidence"]')].some(input => input.checked);
       const hasWork = Boolean(sim.position) || sim.realized !== 0 || sim.balance !== sim.initialBalance
-        || (Boolean(replayTraining.id) && !replayTraining.saved && (replayTraining.decisions.length > 0 || state.revealCount > 24 || hasDraft));
+        || (Boolean(replayTraining.id) && !replayTraining.saved && (replayTraining.decisions.length > 0 || state.revealCount > initialReplayReveal(state.sessionLength) || hasDraft));
       if (!hasWork) return true;
       return window.confirm(`切换到${mode === 'live' ? '公开实时行情' : '模拟教学'}将结束当前训练，清空当前模拟持仓并重置模拟账户；未保存的本轮判断和表单将被放弃。已保存的成交档案、复盘和课程进度保留。继续切换吗？`);
     }
@@ -5006,18 +5013,23 @@
       renderQuestion(questionIndex);
       document.getElementById('questionTitle').scrollIntoView({ behavior: 'smooth', block: 'center' });
     });
+    function initialReplayReveal(length) {
+      const value = Number(length);
+      return Number.isInteger(value) ? Math.min(24, Math.max(8, value - 2)) : 8;
+    }
     function replayWindow() { const start = Math.min(state.sessionStart, Math.max(0, historicalRows.length - state.sessionLength)); return historicalRows.slice(start, start + state.sessionLength); }
     // 账户、持仓和回放位置保存为同一份草稿；历史交易档案不用于反推当前场次余额。
     function normalizeSessionDraft(draft) {
       const validNumber = value => typeof value === 'number' && Number.isFinite(value);
       const integer = (value, min, max) => Number.isInteger(value) && value >= min && value <= max;
+      const minSessionLength = typeof TRAINING_LENGTH_MIN === 'number' ? TRAINING_LENGTH_MIN : 10;
       if (!draft || draft.version !== 1 || !draft.context || !draft.account || !draft.replay) throw new Error('草稿版本或结构无法识别');
       const c = draft.context, a = draft.account, r = draft.replay;
       if (!['sim', 'live'].includes(c.dataMode) || !['1m', '3m', '5m', '15m', '30m', '1H', '2H', '4H', '6H', '8H', '12H', '1D', '3D', '1W', '1M'].includes(c.timeframe)
         || (c.replayMode && !['1m', '5m', '1H'].includes(c.timeframe))
         || !['up', 'range', 'down', 'breakout', 'pullback', 'reversalUp', 'exhaustion', 'falseBreak', 'squeeze', 'volatility', 'breakdown', 'breakRetest'].includes(c.scenario)
         || typeof c.replayMode !== 'boolean' || typeof c.replayPaused !== 'boolean'
-        || !integer(c.sessionLength, 24, 500) || !integer(c.revealCount, 8, c.sessionLength) || !integer(c.sessionStart, 0, 100000)
+        || !integer(c.sessionLength, minSessionLength, 500) || !integer(c.revealCount, 8, c.sessionLength) || !integer(c.sessionStart, 0, 100000)
         || !['BTC-USDT-SWAP', 'ETH-USDT-SWAP', 'SOL-USDT-SWAP'].includes(c.instrument)) throw new Error('草稿行情位置无效');
       if (![a.balance, a.initialBalance, a.realized].every(validNumber) || a.initialBalance <= 0 || !['long', 'short'].includes(a.side)) throw new Error('草稿账户无效');
       let position = null;
@@ -5139,7 +5151,7 @@
         if (c.replayMode) {
           const rows = historicalByTimeframe[c.timeframe] || historicalByTimeframe['1H'] || [], d = draft.dataset;
           if (!d?.fingerprint) throw new Error('旧版回放草稿没有历史数据校验信息，无法确认原训练样本是否变化');
-          if (!replayDatasetMatches(d, rows) || c.sessionStart + c.sessionLength > rows.length) throw new Error('本地历史数据校验不匹配，不能安全续接原回放');
+          if (!replayDatasetMatches(d, rows) || c.sessionStart + c.sessionLength + TRAINING_WARMUP > rows.length) throw new Error('本地历史数据校验不匹配，不能安全续接原回放');
         }
         Object.assign(state, { scenario: c.scenario, timeframe: c.timeframe, dataMode: c.dataMode, replayMode: c.replayMode, replayPaused: c.replayPaused,
           revealCount: c.revealCount, sessionLength: c.sessionLength, sessionStart: c.sessionStart, chartType: c.chartType === 'line' ? 'line' : 'candles' });
@@ -5149,6 +5161,9 @@
         liveMarket.instrument = c.instrument;
         historicalRows = historicalByTimeframe[c.timeframe] || historicalByTimeframe['1H'] || [];
         trainingSetupState.timeframe = historicalByTimeframe[c.timeframe] ? c.timeframe : '1H'; trainingSetupState.length = c.sessionLength;
+        trainingSetupState.lengthMode = [60, 120, 300].includes(c.sessionLength) ? 'preset' : 'custom';
+        const restoredLengthInput = document.getElementById('setupLengthCustom');
+        if (restoredLengthInput) restoredLengthInput.value = String(c.sessionLength);
         setTrainingMode(draft.replay.mode);
         Object.entries(draft.fields).forEach(([id, value]) => { document.getElementById(id).value = value; });
         document.querySelectorAll('[name="decisionEvidence"]').forEach(input => { input.checked = draft.evidence.includes(input.value); });
@@ -5402,8 +5417,9 @@
       return true;
     }
     function replayResetNeedsConfirmation(work) {
+      const revealFloor = typeof initialReplayReveal === 'function' ? initialReplayReveal(work.sessionLength) : Math.min(24, Math.max(8, Number(work.sessionLength) - 2));
       return Boolean(work.hasPosition || work.hasSessionTrades || (work.activeSession && (
-        work.decisionCount > 0 || work.revealCount > Math.min(24, work.sessionLength) || work.hasFormDraft
+        work.decisionCount > 0 || work.revealCount > revealFloor || work.hasFormDraft
       )));
     }
     function confirmReplayReset() {
@@ -5422,7 +5438,7 @@
       if (!confirmReplayReset()) return;
       resetSimulationContext();
       replayTraining.id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-      state.revealCount = Math.min(24, state.sessionLength);
+      state.revealCount = initialReplayReveal(state.sessionLength);
       document.getElementById('blindRange').value = state.revealCount;
       document.getElementById('simLog').textContent = '训练记录会显示在这里。';
       updateBlind(); updateStats(); renderReplayHistory();
@@ -5448,38 +5464,83 @@
     document.getElementById('tradeCsv').addEventListener('change', event => { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = () => { const parsed = parseTradeCsv(String(reader.result || '')); sim.importedTrades = parsed; updateStats(); const note = document.getElementById('recommendation'); const original = note.innerHTML; note.innerHTML = `<strong>已导入 ${parsed.length} 条交易记录</strong>${original.replace(/<strong>.*?<\/strong>/, '')}`; }; reader.readAsText(file); });
     document.getElementById('clearStats').addEventListener('click', () => { sim.trades = []; sim.importedTrades = []; try { localStorage.removeItem('trend-lab-trades'); } catch (_) {} updateStats(); });
     document.getElementById('stageCards').addEventListener('click', event => { const card = event.target.closest('[data-stage-select]'); if (!card || card.disabled) return; stageState.active = Number(card.dataset.stageSelect); saveStageState(); renderStagePanel(); renderTrainingHome(); continueTrainingRoute(); });
+    function trainingLengthValue() {
+      const value = Number(trainingSetupState.length);
+      return Number.isInteger(value) ? value : null;
+    }
+    function syncTrainingLengthButtons() {
+      const value = trainingLengthValue();
+      document.querySelectorAll('[data-setup-length]').forEach(button => {
+        button.setAttribute('aria-pressed', String(trainingSetupState.lengthMode === 'preset' && Number(button.dataset.setupLength) === value));
+      });
+    }
+    function setTrainingLength(length, mode = 'preset') {
+      const value = Number(length);
+      trainingSetupState.lengthMode = mode === 'custom' ? 'custom' : 'preset';
+      trainingSetupState.length = Number.isInteger(value) ? value : NaN;
+      const input = document.getElementById('setupLengthCustom');
+      if (input && Number.isInteger(value)) input.value = String(value);
+      syncTrainingLengthButtons();
+      updateTrainingSetupAvailability();
+    }
+    function updateCustomTrainingLength() {
+      const input = document.getElementById('setupLengthCustom');
+      if (!input) return;
+      const raw = input.value.trim();
+      const value = raw === '' ? NaN : Number(raw);
+      trainingSetupState.lengthMode = 'custom';
+      trainingSetupState.length = Number.isInteger(value) ? value : NaN;
+      syncTrainingLengthButtons();
+      updateTrainingSetupAvailability();
+    }
     function updateTrainingSetupAvailability() {
       const start = document.getElementById('confirmTrainingStart');
       const status = document.getElementById('setupDataStatus');
+      const customLength = document.getElementById('setupLengthCustom');
+      const lengthHint = document.getElementById('setupLengthHint');
       const pinned = pendingReplaySampleIndex != null;
       const rows = historicalByTimeframe[trainingSetupState.timeframe] || [];
-      const canStart = historicalReady && rows.length >= trainingSetupState.length + 24;
+      const maxLength = Math.max(0, rows.length - TRAINING_WARMUP);
+      const length = trainingLengthValue();
+      const validLength = length != null && length >= TRAINING_LENGTH_MIN && length <= maxLength;
+      const canStart = historicalReady && validLength && rows.length >= length + TRAINING_WARMUP;
       document.querySelectorAll('[data-setup-time]').forEach(button => {
-        const available = historicalReady && (historicalByTimeframe[button.dataset.setupTime]?.length || 0) >= trainingSetupState.length + 24;
-        button.disabled = !available || (pinned && button.dataset.setupTime !== '1H');
-        button.title = pinned ? '课程历史样本固定使用 1 小时数据' : available ? '' : '该周期可用数据不足，无法满足当前训练长度';
+        const available = historicalReady && validLength && (historicalByTimeframe[button.dataset.setupTime]?.length || 0) >= length + TRAINING_WARMUP;
+        const unavailablePeriod = !historicalDatasetConfig[button.dataset.setupTime];
+        button.disabled = unavailablePeriod || !available || (pinned && button.dataset.setupTime !== '1H');
+        button.title = pinned ? '课程历史样本固定使用 1 小时数据' : unavailablePeriod ? '本地尚未载入可复核的该周期历史样本' : available ? '' : '该周期可用数据不足，无法满足当前训练长度';
       });
       document.querySelectorAll('[data-setup-length]').forEach(button => {
         const length = Number(button.dataset.setupLength);
-        const available = historicalReady && rows.length >= length + 24;
+        const available = historicalReady && rows.length >= length + TRAINING_WARMUP;
         button.disabled = !available || (pinned && length !== 60);
         button.title = pinned ? '课程历史样本固定使用 60 根双盲训练' : available ? '' : '当前周期可用数据不足';
       });
+      if (customLength) {
+        customLength.disabled = pinned || !historicalReady || maxLength < TRAINING_LENGTH_MIN;
+        customLength.min = String(TRAINING_LENGTH_MIN);
+        customLength.max = String(maxLength);
+        customLength.setAttribute('aria-invalid', String(!validLength));
+      }
+      if (lengthHint) lengthHint.textContent = pinned
+        ? '课程样本固定为 60 根双盲训练。'
+        : historicalReady ? `当前周期可选 ${TRAINING_LENGTH_MIN}–${maxLength} 根；额外保留 ${TRAINING_WARMUP} 根历史用于指标预热。短场次保留最后 2 根未来 K 线。` : '历史数据加载后计算可用上限。';
       document.querySelectorAll('[data-setup-mode]').forEach(button => { button.disabled = pinned && button.dataset.setupMode !== 'blind'; button.title = pinned ? '课程指定历史样本只用于双盲判断' : ''; });
       start.disabled = !canStart;
-      start.textContent = canStart ? '开始训练' : '正在准备';
+      start.textContent = canStart ? '开始训练' : historicalReady ? '调整训练长度' : '正在准备';
       status.textContent = historicalLoadError
         ? `历史数据加载失败：${historicalLoadError}。请通过一键启动脚本打开本地服务后重试。`
         : !historicalReady
           ? '历史行情加载中…'
           : canStart
             ? pinned ? '指定历史位置已就绪 · Binance BTCUSDT 现货 · 后续走势仍隐藏' : `${trainingSetupState.timeframe} 已就绪 · ${rows.length} 根历史 K 线 · 可随机抽取训练片段`
-            : `${trainingSetupState.timeframe} 数据不足以完成 ${trainingSetupState.length} 根训练，请更换周期或长度。`;
+            : length == null ? `请输入 ${TRAINING_LENGTH_MIN}–${maxLength} 之间的整数训练长度。` : `${trainingSetupState.timeframe} 当前支持 ${TRAINING_LENGTH_MIN}–${maxLength} 根训练（需保留 ${TRAINING_WARMUP} 根预热空间），请调整长度。`;
     }
     function setTrainingMode(mode) { trainingModeState.mode = mode === 'free' ? 'free' : 'blind'; document.querySelectorAll('[data-setup-mode]').forEach(item => item.setAttribute('aria-pressed', String(item.dataset.setupMode === trainingModeState.mode))); document.getElementById('setupModeHint').textContent = trainingModeState.mode === 'free' ? '逐根推进 K 线；可直接使用模拟开多、开空和平仓。' : '未来 K 线隐藏；每次揭示前先记录判断。'; }
     function openTrainingSetup({ mode, sampleIndex, timeframe, indicator } = {}) {
       if (sampleIndex != null && Number.isInteger(Number(sampleIndex))) {
-        pendingReplaySampleIndex = Number(sampleIndex); trainingSetupState.timeframe = '1H'; trainingSetupState.length = 60; setTrainingMode('blind');
+        pendingReplaySampleIndex = Number(sampleIndex); trainingSetupState.timeframe = '1H'; trainingSetupState.length = 60; trainingSetupState.lengthMode = 'preset';
+        document.getElementById('setupLengthCustom').value = '60'; setTrainingMode('blind');
       } else {
         pendingReplaySampleIndex = null;
         if (mode) setTrainingMode(mode);
@@ -5493,7 +5554,8 @@
         pinnedNotice.textContent = `已选择课程历史位置；固定为 1 小时、60 根双盲，回放期间不显示日期或后续走势。${labels[indicator] ? `本课使用 ${labels[indicator]} 默认参数，已应用到图表设置。` : ''}`;
       }
       document.querySelectorAll('[data-setup-time]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.setupTime === trainingSetupState.timeframe)));
-      document.querySelectorAll('[data-setup-length]').forEach(button => button.setAttribute('aria-pressed', String(Number(button.dataset.setupLength) === trainingSetupState.length)));
+      if (Number.isInteger(trainingSetupState.length)) document.getElementById('setupLengthCustom').value = String(trainingSetupState.length);
+      syncTrainingLengthButtons();
       updateTrainingSetupAvailability();
       const dialog = document.getElementById('trainingSetup');
       if (!dialog.open) dialog.showModal();
@@ -5501,13 +5563,14 @@
     document.getElementById('trainingSetup').addEventListener('close', () => { if (pendingReplaySampleIndex != null) { pendingReplaySampleIndex = null; document.getElementById('setupPinnedSample').hidden = true; updateTrainingSetupAvailability(); } });
     function beginHistoricalTraining() {
       const dialog = document.getElementById('trainingSetup'), rows = historicalByTimeframe[trainingSetupState.timeframe] || [], pinnedIndex = pendingReplaySampleIndex;
-      if (!historicalReady || rows.length < trainingSetupState.length + 24) { updateTrainingSetupAvailability(); return; }
+      const length = trainingLengthValue(), maxLength = Math.max(0, rows.length - TRAINING_WARMUP);
+      if (!historicalReady || length == null || length < TRAINING_LENGTH_MIN || length > maxLength || rows.length < length + TRAINING_WARMUP) { updateTrainingSetupAvailability(); return; }
       if (!confirmReplayReset()) return;
-      state.timeframe = trainingSetupState.timeframe; state.sessionLength = trainingSetupState.length; historicalRows = rows; state.replayMode = true;
-      const maxStart = Math.max(0, historicalRows.length - state.sessionLength - 24);
+      state.timeframe = trainingSetupState.timeframe; state.sessionLength = length; historicalRows = rows; state.replayMode = true;
+      const maxStart = Math.max(0, historicalRows.length - state.sessionLength - TRAINING_WARMUP);
       state.sessionStart = pinnedIndex == null ? Math.floor(Math.random() * (maxStart + 1)) : Math.max(0, Math.min(maxStart, pinnedIndex - 23));
       pendingReplaySampleIndex = null; document.getElementById('setupPinnedSample').hidden = true;
-      state.revealCount = Math.min(24, state.sessionLength); state.replayPaused = false; replayTraining.id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`; replayTraining.mode = trainingModeState.mode; sim.balance = 10000; sim.realized = 0; sim.position = null; sim.log = []; state.dataMode = 'sim'; stopLiveMarket(); replayTraining.decisions = []; replayTraining.saved = false; delete replayTraining.completedAt;
+      state.revealCount = initialReplayReveal(state.sessionLength); state.replayPaused = false; replayTraining.id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`; replayTraining.mode = trainingModeState.mode; sim.balance = 10000; sim.realized = 0; sim.position = null; sim.log = []; state.dataMode = 'sim'; stopLiveMarket(); replayTraining.decisions = []; replayTraining.saved = false; delete replayTraining.completedAt;
       document.getElementById('replayPause').textContent = '暂停揭示'; document.getElementById('blindRange').max = String(state.sessionLength); document.getElementById('blindRange').value = String(state.revealCount); document.getElementById('resetBlind').textContent = '重置本题'; document.getElementById('simLog').textContent = '训练记录会显示在这里。'; document.getElementById('replayEvents').innerHTML = '<tr><td colspan="4" class="review-table-empty">开始回放后，揭示和订单事件会显示在这里。</td></tr>';
       document.getElementById('replaySessionLabel').textContent = `匿名样本 · ${state.timeframe} · ${state.sessionLength} 根${trainingModeState.mode === 'free' ? '自由操盘' : '双盲判断'}`; clearReplayDecision(); if (dialog.open) dialog.close(); updateDataSourceUI(); document.getElementById('chartCoach').textContent = `Binance BTCUSDT 现货历史回放 · ${state.timeframe}：先记录结构、指标证据与失效位，再揭示下一根 K 线；样本不代表永续合约行情。`; updateReplayGate(); updateBlind(); updateStats(); renderReplayHistory(); setWorkspace('replay');
     }
@@ -5523,7 +5586,9 @@
     document.getElementById('closeTrainingSetup').addEventListener('click', () => document.getElementById('trainingSetup').close());
     document.getElementById('cancelTrainingSetup').addEventListener('click', () => document.getElementById('trainingSetup').close());
     document.querySelectorAll('[data-setup-time]').forEach(button => button.addEventListener('click', () => { if (button.disabled) return; trainingSetupState.timeframe = button.dataset.setupTime; document.querySelectorAll('[data-setup-time]').forEach(item => item.setAttribute('aria-pressed', String(item === button))); updateTrainingSetupAvailability(); }));
-    document.querySelectorAll('[data-setup-length]').forEach(button => button.addEventListener('click', () => { if (button.disabled) return; trainingSetupState.length = Number(button.dataset.setupLength); document.querySelectorAll('[data-setup-length]').forEach(item => item.setAttribute('aria-pressed', String(item === button))); updateTrainingSetupAvailability(); }));
+    document.querySelectorAll('[data-setup-length]').forEach(button => button.addEventListener('click', () => { if (button.disabled) return; setTrainingLength(Number(button.dataset.setupLength), 'preset'); }));
+    document.getElementById('setupLengthCustom').addEventListener('input', updateCustomTrainingLength);
+    document.getElementById('setupLengthCustom').addEventListener('change', updateCustomTrainingLength);
     document.querySelectorAll('[data-setup-mode]').forEach(button => button.addEventListener('click', () => setTrainingMode(button.dataset.setupMode)));
     document.getElementById('confirmTrainingStart').addEventListener('click', beginHistoricalTraining);
     document.getElementById('teachModeBtn').addEventListener('click', () => { stageState.mode = 'teach'; saveStageState(); renderStagePanel(); updateTrainingCoach(0); });

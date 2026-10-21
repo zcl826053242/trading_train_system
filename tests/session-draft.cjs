@@ -43,7 +43,7 @@ const { historicalDatasetFingerprint, replayDatasetMatches } = vm.runInNewContex
   ${html.slice(fingerprintStart, fingerprintEnd)}
   return { historicalDatasetFingerprint, replayDatasetMatches };
 })()`);
-assert.match(html, /if \(!replayDatasetMatches\(d, rows\) \|\| c\.sessionStart \+ c\.sessionLength > rows\.length\)/, 'Restoration must reject changed replay history');
+assert.match(html, /if \(!replayDatasetMatches\(d, rows\) \|\| c\.sessionStart \+ c\.sessionLength \+ TRAINING_WARMUP > rows\.length\)/, 'Restoration must reject changed replay history or a session without its warmup range');
 assert.match(html, /旧版回放草稿没有历史数据校验信息/, 'Legacy replay drafts must explain why they cannot be resumed');
 assert.match(html, /exportSessionDraftBackup\(\)/, 'Legacy recovery must provide a draft backup export action');
 assert.match(html, /已触发备份下载，原草稿仍保留/, 'Exporting a legacy draft must explicitly preserve the original');
@@ -86,6 +86,7 @@ const resetGuardEnd = html.indexOf('\n    function confirmReplayReset()', resetG
 assert.notEqual(resetGuardStart, -1, 'Missing replay reset confirmation guard');
 assert.notEqual(resetGuardEnd, -1, 'Cannot find end of replay reset confirmation guard');
 const replayResetNeedsConfirmation = vm.runInNewContext(`(() => {
+  const initialReplayReveal = length => Math.min(24, Math.max(8, Number(length) - 2));
   ${html.slice(resetGuardStart, resetGuardEnd)}
   return replayResetNeedsConfirmation;
 })()`);
@@ -93,6 +94,8 @@ const resetWork = overrides => ({ hasPosition: false, hasSessionTrades: false, a
   decisionCount: 0, revealCount: 24, sessionLength: 60, hasFormDraft: false, ...overrides });
 assert.equal(replayResetNeedsConfirmation(resetWork({ activeSession: false })), false, 'No active session must not prompt');
 assert.equal(replayResetNeedsConfirmation(resetWork({ activeSession: true })), false, 'An untouched session must not prompt');
+assert.equal(replayResetNeedsConfirmation(resetWork({ revealCount: 8, sessionLength: 10 })), false, 'A short session starts with 8 revealed candles without counting as user progress');
+assert.equal(replayResetNeedsConfirmation(resetWork({ revealCount: 9, sessionLength: 10 })), true, 'Progress after the short-session start must request confirmation');
 for (const [label, overrides] of [
   ['open position', { hasPosition: true }],
   ['session trade', { hasSessionTrades: true }],
@@ -134,6 +137,16 @@ assert.equal(restored.account.position.entry, 100);
 assert.equal(restored.account.balance, 9987.5);
 assert.equal(restored.fields.decisionReason, '尚未提交的理由');
 assert.equal(restored.events[0][1], '等待');
+const shortSessionDraft = draft();
+shortSessionDraft.context.sessionLength = 10;
+shortSessionDraft.context.revealCount = 8;
+shortSessionDraft.replay.decisions = [];
+assert.equal(normalize(shortSessionDraft).context.sessionLength, 10, 'Valid short custom sessions must remain resumable');
+const tooShortSessionDraft = draft();
+tooShortSessionDraft.context.sessionLength = 9;
+tooShortSessionDraft.context.revealCount = 8;
+tooShortSessionDraft.replay.decisions = [];
+assert.throws(() => normalize(tooShortSessionDraft), /草稿行情位置无效/, 'Drafts below the 10-candle minimum must be rejected');
 
 const invalidEvidence = draft();
 invalidEvidence.evidence = ['structure'];
