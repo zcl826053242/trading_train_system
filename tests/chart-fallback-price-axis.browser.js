@@ -14,6 +14,7 @@ async (page) => {
       await target.goto('http://127.0.0.1:4188/', { waitUntil: 'domcontentloaded' });
       await target.waitForFunction(() => historicalReady && sessionPersistenceReady);
       await target.locator('[data-nav-target="market"]').click();
+      await target.evaluate(() => { state.dataMode = 'sim'; state.replayMode = false; state.liveRows = []; state.liveError = ''; state.liveLoading = false; renderChart(); updateSimDisplay(); });
       const point = await target.locator('#chart .chart-fallback').evaluate(svg => {
         const rect = svg.getBoundingClientRect(), view = svg.viewBox.baseVal;
         const plotX = Number(svg.dataset.plotX), plotW = Number(svg.dataset.plotWidth);

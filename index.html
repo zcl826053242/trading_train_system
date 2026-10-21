@@ -153,6 +153,16 @@
     .chart-load-status { position: absolute; top: 8px; left: 8px; z-index: 4; max-width: calc(100% - 16px); padding: 5px 8px; border: 1px solid #665211; border-radius: 3px; background: rgba(32, 35, 40, .94); color: #f0b90b; font-size: 10px; line-height: 1.4; pointer-events: none; }
     .chart-load-status[hidden] { display: none; }
     .chart-load-status.failed { border-color: #7b4248; color: #f0a0a7; }
+    .chart-empty-state { position: absolute; inset: 0; z-index: 5; display: grid; place-items: center; padding: 24px; background: rgba(11, 14, 17, .94); color: #eaecef; text-align: center; }
+    .chart-empty-state[hidden] { display: none; }
+    .chart-empty-card { display: grid; max-width: 360px; gap: 7px; justify-items: center; padding: 22px 24px; border: 1px solid #2b3139; border-radius: 6px; background: #161a1e; box-shadow: 0 12px 30px rgba(0, 0, 0, .25); }
+    .chart-empty-card strong { color: #f0b90b; font-size: 14px; }
+    .chart-empty-card p { margin: 0; color: #848e9c; font-size: 11px; line-height: 1.6; }
+    .chart-empty-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 7px; margin-top: 5px; }
+    .chart-empty-actions button { min-height: 30px; padding: 4px 10px; border: 1px solid #3a4149; border-radius: 4px; background: #1e2329; color: #eaecef; font-size: 11px; }
+    .chart-empty-actions button:hover, .chart-empty-actions button:focus-visible { border-color: #f0b90b; color: #f0b90b; outline: none; }
+    .chart-empty-actions button.primary { border-color: #0c8b76; background: #123c35; color: #9fe1d0; }
+    .chart-empty-actions button.primary:hover, .chart-empty-actions button.primary:focus-visible { border-color: #0ecb81; color: #eaecef; }
     .chart-stage:fullscreen { width: 100vw; height: 100vh; border: 0; border-radius: 0; }
     .chart-stage:fullscreen #chart { height: calc(100vh - 34px); }
     .chart-wrap:fullscreen { display: grid; width: 100vw; height: 100vh; min-height: 0; grid-template-columns: 38px minmax(0, 1fr); gap: 8px; margin: 0; background: #0b0e11; }
@@ -1648,6 +1658,16 @@
             <button type="button" id="finishAnyWaves" class="drawing-finish-btn" hidden><i data-lucide="check" aria-hidden="true"></i>完成自由折线</button>
             <button type="button" id="indicatorPracticeStep" class="drawing-finish-btn indicator-practice-step" hidden>记录观察完成</button>
             <div class="chart-load-status" id="chartLoadStatus" role="status" aria-live="polite" hidden></div>
+            <div class="chart-empty-state" id="chartEmptyState" role="status" aria-live="polite" hidden>
+              <div class="chart-empty-card">
+                <strong id="chartEmptyTitle">正在读取公开行情…</strong>
+                <p id="chartEmptyMessage">暂无实盘 K 线时不会以模拟数据代替。</p>
+                <div class="chart-empty-actions">
+                  <button type="button" class="primary" id="chartEmptyRetry">刷新行情</button>
+                  <button type="button" id="chartEmptySwitchSim">切换模拟教学</button>
+                </div>
+              </div>
+            </div>
           </div>
           <div class="chart-axis-bar" id="chartAxisBar" hidden>
             <span class="chart-axis-hint">拖动平移 · 滚轮缩放</span>
@@ -2360,6 +2380,7 @@
       if (ohlcLabel) ohlcLabel.textContent = `正在读取 ${state.timeframe} 行情…`;
       if (chartStatus) { chartStatus.hidden = false; chartStatus.classList.remove('failed'); chartStatus.textContent = `正在读取 ${state.timeframe} 公开行情…`; }
       updateMarketPerformance(state.liveRows);
+      if (!state.liveRows.length && typeof renderChart === 'function') renderChart();
       const bar = liveBars[state.timeframe] || '1H';
       try {
         const url = `${liveMarket.endpoint}?instId=${encodeURIComponent(liveMarket.instrument)}&bar=${encodeURIComponent(bar)}&limit=300`;
@@ -2376,6 +2397,7 @@
         if (intervalLabel) intervalLabel.textContent = `${state.timeframe} · 失败`;
         if (ohlcLabel) ohlcLabel.textContent = `暂无 ${state.timeframe} 行情`;
         if (chartStatus) { chartStatus.hidden = false; chartStatus.classList.add('failed'); chartStatus.textContent = state.liveRows.length ? `${state.timeframe} 行情读取失败，保留上次行情（非最新数据）` : `${state.timeframe} 行情读取失败，暂无可用实盘数据；可切换模拟教学`; }
+        if (!state.liveRows.length && state.dataMode === 'live' && typeof renderChart === 'function') renderChart();
         if (!quiet && state.dataMode === 'live') document.getElementById('chartCoach').textContent = '实盘行情暂时读取失败。你可以继续使用模拟教学，稍后再点“刷新行情”。';
       } finally {
         clearTimeout(timeout);
@@ -2384,6 +2406,7 @@
         state.liveLoading = false; updateDataSourceUI();
         if (!state.liveError && chartStatus) { chartStatus.hidden = true; chartStatus.classList.remove('failed'); }
         updateMarketPerformance(state.liveRows);
+        if (state.dataMode === 'live' && !state.liveRows.length && typeof renderChartEmptyState === 'function') renderChartEmptyState();
         if (state.dataMode === 'live' && !state.liveError) document.getElementById('chartCoach').textContent = `实盘教学：先独立写下结构 → EMA/量能证据 → 失效位，再与下一次刷新后的行情对照。当前 ${state.timeframe}，数据源为 ${liveMarket.source}。`;
       }
     }
@@ -2402,7 +2425,8 @@
         liveRefreshTimer = setInterval(() => { if (state.dataMode === 'live') loadLiveMarket({ quiet: true }); }, 30000);
         updateDataSourceUI();
         document.getElementById('chartCoach').textContent = '正在读取公开实盘行情。读取后先写判断，再打开指标验证，不要把实时价格当成下单信号。';
-        state.liveRows = [];
+        state.liveRows = []; state.liveError = ''; state.liveUpdatedAt = 0;
+        renderChart();
         updateSimDisplay();
         loadLiveMarket();
       } else {
@@ -2493,6 +2517,8 @@
     function buildData(scenario, timeframe) {
       if (state.replayMode && historicalRows.length) return getHistoricalReplay();
       if (state.dataMode === 'live' && state.liveRows.length) return state.liveRows.slice(-300);
+      // 只读实盘尚未拿到数据时，不能用教学样本冒充行情。渲染层会显示明确的空状态。
+      if (state.dataMode === 'live' && !state.replayMode) return [];
       const count = ({ '1m': 60, '3m': 56, '5m': 54, '15m': 48, '30m': 46, '1H': 42, '2H': 40, '4H': 36, '6H': 34, '8H': 32, '12H': 32, '1D': 30, '3D': 28, '1W': 28, '1M': 24 })[timeframe] || 42;
       const step = ({ '1m': 0.28, '3m': 0.36, '5m': 0.46, '15m': 0.72, '30m': 0.86, '1H': 1, '2H': 1.18, '4H': 1.36, '6H': 1.52, '8H': 1.66, '12H': 1.82, '1D': 2.15, '3D': 2.75, '1W': 3.25, '1M': 4 })[timeframe] || 1;
       const downMode = ['down', 'breakdown'].includes(scenario);
@@ -2526,6 +2552,56 @@
         value = close;
       }
       return rows;
+    }
+    function clearChartReadouts() {
+      const set = (id, text) => { const node = document.getElementById(id); if (node) node.textContent = text; };
+      set('chartIntervalLabel', `${state.timeframe} · —`);
+      set('chartOhlc', `暂无 ${state.timeframe} 行情`);
+      set('chartIndicatorValues', '指标等待行情');
+      set('lastPrice', '—');
+      const change = document.getElementById('priceChange');
+      if (change) { change.innerHTML = '<span>等待公开行情</span>'; change.style.color = '#848e9c'; }
+      set('regime', '等待行情'); set('confidence', '暂无数据');
+      set('regimeDesc', '公开实盘 K 线加载后，再开始结构、指标和风险观察。');
+      set('candleHint', '当前：没有可用实盘 K 线'); set('regimeTime', `${state.timeframe} · 只读实盘`);
+      const status = document.getElementById('statusBox'); if (status) status.style.background = '#202328';
+      updateMarketPerformance([]); updateAccountSummary(null);
+      renderChartPaneLegends({ main: [], volume: [], rsi: [], macd: [], kdj: [] });
+      configureChartInspection([], 0, -1, null, null);
+    }
+    function renderChartEmptyState() {
+      const empty = document.getElementById('chartEmptyState');
+      if (!empty) return;
+      const liveWithoutRows = state.dataMode === 'live' && !state.replayMode && !state.liveRows.length;
+      empty.hidden = !liveWithoutRows;
+      if (!liveWithoutRows) return;
+      const loading = Boolean(state.liveLoading), failed = Boolean(state.liveError);
+      const title = document.getElementById('chartEmptyTitle'), message = document.getElementById('chartEmptyMessage');
+      const retry = document.getElementById('chartEmptyRetry'), switchSim = document.getElementById('chartEmptySwitchSim');
+      if (title) title.textContent = loading ? '正在读取公开行情…' : failed ? '暂无可用实盘数据' : '等待公开行情';
+      if (message) message.textContent = loading
+        ? `正在读取 ${state.timeframe} K 线；加载完成前不会展示模拟蜡烛。`
+        : failed ? `读取 ${state.timeframe} 行情失败：${state.liveError}。可重试，或切换模拟教学继续学习。`
+          : `尚未加载 ${state.timeframe} K 线；只读实盘无数据时不会以教学样本代替。`;
+      if (retry) { retry.hidden = loading; retry.disabled = loading; }
+      if (switchSim) switchSim.hidden = loading;
+      clearChartReadouts();
+    }
+    function clearProfessionalChartData() {
+      if (!proChart.chart) return;
+      const clear = series => { try { series?.setData([]); } catch (_) {} };
+      [proChart.candles, proChart.line, proChart.ema20, proChart.ema60, proChart.psarSeries, proChart.volume,
+        ...Object.values(proChart.smaSeries), ...Object.values(proChart.volumeSmaSeries), ...(proChart.bb || [])].forEach(clear);
+      if (proChart.markers) { try { proChart.markers.setMarkers([]); } catch (_) {} }
+      Object.values(proChart.indicators).forEach(item => item.series.forEach(series => { try { series.setData([]); } catch (_) {} }));
+      [...proChart.riskLines, ...proChart.extremeLines].forEach(line => { try { proChart.candles.removePriceLine(line); } catch (_) {} });
+      proChart.riskLines = []; proChart.extremeLines = [];
+      proChart.visibleRows = []; proChart.readoutRows = []; proChart.readoutOffset = 0; proChart.readoutData = null; proChart.psarValues = [];
+      proChart.viewKey = '';
+      configureChartInspection([], 0, -1, null, null);
+      renderChartPaneLegends({ main: [], volume: [], rsi: [], macd: [], kdj: [] });
+      try { proChart.chart.clearCrosshairPosition(); } catch (_) {}
+      scheduleChartOverlay();
     }
     function ema(values, period) {
       const k = 2 / (period + 1); let prev = values[0];
@@ -2964,7 +3040,12 @@
     function renderMarketChart() {
       initProChart();
       const rows = buildData(state.scenario, state.timeframe);
-      if (!rows?.length) return;
+      if (!rows?.length) {
+        clearProfessionalChartData();
+        renderChartEmptyState();
+        return;
+      }
+      renderChartEmptyState();
       const chartElement = document.getElementById('chart');
       chartElement.classList.toggle('has-rsi-pane', state.indicator.rsi);
       chartElement.classList.toggle('has-macd-pane', state.indicator.macd);
@@ -3891,6 +3972,16 @@
       // 清理旧版本残留尺寸，并按当前副图状态重算弹性布局。
       container.classList.remove('chart-fallback-mode');
       container.style.removeProperty('--fallback-height');
+      const sourceData = buildData(state.scenario, state.timeframe);
+      if (!sourceData.length) {
+        container.replaceChildren();
+        proChart.fallback = null; proChart.visibleRows = []; proChart.readoutRows = []; proChart.readoutOffset = 0; proChart.readoutData = null;
+        clearChartReadouts();
+        renderChartEmptyState();
+        syncChartAxisControls();
+        return;
+      }
+      renderChartEmptyState();
       for (const name of ['rsi', 'macd', 'kdj']) container.classList.toggle(`has-${name}-pane`, Boolean(state.indicator[name]));
       // 宽高均使用当前可用像素，文字与 HTML 图例不随副图数量变形。
       const W = Math.max(200, container.clientWidth || 900);
@@ -3905,7 +3996,6 @@
       svg.dataset.plotX = plot.x; svg.dataset.plotWidth = plot.w; svg.dataset.plotY = plot.y; svg.dataset.plotHeight = plot.h;
       svg.dataset.paneTops = JSON.stringify({ main: 3, volume: volumeTop, ...Object.fromEntries(paneNames.map((name, i) => [name, paneStart + 3 + i * paneStep])) });
       const colors = chartColors;
-      const sourceData = buildData(state.scenario, state.timeframe);
       const live = state.dataMode === 'live' && state.liveRows.length > 0;
       const visibleCount = Math.max(16, Math.min(sourceData.length, Math.round(sourceData.length / state.chartZoom)));
       const maxOffset = Math.max(0, sourceData.length - visibleCount);
@@ -4192,6 +4282,7 @@
       document.getElementById('lastPrice').textContent = formatChartPrice(last);
       const change = document.getElementById('priceChange'); change.innerHTML = `<i data-lucide="${pct >= 0 ? 'trending-up' : 'trending-down'}" aria-hidden="true"></i><span>${pct >= 0 ? '+' : ''}${pct.toFixed(2)}% · 近 ${data.length} 根</span>`;
       const regime = document.getElementById('regime'), desc = document.getElementById('regimeDesc'), conf = document.getElementById('confidence'), hint = document.getElementById('candleHint'), box = document.getElementById('statusBox');
+      change.style.removeProperty('color');
       if (state.dataMode === 'live' && state.liveRows.length) {
         const lookback = Math.max(1, Math.min(12, data.length - 1));
         const spread = e20[e20.length - 1] - e60[e60.length - 1];
@@ -5612,6 +5703,8 @@
     document.getElementById('simDataBtn').addEventListener('click', () => setDataMode('sim'));
     document.getElementById('liveDataBtn').addEventListener('click', () => setDataMode('live'));
     document.getElementById('liveRefreshBtn').addEventListener('click', () => loadLiveMarket());
+    document.getElementById('chartEmptyRetry').addEventListener('click', () => loadLiveMarket());
+    document.getElementById('chartEmptySwitchSim').addEventListener('click', () => setDataMode('sim'));
     document.getElementById('replayToggle').addEventListener('click', () => {
       if (state.replayMode) setWorkspace('replay');
       else openTrainingSetup();

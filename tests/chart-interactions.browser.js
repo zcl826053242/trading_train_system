@@ -15,6 +15,7 @@ async (page) => {
       await target.goto('http://127.0.0.1:4188/');
       await target.waitForFunction(() => sessionPersistenceReady && historicalReady);
       await target.locator('[data-nav-target="market"]').click();
+      await target.evaluate(() => { state.dataMode = 'sim'; state.replayMode = false; state.liveRows = []; state.liveError = ''; state.liveLoading = false; renderChart(); updateSimDisplay(); });
       const marketSummary = () => target.evaluate(() => Object.fromEntries(
         ['lastPrice', 'priceChange', 'regime', 'regimeDesc', 'confidence'].map(id => [id, document.getElementById(id).textContent])));
       const initialSummary = await marketSummary();
@@ -95,6 +96,8 @@ async (page) => {
       await target.waitForTimeout(120);
       const points = await target.evaluate(() => proChart.drawings.at(-1)?.edit.points);
       check(points?.length === 2 && points[0].price !== points[1].price && points[0].time !== points[1].time, 'a sloping trendline was not created');
+      // 教学模拟 K 线的绘图锚点还会带 scenario 元数据；交互回归只比较时间/价格这两个几何字段。
+      const pointGeometry = points?.map(point => ({ time: point.time, price: point.price }));
       const audit = async action => {
         await target.waitForTimeout(180);
         const result = await target.evaluate(() => {
@@ -137,7 +140,7 @@ async (page) => {
       }));
       check(!axisState.auto, 'price-axis drag did not enter manual scale mode');
       if (fallback) check(axisState.zoom > 1, 'fallback price-axis drag did not increase scale');
-      check(JSON.stringify(axisState.points) === JSON.stringify(points), 'price-axis drag changed drawing anchors');
+      check(JSON.stringify(axisState.points) === JSON.stringify(pointGeometry), 'price-axis drag changed drawing anchors');
       if (fallback) check(afterAxis.offset === beforeAxis.offset, 'price-axis drag changed the time offset');
       else check(afterAxis.range.from === beforeAxis.range.from && afterAxis.range.to === beforeAxis.range.to, 'price-axis drag changed the visible time range');
       checks.push({ action: 'price-axis-state', axisPoint, beforeAxis, afterAxis, axisState });

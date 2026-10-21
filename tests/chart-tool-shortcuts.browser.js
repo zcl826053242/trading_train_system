@@ -13,6 +13,7 @@ async (page) => {
       await target.goto('http://127.0.0.1:4188/', { waitUntil: 'domcontentloaded' });
       await target.waitForFunction(() => sessionPersistenceReady && historicalReady);
       await target.locator('[data-nav-target="market"]').click();
+      await target.evaluate(() => { state.dataMode = 'live'; state.replayMode = false; state.liveError = ''; state.liveLoading = false; state.liveRows = Array.from({ length: 42 }, (_, i) => { const close = 68000 + i * 4; return { i, openTime: 1700000000000 + i * 3600000, open: close - 2, high: close + 5, low: close - 5, close, volume: 12 }; }); renderChart(); updateSimDisplay(); });
       const point = async (x, y) => target.evaluate(({ x, y }) => {
         const rect = document.querySelector('#chart').getBoundingClientRect();
         return { x: rect.left + rect.width * x, y: rect.top + rect.height * y };

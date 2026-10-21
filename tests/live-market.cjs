@@ -16,6 +16,14 @@ function source(name) {
 const payload = close => ({ code: '0', data: Array.from({ length: 8 }, (_, i) => [
   String(1700000000000 + i * 60000), String(close - 1), String(close + 2), String(close - 2), String(close), '12'
 ]) });
+function dataHarness() {
+  const context = vm.createContext({
+    state: { dataMode: 'live', replayMode: false, liveRows: [], scenario: 'up' },
+    historicalRows: [], getHistoricalReplay: () => [{ open: 1, high: 2, low: 0, close: 1, volume: 1 }], seeded: () => .5
+  });
+  vm.runInContext(source('buildData'), context);
+  return context;
+}
 function harness() {
   const elements = new Map();
   const get = id => {
@@ -49,6 +57,20 @@ function harness() {
   return { context, requests, timers, get };
 }
 (async () => {
+  // 无实盘行情不可回退成模拟样本；模拟模式和有效回放仍各自返回本模式的数据。
+  {
+    const c = dataHarness();
+    assert.equal(c.buildData('up', '1H').length, 0);
+    c.state.dataMode = 'sim';
+    assert.ok(c.buildData('up', '1H').length > 0);
+    c.state.dataMode = 'live';
+    c.state.liveRows = [{ open: 90, high: 92, low: 89, close: 91, volume: 2 }];
+    assert.equal(c.buildData('up', '1H')[0].close, 91);
+    c.state.replayMode = true;
+    c.state.liveRows = [];
+    c.historicalRows = [{ open: 1, high: 2, low: 0, close: 1, volume: 1 }];
+    assert.equal(c.buildData('up', '1H')[0].close, 1);
+  }
   // 快速切周期：旧请求的成功和失败都不能覆盖新周期，旧 finally 不能清掉新 loading。
   for (const outcome of ['ok', 'fail']) {
     const { context: c, requests, timers, get } = harness();

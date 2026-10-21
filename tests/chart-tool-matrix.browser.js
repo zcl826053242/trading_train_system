@@ -22,6 +22,7 @@ async (page) => {
       await target.goto('http://127.0.0.1:4188/');
       await target.waitForFunction(() => sessionPersistenceReady && historicalReady);
       await target.locator('[data-nav-target="market"]').click();
+      await target.evaluate(() => { state.dataMode = 'sim'; state.replayMode = false; state.liveRows = []; state.liveError = ''; state.liveLoading = false; renderChart(); updateSimDisplay(); });
       await target.locator('summary[aria-label="图表设置"]').click();
       await target.locator('#simDataBtn').click();
       await target.locator('summary[aria-label="图表设置"]').click();
