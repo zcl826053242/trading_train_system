@@ -1390,7 +1390,7 @@
     .chart-pane-legend[hidden] { display: none; }
     .chart-pane-legend:focus-visible { outline: 1px solid #f0b90b; outline-offset: -1px; }
     .chart-pane-legend span { flex: 0 0 auto; font-variant-numeric: tabular-nums; }
-    #chart.chart-fallback-mode { height: 100% !important; min-height: 0 !important; flex: 1 1 auto; }
+    #chart.chart-fallback-mode { height: 100% !important; min-height: 0 !important; flex: 1 1 auto; touch-action: none; }
     .chart-pane-legends.fallback-legends .chart-pane-legend { font-size: 12px; line-height: 20px; }
     #chart:focus-visible { outline: 1px solid #f0b90b; outline-offset: -1px; }
     .chart-screen-reader { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
@@ -2091,7 +2091,7 @@
       document.querySelectorAll('[data-ma]').forEach(input => { input.checked = state.sma[Number(input.dataset.ma)]; });
       document.querySelectorAll('[data-vol-ma]').forEach(input => { input.checked = state.volumeSma[Number(input.dataset.volMa)]; });
     }
-    const state = { scenario: 'up', timeframe: '1H', dataMode: 'live', chartType: 'candles', chartZoom: 1, chartOffset: 0, chartDragging: false, chartDragX: 0, ...loadChartOverlayPreferences(), chartDisplay: loadChartDisplayPreferences(), indicatorParams: loadIndicatorParams(), lesson: 0, tool: 'cursor', indicator: loadIndicatorPreferences(), drawings: [], pendingDraw: [], replayMode: false, replayPaused: false, revealCount: 24, sessionLength: 60, sessionStart: 0, liveRows: [], liveUpdatedAt: 0, liveLoading: false, liveError: '' };
+    const state = { scenario: 'up', timeframe: '1H', dataMode: 'live', chartType: 'candles', chartZoom: 1, chartOffset: 0, chartDragging: false, chartDragX: 0, chartTouchPoints: {}, chartTouchPinch: null, ...loadChartOverlayPreferences(), chartDisplay: loadChartDisplayPreferences(), indicatorParams: loadIndicatorParams(), lesson: 0, tool: 'cursor', indicator: loadIndicatorPreferences(), drawings: [], pendingDraw: [], replayMode: false, replayPaused: false, revealCount: 24, sessionLength: 60, sessionStart: 0, liveRows: [], liveUpdatedAt: 0, liveLoading: false, liveError: '' };
     const indicatorLibraryEntries = [
       { id: 'ema', code: 'EMA20 / 60', title: '指数移动平均', category: 'trend', summary: '比较短期与中期均线的位置和斜率。', observe: '先描述价格高低点，再看 EMA20 与 EMA60 是否同向；均线只作方向过滤。', confirm: '价格结构抬高且 EMA20 在 EMA60 上方，回踩时结构仍守住，才算多头假设得到配合。', caution: '均线交叉滞后，横盘时会反复交叉；不能把交叉本身当作入场信号。', action: 'ema', questionIndexes: [0, 7], sampleIds: ['trendExtension', 'pullbackContinuation'] },
       { id: 'structure', code: 'HH / HL', title: '摆动高低点结构', category: 'trend', summary: '用高点、低点的抬高或下移描述趋势。', observe: '比较连续摆动高点与低点：同步抬高、同步下移，或互相重叠。', confirm: '突破后观察是否出现新的摆动点，并结合回踩是否守住前一个结构位。', caution: '单根影线不一定构成有效摆动点；区间中部不要强行判趋势。', action: 'structure', questionIndexes: [0, 1] },
@@ -4049,11 +4049,38 @@
       // 捕获交给稳定容器，重绘替换 SVG 后仍能接收整次拖动及松开事件。
       container.onpointerdown = evt => {
         container.dataset.dragMoved = '';
+        if (evt.pointerType === 'touch' && state.tool === 'cursor' && evt.target.closest?.('[data-overlay]')) {
+          state.chartTouchPoints[evt.pointerId] = { x: evt.clientX, y: evt.clientY };
+          try { container.setPointerCapture(evt.pointerId); } catch (_) {}
+          const points = Object.values(state.chartTouchPoints);
+          if (points.length >= 2) {
+            state.chartDragging = false;
+            const [a, b] = points, rect = svg.getBoundingClientRect();
+            const fraction = Math.max(0, Math.min(1, (((a.x + b.x) / 2 - rect.left) * W / rect.width - plot.x) / plot.w));
+            const rows = buildData(state.scenario, state.timeframe), visible = Math.max(16, Math.min(rows.length, Math.round(rows.length / state.chartZoom)));
+            const start = Math.max(0, rows.length - visible - state.chartOffset);
+            state.chartTouchPinch = { distance: Math.hypot(a.x - b.x, a.y - b.y), zoom: state.chartZoom, fraction, logical: start + fraction * visible };
+          } else {
+            state.chartDragging = true; state.chartDragX = evt.clientX; state.chartTouchPinch = null;
+          }
+          return;
+        }
         beginDrawingEdit(evt);
         if (proChart.editingDrawing) return;
         if (evt.target.closest?.('[data-overlay]') && state.tool === 'cursor' && evt.button === 0) { state.chartDragging = true; state.chartDragX = evt.clientX; container.setPointerCapture(evt.pointerId); }
       };
       container.onpointermove = evt => {
+        if (evt.pointerType === 'touch' && Object.hasOwn(state.chartTouchPoints, evt.pointerId)) {
+          state.chartTouchPoints[evt.pointerId] = { x: evt.clientX, y: evt.clientY };
+          const points = Object.values(state.chartTouchPoints), pinch = state.chartTouchPinch;
+          if (points.length >= 2 && pinch) {
+            const [a, b] = points, rect = svg.getBoundingClientRect();
+            const fraction = Math.max(0, Math.min(1, (((a.x + b.x) / 2 - rect.left) * W / rect.width - plot.x) / plot.w));
+            const factor = Math.hypot(a.x - b.x, a.y - b.y) / Math.max(1, pinch.distance);
+            setFallbackZoomAt(pinch.zoom * factor, fraction, pinch.logical);
+            return;
+          }
+        }
         if (proChart.editingDrawing) { moveDrawingEdit(evt); return; }
         if (!state.chartDragging && !evt.target.closest?.('[data-overlay]')) return;
         updateCrosshair(evt);
@@ -4064,9 +4091,19 @@
         }
         if (state.chartDragging && state.tool === 'cursor') { const rect = svg.getBoundingClientRect(); const delta = Math.round((evt.clientX - state.chartDragX) / rect.width * W / Math.max(1, plot.w) * data.length); if (Math.abs(delta) >= 1) { state.chartOffset = Math.max(0, Math.min(maxOffset, state.chartOffset + delta)); state.chartDragX = evt.clientX; container.dataset.dragMoved = 'true'; renderChart(); } }
       };
-      const endDrag = evt => { if (proChart.editingDrawing) { container.dataset.dragMoved = 'true'; endDrawingEdit(evt); } state.chartDragging = false; if (container.hasPointerCapture(evt.pointerId)) container.releasePointerCapture(evt.pointerId); };
+      const endDrag = evt => {
+        if (proChart.editingDrawing) { container.dataset.dragMoved = 'true'; endDrawingEdit(evt); }
+        if (evt.pointerType === 'touch') {
+          delete state.chartTouchPoints[evt.pointerId];
+          const remaining = Object.values(state.chartTouchPoints);
+          state.chartTouchPinch = null;
+          state.chartDragging = remaining.length === 1;
+          if (remaining.length === 1) state.chartDragX = remaining[0].x;
+        } else state.chartDragging = false;
+        if (container.hasPointerCapture(evt.pointerId)) container.releasePointerCapture(evt.pointerId);
+      };
       container.onpointerup = endDrag; container.onpointercancel = endDrag;
-      container.onlostpointercapture = () => { state.chartDragging = false; };
+      container.onlostpointercapture = () => { if (Object.keys(state.chartTouchPoints).length !== 1) state.chartDragging = false; };
       overlay.addEventListener('wheel', evt => {
         evt.preventDefault();
         const svgRect = svg.getBoundingClientRect();
@@ -6020,20 +6057,24 @@
       const center = (range.from + range.to) / 2, half = (range.to - range.from) / (2 * factor);
       scale.setVisibleLogicalRange({ from: center - half, to: center + half });
     }
-    function zoomFallbackAt(factor, anchorFraction = .5) {
+    function setFallbackZoomAt(nextZoom, anchorFraction, anchorLogical) {
       const rows = buildData(state.scenario, state.timeframe), count = rows.length;
-      if (proChart.chart || count < 2) { zoomChart(factor); return; }
+      if (proChart.chart || count < 2) return;
       const oldVisible = Math.max(16, Math.min(count, Math.round(count / state.chartZoom)));
       const oldOffset = Math.max(0, Math.min(count - oldVisible, state.chartOffset));
       const oldStart = count - oldVisible - oldOffset;
-      const anchor = oldStart + Math.max(0, Math.min(1, anchorFraction)) * oldVisible;
-      const nextZoom = Math.max(1, Math.min(6, state.chartZoom * factor));
-      const nextVisible = Math.max(16, Math.min(count, Math.round(count / nextZoom)));
       const fraction = Math.max(0, Math.min(1, anchorFraction));
+      const anchor = Number.isFinite(anchorLogical) ? anchorLogical : oldStart + fraction * oldVisible;
+      nextZoom = Math.max(1, Math.min(6, nextZoom));
+      const nextVisible = Math.max(16, Math.min(count, Math.round(count / nextZoom)));
       const nextStart = Math.max(0, Math.min(count - nextVisible, anchor - fraction * nextVisible));
       state.chartZoom = nextZoom;
       state.chartOffset = count - nextVisible - Math.round(nextStart);
       renderChart();
+    }
+    function zoomFallbackAt(factor, anchorFraction = .5) {
+      if (proChart.chart) { zoomChart(factor); return; }
+      setFallbackZoomAt(state.chartZoom * factor, anchorFraction);
     }
     document.getElementById('chartZoomIn').addEventListener('click', () => { zoomChart(1.25); });
     document.getElementById('chartZoomOut').addEventListener('click', () => { zoomChart(.8); });
