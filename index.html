@@ -4037,7 +4037,13 @@
       const endDrag = evt => { if (proChart.editingDrawing) { container.dataset.dragMoved = 'true'; endDrawingEdit(evt); } state.chartDragging = false; if (container.hasPointerCapture(evt.pointerId)) container.releasePointerCapture(evt.pointerId); };
       container.onpointerup = endDrag; container.onpointercancel = endDrag;
       container.onlostpointercapture = () => { state.chartDragging = false; };
-      overlay.addEventListener('wheel', evt => { evt.preventDefault(); zoomChart(evt.deltaY < 0 ? 1.18 : .85); }, { passive: false });
+      overlay.addEventListener('wheel', evt => {
+        evt.preventDefault();
+        const svgRect = svg.getBoundingClientRect();
+        const pointerX = (evt.clientX - svgRect.left) * W / Math.max(1, svgRect.width);
+        const anchor = Math.max(0, Math.min(1, (pointerX - plot.x) / plot.w));
+        zoomFallbackAt(evt.deltaY < 0 ? 1.18 : .85, anchor);
+      }, { passive: false });
       container.onpointerleave = () => { if (!state.chartDragging) { hideChartTooltip(); crosshair.setAttribute('opacity', '0'); restoreLatestReadout(); } };
       container.onclick = evt => {
         if (container.dataset.dragMoved || state.tool === 'cursor') return;
@@ -5919,6 +5925,21 @@
       if (!range) return;
       const center = (range.from + range.to) / 2, half = (range.to - range.from) / (2 * factor);
       scale.setVisibleLogicalRange({ from: center - half, to: center + half });
+    }
+    function zoomFallbackAt(factor, anchorFraction = .5) {
+      const rows = buildData(state.scenario, state.timeframe), count = rows.length;
+      if (proChart.chart || count < 2) { zoomChart(factor); return; }
+      const oldVisible = Math.max(16, Math.min(count, Math.round(count / state.chartZoom)));
+      const oldOffset = Math.max(0, Math.min(count - oldVisible, state.chartOffset));
+      const oldStart = count - oldVisible - oldOffset;
+      const anchor = oldStart + Math.max(0, Math.min(1, anchorFraction)) * oldVisible;
+      const nextZoom = Math.max(1, Math.min(6, state.chartZoom * factor));
+      const nextVisible = Math.max(16, Math.min(count, Math.round(count / nextZoom)));
+      const fraction = Math.max(0, Math.min(1, anchorFraction));
+      const nextStart = Math.max(0, Math.min(count - nextVisible, anchor - fraction * nextVisible));
+      state.chartZoom = nextZoom;
+      state.chartOffset = count - nextVisible - Math.round(nextStart);
+      renderChart();
     }
     document.getElementById('chartZoomIn').addEventListener('click', () => { zoomChart(1.25); });
     document.getElementById('chartZoomOut').addEventListener('click', () => { zoomChart(.8); });
