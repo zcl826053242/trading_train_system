@@ -14,7 +14,7 @@ async (page) => {
     const name = `${viewport.width}x${viewport.height}/${tool}`;
     const errors = [];
     try {
-      await context.route('**/api/v5/**', route => route.abort());
+      await context.route('https://fapi.binance.com/fapi/v1/klines**', route => route.abort());
       await context.route('**/unpkg.com/**', route => route.abort());
       const target = await context.newPage();
       target.on('pageerror', error => errors.push(error.message));

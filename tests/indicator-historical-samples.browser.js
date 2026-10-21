@@ -13,7 +13,7 @@ async (page) => {
     const context = await page.context().browser().newContext({ viewport: { width: 1440, height: 900 } });
     const errors = [];
     try {
-      await context.route('**/api/v5/**', route => route.abort());
+      await context.route('https://fapi.binance.com/fapi/v1/klines**', route => route.abort());
       await context.route('**/unpkg.com/**', route => route.abort());
       if (chartMode === 'fallback') await context.route('**/vendor/lightweight-charts.standalone.production.js', route => route.fulfill({ status: 200, contentType: 'application/javascript', body: '' }));
       const target = await context.newPage();
@@ -82,7 +82,7 @@ async (page) => {
     const context = await page.context().browser().newContext({ viewport: { width: 1440, height: 900 } });
     const errors = [];
     try {
-      await context.route('**/api/v5/**', route => route.abort());
+      await context.route('https://fapi.binance.com/fapi/v1/klines**', route => route.abort());
       await context.route('**/unpkg.com/**', route => route.abort());
       const target = await context.newPage();
       target.on('pageerror', error => errors.push(error.message));
@@ -121,7 +121,7 @@ async (page) => {
     const context = await page.context().browser().newContext({ viewport });
     const errors = [];
     try {
-      await context.route('**/api/v5/**', route => route.abort());
+      await context.route('https://fapi.binance.com/fapi/v1/klines**', route => route.abort());
       await context.route('**/unpkg.com/**', route => route.abort());
       if (chartMode === 'fallback') await context.route('**/vendor/lightweight-charts.standalone.production.js', route => route.fulfill({ status: 200, contentType: 'application/javascript', body: '' }));
       const target = await context.newPage();
@@ -176,7 +176,7 @@ async (page) => {
     const context = await page.context().browser().newContext({ viewport: { width: 1440, height: 900 } });
     const errors = [];
     try {
-      await context.route('**/api/v5/**', route => route.abort());
+      await context.route('https://fapi.binance.com/fapi/v1/klines**', route => route.abort());
       await context.route('**/unpkg.com/**', route => route.abort());
       const target = await context.newPage();
       target.on('pageerror', error => errors.push(error.message));
@@ -205,7 +205,7 @@ async (page) => {
     const context = await page.context().browser().newContext({ viewport: { width: 1440, height: 900 } });
     const errors = [];
     try {
-      await context.route('**/api/v5/**', route => route.abort());
+      await context.route('https://fapi.binance.com/fapi/v1/klines**', route => route.abort());
       await context.route('**/unpkg.com/**', route => route.abort());
       const target = await context.newPage();
       target.on('pageerror', error => errors.push(error.message));

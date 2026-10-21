@@ -7,7 +7,7 @@ async (page) => {
     const errors = [], checks = [], name = `${viewport.width}/${fallback ? 'fallback' : 'professional'}`;
     const check = (ok, message) => { if (!ok) failures.push(`${name}: ${message}`); };
     try {
-      await context.route('**/api/v5/**', route => route.abort());
+      await context.route('https://fapi.binance.com/fapi/v1/klines**', route => route.abort());
       await context.route('**/unpkg.com/**', route => route.abort());
       if (fallback) await context.route('**/vendor/lightweight-charts*', route => route.abort());
       const target = await context.newPage();

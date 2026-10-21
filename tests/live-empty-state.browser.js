@@ -7,7 +7,7 @@ async (page) => {
   let notifyFirstRequest;
   const firstRequestStarted = new Promise(resolve => { notifyFirstRequest = resolve; });
   const waitForFirstRelease = new Promise(resolve => { releaseInitial = resolve; });
-  await context.route('https://www.okx.com/api/v5/market/candles**', async route => {
+  await context.route('https://fapi.binance.com/fapi/v1/klines**', async route => {
     requestCount++;
     if (requestCount === 1) { notifyFirstRequest(); await waitForFirstRelease; }
     if (outcome !== 'ok') {
@@ -17,9 +17,10 @@ async (page) => {
     const now = Math.floor(Date.now() / 60000) * 60000;
     const data = Array.from({ length: 80 }, (_, i) => {
       const close = 68000 + i * 4;
-      return [String(now - (79 - i) * 60000), String(close - 5), String(close + 8), String(close - 9), String(close), '12'];
+      const openTime = now - (79 - i) * 60000;
+      return [String(openTime), String(close - 5), String(close + 8), String(close - 9), String(close), '12', String(openTime + 59999), String(close * 12), '100', '6', String(close * 6), '0'];
     });
-    await route.fulfill({ json: { code: '0', data } });
+    await route.fulfill({ json: data });
   });
   const target = await context.newPage();
   target.on('pageerror', error => errors.push(error.message));

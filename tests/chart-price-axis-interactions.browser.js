@@ -6,7 +6,7 @@ async (page) => {
     const context = await page.context().browser().newContext({ viewport });
     const errors = [], name = `${viewport.width}x${viewport.height}`;
     try {
-      await context.route('**/api/v5/**', route => route.abort());
+      await context.route('https://fapi.binance.com/fapi/v1/klines**', route => route.abort());
       await context.route('**/unpkg.com/**', route => route.abort());
       const target = await context.newPage(); target.on('pageerror', error => errors.push(error.message));
       await target.goto('http://127.0.0.1:4188/', { waitUntil: 'domcontentloaded' });

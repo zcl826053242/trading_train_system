@@ -13,9 +13,9 @@ function source(name) {
   assert.notEqual(next, -1, `Missing boundary after ${name}`);
   return html.slice(start, start + 1 + next);
 }
-const payload = close => ({ code: '0', data: Array.from({ length: 8 }, (_, i) => [
-  String(1700000000000 + i * 60000), String(close - 1), String(close + 2), String(close - 2), String(close), '12'
-]) });
+const payload = close => Array.from({ length: 8 }, (_, i) => [
+  String(1700000000000 + i * 60000), String(close - 1), String(close + 2), String(close - 2), String(close), '12', String(1700000059999 + i * 60000), '100', '1', '1', '1', '0'
+]);
 function dataHarness() {
   const context = vm.createContext({
     state: { dataMode: 'live', replayMode: false, liveRows: [], scenario: 'up' },
@@ -38,7 +38,8 @@ function harness() {
   const context = vm.createContext({
     state: { dataMode: 'live', replayMode: false, timeframe: '1H', liveRows: [], liveLoading: false, liveError: '', liveUpdatedAt: 0 },
     liveMarket: { endpoint: 'https://example.test/candles', instrument: 'BTC-USDT-SWAP', source: 'test fixture' },
-    liveBars: { '1m': '1m', '3m': '3m', '5m': '5m', '15m': '15m', '30m': '30m', '1H': '1H', '2H': '2H', '4H': '4H', '6H': '6H', '8H': '8H', '12H': '12H', '1D': '1D', '3D': '3D', '1W': '1W', '1M': '1M' }, liveRequestId: 0, liveRequestController: null, liveRefreshTimer: null,
+    liveSymbols: { 'BTC-USDT-SWAP': 'BTCUSDT', 'ETH-USDT-SWAP': 'ETHUSDT', 'SOL-USDT-SWAP': 'SOLUSDT' },
+    liveBars: { '1m': '1m', '3m': '3m', '5m': '5m', '15m': '15m', '30m': '30m', '1H': '1h', '2H': '2h', '4H': '4h', '6H': '6h', '8H': '8h', '12H': '12h', '1D': '1d', '3D': '3d', '1W': '1w', '1M': '1M' }, liveRequestId: 0, liveRequestController: null, liveRefreshTimer: null,
     AbortController, encodeURIComponent, Date,
     document: { getElementById: get },
     setTimeout: (callback, ms) => { const id = ++nextTimer; timers.set(id, { callback, ms }); return id; },
@@ -48,7 +49,7 @@ function harness() {
       ok: close => resolve({ ok: true, json: async () => payload(close) }),
       fail: message => reject(new Error(message)),
       http: status => resolve({ ok: false, status }),
-      insufficient: () => resolve({ ok: true, json: async () => ({ code: '0', data: [] }) }),
+      insufficient: () => resolve({ ok: true, json: async () => [] }),
       // 部分场景故意允许取消后仍返回，验证请求序号保护而不只依赖 fetch 的取消行为。
       respectAbort: () => options.signal.addEventListener('abort', () => reject(new Error('aborted')), { once: true })
     }))
@@ -57,6 +58,16 @@ function harness() {
   return { context, requests, timers, get };
 }
 (async () => {
+  // Binance Futures Kline rows require a valid close-time and reject the still-open candle.
+  {
+    const context = vm.createContext({ Date });
+    vm.runInContext(source('parseLiveCandles'), context);
+    const now = Date.now(), closed = [now - 120000, '10', '12', '9', '11', '3', now - 60001];
+    const forming = [now - 60000, '11', '13', '10', '12', '4', now + 1000];
+    const invalid = [now - 180000, '10', '9', '11', '10', '1', now - 120001];
+    assert.deepEqual(Array.from(context.parseLiveCandles([forming, invalid, closed]), row => row.openTime), [now - 120000]);
+    assert.throws(() => context.parseLiveCandles({ code: '0', data: [closed] }), /Binance Futures K 线返回格式异常/);
+  }
   // 无实盘行情不可回退成模拟样本；模拟模式和有效回放仍各自返回本模式的数据。
   {
     const c = dataHarness();
@@ -78,7 +89,7 @@ function harness() {
     c.state.timeframe = '5m';
     const current = c.loadLiveMarket();
     assert.equal(requests[0].signal.aborted, true);
-    assert.ok(requests[1].url.includes('bar=5m'));
+    assert.ok(requests[1].url.includes('interval=5m'));
     requests[0][outcome](outcome === 'ok' ? 100 : 'old network failure');
     await old;
     assert.equal(c.state.liveLoading, true);
@@ -138,10 +149,17 @@ function harness() {
     assert.equal(get('chartLoadStatus').hidden, true);
     assert.equal(get('chartLoadStatus').classList.contains('failed'), false);
   }
+  for (const [instrument, symbol] of [['BTC-USDT-SWAP', 'BTCUSDT'], ['ETH-USDT-SWAP', 'ETHUSDT'], ['SOL-USDT-SWAP', 'SOLUSDT']]) {
+    const { context: c, requests } = harness(); c.liveMarket.instrument = instrument;
+    const pending = c.loadLiveMarket();
+    assert.ok(requests[0].url.includes(`symbol=${symbol}`), `${instrument} requests ${symbol}`);
+    requests[0].ok(500); await pending;
+  }
   for (const timeframe of Object.keys(contextTimeframes())) {
     const { context: c, requests } = harness(); c.state.timeframe = timeframe;
     const pending = c.loadLiveMarket();
-    assert.ok(requests[0].url.includes(`bar=${encodeURIComponent(timeframe)}`), `${timeframe} requests the selected bar size`);
+    const expectedInterval = { '1m': '1m', '3m': '3m', '5m': '5m', '15m': '15m', '30m': '30m', '1H': '1h', '2H': '2h', '4H': '4h', '6H': '6h', '8H': '8h', '12H': '12h', '1D': '1d', '3D': '3d', '1W': '1w', '1M': '1M' }[timeframe];
+    assert.ok(requests[0].url.includes(`interval=${encodeURIComponent(expectedInterval)}`), `${timeframe} requests the selected Binance Futures interval`);
     requests[0].ok(500); await pending;
   }
   console.log('PASS: latest request wins; simulation/replay cancellation; 12s timeout; HTTP/offline/insufficient data; stale labels and retry.');

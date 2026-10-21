@@ -10,7 +10,11 @@ assert.ok(mapping, 'live interval mapping exists');
 const liveBars = vm.runInNewContext(`(${mapping[1]})`);
 const expected = ['1m', '3m', '5m', '15m', '30m', '1H', '2H', '4H', '6H', '8H', '12H', '1D', '3D', '1W', '1M'];
 assert.deepEqual(Object.keys(liveBars), expected);
-assert.deepEqual(Object.values(liveBars), expected, 'OKX candle bars use matching supported interval keys');
+const binanceFuturesIntervals = ['1m', '3m', '5m', '15m', '30m', '1h', '2h', '4h', '6h', '8h', '12h', '1d', '3d', '1w', '1M'];
+assert.deepEqual(Object.values(liveBars), binanceFuturesIntervals, 'Binance Futures interval mapping uses supported keys and case');
+assert.match(html, /fapi\.binance\.com\/fapi\/v1\/klines/);
+assert.match(html, /symbol=\$\{encodeURIComponent\(liveSymbols\[liveMarket\.instrument\]/);
+assert.match(html, /interval=\$\{encodeURIComponent\(bar\)/);
 
 const buttons = [...html.matchAll(/data-time="([^"]+)"/g)].map(match => match[1]);
 assert.deepEqual(buttons, ['1m', '5m', '15m', '1H', '4H', '1D', '3m', '30m', '2H', '6H', '8H', '12H', '3D', '1W', '1M']);

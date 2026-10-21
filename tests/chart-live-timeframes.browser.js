@@ -1,19 +1,19 @@
 // 通过 Playwright browser_run_code_unsafe 的 filename 参数运行；先启动本地 4188 服务。
-// 隔离 context，以模拟 OKX candle 响应验证周期切换和手机菜单边界。
+// 隔离 context，以模拟 Binance USDⓈ-M Futures K 线响应验证周期切换和手机菜单边界。
 async (page) => {
   const failures = [], results = [];
   for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 667 }, { width: 320, height: 667 }]) {
     const context = await page.context().browser().newContext({ viewport });
     const calls = [], errors = [], name = `${viewport.width}x${viewport.height}`;
     try {
-      await context.route('https://www.okx.com/api/v5/market/candles**', async route => {
-        calls.push(new URL(route.request().url()).searchParams.get('bar'));
+      await context.route('https://fapi.binance.com/fapi/v1/klines**', async route => {
+        calls.push(new URL(route.request().url()).searchParams.get('interval'));
         const now = Math.floor(Date.now() / 60000) * 60000;
         const data = Array.from({ length: 80 }, (_, i) => {
           const close = 68000 + i * 4;
-          return [String(now - (79 - i) * 60000), String(close - 5), String(close + 8), String(close - 9), String(close), '12', '12', String(close * 12), '1'];
+          return [String(now - (79 - i) * 60000), String(close - 5), String(close + 8), String(close - 9), String(close), '12', String(now - (78 - i) * 60000), '12', '1', '1', '1', '1'];
         }).reverse();
-        await route.fulfill({ json: { code: '0', data } });
+        await route.fulfill({ json: data });
       });
       const target = await context.newPage(); target.on('pageerror', error => errors.push(error.message));
       await target.goto('http://127.0.0.1:4188/', { waitUntil: 'domcontentloaded' });
@@ -41,12 +41,12 @@ async (page) => {
       await target.locator('#chartMoreIntervals > summary').click();
       await target.locator('#chartMoreIntervals [data-time="2H"]').click();
       await target.waitForFunction(() => state.timeframe === '2H' && !state.liveLoading && state.liveRows.length >= 8);
-      if (calls.at(-1) !== '2H' || await target.locator('#chartIntervalLabel').textContent() !== '2H') failures.push(`${name}: 2H selection did not reach data request and chart label`);
+      if (calls.at(-1) !== '2h' || await target.locator('#chartIntervalLabel').textContent() !== '2H') failures.push(`${name}: 2H selection did not reach data request and chart label`);
       if (await target.locator('#chartMoreIntervals').evaluate(node => node.open)) failures.push(`${name}: menu remained open after selection`);
       await target.locator('#chartMoreIntervals > summary').click();
       await target.locator('#chartMoreIntervals [data-time="1W"]').click();
       await target.waitForFunction(() => state.timeframe === '1W' && !state.liveLoading && state.liveRows.length >= 8);
-      if (calls.at(-1) !== '1W') failures.push(`${name}: weekly selection used the wrong exchange bar`);
+      if (calls.at(-1) !== '1w') failures.push(`${name}: weekly selection used the wrong exchange interval`);
       const replayGate = await target.evaluate(() => {
         state.replayMode = true; state.timeframe = '1H'; syncChartTimeframeControls();
         return { available: ['1m', '5m', '1H'].every(period => !document.querySelector(`[data-time="${period}"]`).disabled),
