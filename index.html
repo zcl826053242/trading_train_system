@@ -1455,6 +1455,13 @@
     .chart-pane-legend[hidden] { display: none; }
     .chart-pane-legend:focus-visible { outline: 1px solid #f0b90b; outline-offset: -1px; }
     .chart-pane-legend span { flex: 0 0 auto; font-variant-numeric: tabular-nums; }
+    .chart-pane-separators { position: absolute; inset: 0; z-index: 6; pointer-events: none; overflow: hidden; }
+    .chart-pane-separator { position: absolute; left: 0; width: 100%; height: 10px; margin-top: -5px; cursor: row-resize; pointer-events: auto; touch-action: none; outline: none; }
+    .chart-pane-separator::after { content: ''; position: absolute; left: 0; right: 0; top: 4px; height: 1px; background: #2b3139; }
+    .chart-pane-separator:hover::after, .chart-pane-separator:focus-visible::after, .chart-pane-separator[data-dragging]::after { height: 2px; background: #f0b90b; }
+    .chart-pane-layout-settings { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 9px 0; color: #848e9c; font-size: 11px; }
+    .chart-pane-layout-settings button { border: 1px solid #343a40; border-radius: 3px; background: #202328; color: #eaecef; padding: 6px 9px; cursor: pointer; font: inherit; }
+    .chart-pane-layout-settings button:focus-visible { outline: 1px solid #f0b90b; }
     #chart.chart-fallback-mode { height: 100% !important; min-height: 0 !important; flex: 1 1 auto; touch-action: none; }
     .chart-pane-legends.fallback-legends .chart-pane-legend { font-size: 12px; line-height: 20px; }
     #chart:focus-visible { outline: 1px solid #f0b90b; outline-offset: -1px; }
@@ -1653,6 +1660,7 @@
               <label class="chart-display-select">价格轴<select id="chartPriceScaleMode" aria-label="价格轴类型"><option value="normal">线性</option><option value="logarithmic">对数</option><option value="percentage">百分比</option><option value="indexed">标准化</option></select></label>
               <label class="chart-display-select">蜡烛实体<select id="chartCandleStyle" aria-label="蜡烛实体样式"><option value="solid">实心</option><option value="hollow">空心</option></select></label>
             </div>
+            <div class="chart-pane-layout-settings"><button type="button" id="resetChartPaneLayout">重置面板比例</button><span>拖动主图与副图分隔线调整高度；双击恢复。比例在此浏览器保存。</span></div>
             <div class="chart-toolbar" style="border-top:0; padding-top:9px;">
               <div class="scenario"><span class="scenario-label">练习情景</span><button type="button" data-scenario="up" class="active">上涨</button><button type="button" data-scenario="range">震荡</button><button type="button" data-scenario="down">下跌</button></div>
               <span class="muted" id="candleHint">当前：高点和低点逐步抬高</span>
@@ -1739,6 +1747,8 @@
           </div>
           <div class="chart-stage" id="chartStage">
             <div class="chart-pane-legends" id="chartPaneLegends" aria-label="各图表面板指标读数"></div>
+            <div class="chart-pane-separators" id="chartPaneSeparators" aria-label="图表面板高度调整"></div>
+            <span class="chart-screen-reader" id="chartPaneResizeStatus" role="status" aria-live="polite"></span>
             <div id="chart" role="group" tabindex="0" aria-label="行情 K 线图" aria-describedby="chartKeyboardHelp"></div>
             <span id="chartKeyboardHelp" class="chart-screen-reader">聚焦图表后，左右方向键逐根查看，Home 和 End 查看已加载范围首尾，Escape 恢复最新读数。Tab 离开图表。</span>
             <span id="chartInspectionStatus" class="chart-screen-reader" role="status" aria-live="polite" aria-atomic="true"></span>
@@ -2867,6 +2877,160 @@
     }
     const proChart = { chart: null, candles: null, heikin: null, line: null, ema20: null, ema60: null, psarSeries: null, psarValues: [], smaSeries: {}, volume: null, volumeSmaSeries: {}, volumePane: null, indicators: {}, drawings: [], riskLines: [], riskLineOwner: null, extremeLines: [], extremeLineOwner: null, lastTimes: [], viewKey: '', editingDrawing: null, measurePoint: null, shapePoints: [], drawingOverlay: null };
     const practiceChart = { chart: null, candles: null, ema20: null, ema60: null, volume: null, volumePane: null, resizeObserver: null };
+    const chartPaneSizing = { layouts: loadChartPaneLayouts(), drag: null };
+    function loadChartPaneLayouts() {
+      try {
+        const saved = JSON.parse(localStorage.getItem('trend-lab-pane-layouts') || 'null');
+        if (saved?.version !== 1 || !saved.layouts || typeof saved.layouts !== 'object') return {};
+        const layouts = {};
+        for (const [key, weights] of Object.entries(saved.layouts)) {
+          const names = key.split(',');
+          if (names.join(',') !== ['main', 'volume', ...['rsi', 'macd', 'kdj'].filter(name => names.includes(name))].join(',')) continue;
+          if (!Array.isArray(weights) || weights.length !== names.length || !weights.every(value => typeof value === 'number' && Number.isFinite(value) && value > 0 && value <= 1)) continue;
+          const sum = weights.reduce((total, value) => total + value, 0);
+          layouts[key] = weights.map(value => value / sum);
+        }
+        return layouts;
+      } catch (_) { return {}; }
+    }
+    function saveChartPaneLayouts() {
+      try {
+        localStorage.setItem('trend-lab-pane-layouts', JSON.stringify({ version: 1, layouts: chartPaneSizing.layouts }));
+        document.getElementById('chartPaneResizeStatus').textContent = '面板比例已保存。';
+        return true;
+      } catch (_) { document.getElementById('chartPaneResizeStatus').textContent = '浏览器存储不可用，面板比例仅本次有效。'; return false; }
+    }
+    function chartPaneNames() { return ['main', 'volume', ...['rsi', 'macd', 'kdj'].filter(name => state.indicator[name])]; }
+    function chartPaneMinimums(names, total, fallback) {
+      const values = names.map(name => name === 'main' ? (fallback ? 132 : 100) : name === 'volume' ? (fallback ? 66 : 60) : fallback ? 72 : 50);
+      const sum = values.reduce((a, b) => a + b, 0), factor = Math.min(1, Math.max(0, total) / sum);
+      return values.map(value => value * factor);
+    }
+    function distributeChartPaneHeights(total, weights, minimums) {
+      // 按偏好分配剩余空间；达到最小高度的面板退出分配，短屏不挤掉读数或时间轴。
+      const heights = Array(weights.length).fill(0), pending = new Set(weights.map((_, i) => i));
+      let remaining = total;
+      while (pending.size) {
+        const sum = [...pending].reduce((value, i) => value + weights[i], 0);
+        const constrained = [...pending].filter(i => remaining * weights[i] / sum < minimums[i]);
+        if (!constrained.length) { pending.forEach(i => { heights[i] = remaining * weights[i] / sum; }); break; }
+        constrained.forEach(i => { heights[i] = minimums[i]; remaining -= heights[i]; pending.delete(i); });
+      }
+      return heights;
+    }
+    function chartPaneSnapshot() {
+      const chart = document.getElementById('chart'), svg = chart.querySelector('svg.chart-fallback');
+      if (!chart.clientWidth || !proChart.visibleRows?.length) return null;
+      if (svg) {
+        const heights = JSON.parse(svg.dataset.paneHeights || 'null');
+        if (!heights) return null;
+        return { names: chartPaneNames(), heights, tops: heights.map((_, i) => heights.slice(0, i).reduce((a, b) => a + b, 0)), fallback: true };
+      }
+      if (!proChart.chart) return null;
+      const panes = proChart.chart.panes(), rect = chart.getBoundingClientRect();
+      const names = panes.map(pane => pane === panes[0] ? 'main' : pane === proChart.volumePane ? 'volume' : Object.keys(proChart.indicators).find(name => proChart.indicators[name].pane === pane));
+      if (names.some(name => !name)) return null;
+      return { names, heights: panes.map(pane => pane.getHeight()), tops: panes.map(pane => pane.getHTMLElement().getBoundingClientRect().top - rect.top), fallback: false };
+    }
+    function applyProfessionalPaneLayout() {
+      if (!proChart.chart) return;
+      const panes = proChart.chart.panes(), names = chartPaneNames(), weights = chartPaneSizing.layouts[names.join(',')];
+      if (panes.length !== names.length) return;
+      const layoutKey = JSON.stringify([names, weights || null]);
+      if (!weights) {
+        if (proChart.paneLayoutKey !== layoutKey) panes.forEach((pane, i) => pane.setStretchFactor(i === 0 ? 7 : i === 1 ? 3.5 : 2.1));
+        proChart.paneLayoutKey = layoutKey;
+        return;
+      }
+      proChart.paneLayoutKey = layoutKey;
+      const total = panes.reduce((sum, pane) => sum + pane.getHeight(), 0);
+      const heights = distributeChartPaneHeights(total, weights, chartPaneMinimums(names, total, false));
+      if (panes.every((pane, i) => Math.abs(pane.getHeight() - heights[i]) < 1.1)) return;
+      panes.forEach((pane, i) => pane.setStretchFactor(heights[i]));
+    }
+    function renderChartPaneSeparators() {
+      const layer = document.getElementById('chartPaneSeparators'), snapshot = chartPaneSnapshot();
+      layer.hidden = !snapshot;
+      if (!snapshot) { layer.replaceChildren(); return; }
+      const { names, heights, tops, fallback } = snapshot;
+      const chart = document.getElementById('chart').getBoundingClientRect(), origin = layer.getBoundingClientRect();
+      const labels = { main: '主图', volume: '成交量', rsi: 'RSI', macd: 'MACD', kdj: 'KDJ' };
+      const minimums = chartPaneMinimums(names, heights.reduce((a, b) => a + b, 0), fallback);
+      while (layer.children.length > names.length - 1) layer.lastElementChild.remove();
+      for (let i = 0; i < names.length - 1; i++) {
+        const handle = layer.children[i] || layer.appendChild(document.createElement('div'));
+        const pair = heights[i] + heights[i + 1];
+        handle.className = 'chart-pane-separator'; handle.dataset.paneBoundary = String(i); handle.tabIndex = 0;
+        handle.setAttribute('role', 'separator'); handle.setAttribute('aria-orientation', 'horizontal');
+        handle.setAttribute('aria-label', `调整${labels[names[i]]}与${labels[names[i + 1]]}高度`);
+        handle.setAttribute('aria-valuemin', String(Math.floor(minimums[i] / pair * 100)));
+        handle.setAttribute('aria-valuemax', String(Math.ceil((pair - minimums[i + 1]) / pair * 100)));
+        handle.setAttribute('aria-valuenow', String(Math.round(heights[i] / pair * 100)));
+        handle.setAttribute('aria-valuetext', `${labels[names[i]]} ${Math.round(heights[i])} 像素，${labels[names[i + 1]]} ${Math.round(heights[i + 1])} 像素`);
+        handle.title = '拖动调整面板；方向键微调，双击或 Home 恢复默认比例';
+        handle.style.top = `${chart.top - origin.top + tops[i + 1]}px`;
+        handle.style.left = `${chart.left - origin.left}px`; handle.style.width = `${chart.width}px`;
+      }
+    }
+    function resizeChartPanePair(snapshot, index, delta) {
+      const { names, heights, fallback } = snapshot, total = heights.reduce((a, b) => a + b, 0);
+      const minimums = chartPaneMinimums(names, total, fallback), next = [...heights], pair = heights[index] + heights[index + 1];
+      next[index] = Math.max(minimums[index], Math.min(pair - minimums[index + 1], heights[index] + delta));
+      next[index + 1] = pair - next[index];
+      chartPaneSizing.layouts[names.join(',')] = next.map(value => value / total);
+      if (fallback) renderChart();
+      else { applyProfessionalPaneLayout(); scheduleChartOverlay(); }
+    }
+    function resetChartPaneLayout() {
+      chartPaneSizing.layouts = {};
+      if (proChart.chart) proChart.chart.panes().forEach((pane, i) => pane.setStretchFactor(i === 0 ? 7 : pane === proChart.volumePane ? 3.5 : 2.1));
+      else renderChart();
+      const saved = saveChartPaneLayouts(); scheduleChartOverlay();
+      document.getElementById('chartPaneResizeStatus').textContent = `已恢复默认面板比例，缩放范围、绘图和训练进度保持不变。${saved ? '' : '浏览器存储不可用，重置仅本次有效。'}`;
+    }
+    function finishChartPaneResize(event, cancelled = false) {
+      const drag = chartPaneSizing.drag;
+      if (!drag || event.pointerId !== drag.pointerId) return;
+      chartPaneSizing.drag = null; delete drag.handle.dataset.dragging;
+      if (cancelled) {
+        if (drag.previous) chartPaneSizing.layouts[drag.key] = drag.previous;
+        else delete chartPaneSizing.layouts[drag.key];
+        if (drag.snapshot.fallback) renderChart();
+        else {
+          proChart.chart.panes().forEach((pane, i) => pane.setStretchFactor(drag.snapshot.heights[i]));
+          scheduleChartOverlay();
+        }
+      } else saveChartPaneLayouts();
+      if (drag.handle.hasPointerCapture(event.pointerId)) drag.handle.releasePointerCapture(event.pointerId);
+    }
+    const chartPaneSeparators = document.getElementById('chartPaneSeparators');
+    chartPaneSeparators.addEventListener('pointerdown', event => {
+      const handle = event.target.closest('[data-pane-boundary]'), snapshot = chartPaneSnapshot();
+      if (!handle || !snapshot || event.button !== 0 || chartPaneSizing.drag) return;
+      event.preventDefault(); event.stopPropagation();
+      const key = snapshot.names.join(',');
+      chartPaneSizing.drag = { snapshot, key, previous: chartPaneSizing.layouts[key], index: Number(handle.dataset.paneBoundary), y: event.clientY, pointerId: event.pointerId, handle };
+      handle.dataset.dragging = 'true'; handle.focus({ preventScroll: true }); handle.setPointerCapture(event.pointerId);
+      hideChartTooltip();
+    });
+    chartPaneSeparators.addEventListener('pointermove', event => {
+      const drag = chartPaneSizing.drag;
+      if (!drag || drag.pointerId !== event.pointerId) return;
+      event.preventDefault(); resizeChartPanePair(drag.snapshot, drag.index, event.clientY - drag.y);
+    });
+    chartPaneSeparators.addEventListener('pointerup', event => finishChartPaneResize(event));
+    chartPaneSeparators.addEventListener('pointercancel', event => finishChartPaneResize(event, true));
+    chartPaneSeparators.addEventListener('lostpointercapture', event => finishChartPaneResize(event, true));
+    chartPaneSeparators.addEventListener('dblclick', event => { if (event.target.closest('[data-pane-boundary]')) resetChartPaneLayout(); });
+    chartPaneSeparators.addEventListener('keydown', event => {
+      const handle = event.target.closest('[data-pane-boundary]'), snapshot = chartPaneSnapshot();
+      if (!handle || !snapshot || !['ArrowUp', 'ArrowDown', 'Home'].includes(event.key)) return;
+      event.preventDefault(); event.stopPropagation();
+      if (event.key === 'Home') { resetChartPaneLayout(); return; }
+      resizeChartPanePair(snapshot, Number(handle.dataset.paneBoundary), (event.key === 'ArrowDown' ? 1 : -1) * (event.shiftKey ? 30 : 10));
+      saveChartPaneLayouts();
+    });
+    document.getElementById('resetChartPaneLayout').addEventListener('click', resetChartPaneLayout);
     const chartInspection = { rows: [], first: 0, last: -1, index: null, active: false, show: null, clear: null };
     function configureChartInspection(rows, first, last, show, clear) {
       Object.assign(chartInspection, { rows, first, last, index: null, active: false, show, clear });
@@ -2902,7 +3066,7 @@
       if (!L) throw new Error('图表组件未加载');
       const chart = L.createChart(document.getElementById('chart'), {
         autoSize: true,
-        layout: { background: { type: L.ColorType.Solid, color: '#0b0e11' }, textColor: '#848e9c', fontFamily: 'Arial, sans-serif', panes: { enableResize: true } },
+        layout: { background: { type: L.ColorType.Solid, color: '#0b0e11' }, textColor: '#848e9c', fontFamily: 'Arial, sans-serif', panes: { enableResize: false } },
         grid: { vertLines: { color: '#1e2329' }, horzLines: { color: '#1e2329' } },
         crosshair: { mode: L.CrosshairMode.Normal, vertLine: { color: '#848e9c', style: L.LineStyle.Dashed, labelBackgroundColor: '#2b3139' }, horzLine: { color: '#848e9c', style: L.LineStyle.Dashed, labelBackgroundColor: '#2b3139' } },
         rightPriceScale: { borderColor: '#2b3139', scaleMargins: { top: .08, bottom: .08 } },
@@ -3260,6 +3424,9 @@
         p.series[1].setData(values.flatMap((item, i) => item ? [{ time: times[i], value: item.d }] : []));
         p.series[2].setData(values.flatMap((item, i) => item ? [{ time: times[i], value: item.j }] : []));
       }
+      // 副图顺序与备用图一致，不由用户勾选先后决定保存键和相邻分隔线。
+      chartPaneNames().slice(2).forEach((name, i) => proChart.indicators[name].pane.moveTo(i + 2));
+      applyProfessionalPaneLayout();
     }
     function applyChartDisplaySettings() {
       const display = state.chartDisplay, L = window.LightweightCharts;
@@ -3496,8 +3663,10 @@
       if (chartOverlayFrame !== null) return;
       chartOverlayFrame = requestAnimationFrame(() => {
         chartOverlayFrame = null;
+        applyProfessionalPaneLayout();
         renderDrawingOverlay();
         positionChartPaneLegends();
+        renderChartPaneSeparators();
       });
     }
     function renderDrawingOverlay() {
@@ -4218,7 +4387,7 @@
       if (fallbackResizeFrame !== null) cancelAnimationFrame(fallbackResizeFrame);
       fallbackResizeFrame = requestAnimationFrame(() => { fallbackResizeFrame = null; renderChart(); });
     });
-    function fallbackChartLayout(width, height, paneCount, axisWidth = 72) {
+    function fallbackChartLayout(width, height, paneCount, axisWidth = 72, customHeights = null) {
       // SVG 使用 CSS 像素坐标；各面板单独预留 26px 图例，避免缩放后遮住数据。
       const available = Math.max(100, height - 28);
       const unit = available / (7 + 3.5 + paneCount * 2.1);
@@ -4227,11 +4396,13 @@
       const minimumPane = paneCount ? Math.max(0, Math.min(72, (available - 198) / paneCount)) : 0;
       const paneStep = paneCount ? Math.max(unit * 2.1, minimumPane) : 0;
       const paneStart = available - paneCount * paneStep;
-      const mainHeight = paneStart * 2 / 3, volumeHeight = paneStart / 3;
+      const heights = customHeights || [paneStart * 2 / 3, paneStart / 3, ...Array(paneCount).fill(paneStep)];
+      const [mainHeight, volumeHeight] = heights;
       return {
         plot: { x: 8, y: 36, w: Math.max(40, width - axisWidth - 8), h: Math.max(1, mainHeight - 44),
           volY: mainHeight + 32, volH: Math.max(1, volumeHeight - 38) },
-        paneStep, paneStart, volumeTop: mainHeight + 3
+        paneStep, paneStart: mainHeight + volumeHeight, volumeTop: mainHeight + 3,
+        heights, tops: heights.map((_, i) => heights.slice(0, i).reduce((a, b) => a + b, 0))
       };
     }
     function fallbackIndicatorScale(name, values) {
@@ -4267,6 +4438,7 @@
         clearChartReadouts();
         renderChartEmptyState();
         syncChartAxisControls();
+        renderChartPaneSeparators();
         return;
       }
       renderChartEmptyState();
@@ -4279,10 +4451,14 @@
       const paneNames = ['rsi', 'macd', 'kdj'].filter(key => state.indicator[key]);
       container.classList.add('chart-fallback-mode');
       const H = container.clientHeight || 540;
-      const { plot, paneStep, paneStart, volumeTop } = fallbackChartLayout(W, H, paneNames.length);
+      const names = ['main', 'volume', ...paneNames], weights = chartPaneSizing.layouts[names.join(',')];
+      const available = Math.max(100, H - 28);
+      const customHeights = weights ? distributeChartPaneHeights(available, weights, chartPaneMinimums(names, available, true)) : null;
+      const { plot, paneStep, paneStart, volumeTop, heights: paneHeights, tops: paneTops } = fallbackChartLayout(W, H, paneNames.length, 72, customHeights);
       svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
       svg.dataset.plotX = plot.x; svg.dataset.plotWidth = plot.w; svg.dataset.plotY = plot.y; svg.dataset.plotHeight = plot.h;
-      svg.dataset.paneTops = JSON.stringify({ main: 3, volume: volumeTop, ...Object.fromEntries(paneNames.map((name, i) => [name, paneStart + 3 + i * paneStep])) });
+      svg.dataset.paneHeights = JSON.stringify(paneHeights);
+      svg.dataset.paneTops = JSON.stringify(Object.fromEntries(names.map((name, i) => [name, paneTops[i] + 3])));
       const colors = chartColors;
       const live = state.dataMode === 'live' && state.liveRows.length > 0;
       const visibleCount = Math.max(16, Math.min(sourceData.length, Math.round(sourceData.length / state.chartZoom)));
@@ -4383,7 +4559,7 @@
         });
       }
       paneNames.forEach((name, paneIndex) => {
-        const top = paneStart + paneIndex * paneStep, height = paneStep - 5;
+        const top = paneTops[paneIndex + 2], height = paneHeights[paneIndex + 2] - 5;
         const pane = el('g', { 'data-indicator-pane': name }); svg.appendChild(pane);
         let lines;
         if (name === 'rsi') lines = [calcRsi(sourceCloses, state.indicatorParams.rsi.period).map(item => item?.value).slice(contextStart, contextStart + visibleCount)];
@@ -4566,6 +4742,7 @@
       container.append(drawingOverlay);
       proChart.visibleRows = sourceData.map((row, index) => ({ ...row, time: barTime(row, index) }));
       proChart.fallback = createFallbackDrawingSurface(svg, drawingOverlay, proChart.visibleRows, start, data.length, plot, W, H, lo, hi);
+      renderChartPaneSeparators();
       proChart.drawings.forEach(drawing => drawing.parts.filter(part => part.type === 'price').forEach(part => { part.owner = proChart.fallback.series; }));
       renderDrawingOverlay();
       const intervalLabel = document.getElementById('chartIntervalLabel'); if (intervalLabel) intervalLabel.textContent = state.timeframe;
