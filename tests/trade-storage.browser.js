@@ -65,13 +65,25 @@ async (page) => {
     const recovered = await target.evaluate(() => ({
       warningHidden: document.querySelector('#tradeStorageWarning').hidden,
       persisted: JSON.parse(localStorage.getItem('trend-lab-trades') || '[]').length,
-      tradeCount: sim.trades.length
+      tradeCount: sim.trades.length,
+      stageTrades: stageState.progress[stageState.active].trades
     }));
     if (!recovered.warningHidden || recovered.persisted !== 2 || recovered.tradeCount !== 2) {
       failures.push(`Recovered storage did not persist both trades and clear the warning: ${JSON.stringify(recovered)}`);
     }
+    await target.reload({ waitUntil: 'domcontentloaded' });
+    await target.waitForFunction(() => historicalReady && sessionPersistenceReady);
+    const afterReload = await target.evaluate(() => ({
+      tradeCount: sim.trades.length,
+      persisted: JSON.parse(localStorage.getItem('trend-lab-trades') || '[]').length,
+      stageTrades: stageState.progress[stageState.active].trades,
+      warningHidden: document.querySelector('#tradeStorageWarning').hidden
+    }));
+    if (afterReload.tradeCount !== 2 || afterReload.persisted !== 2 || afterReload.stageTrades !== recovered.stageTrades || !afterReload.warningHidden) {
+      failures.push(`Reload changed persisted trade/activity state: ${JSON.stringify(afterReload)}`);
+    }
     if (errors.length) failures.push(`pageerror: ${errors.join(' | ')}`);
-    return { passed: failures.length === 0, failures, failedWrite, failedStorageCsvRows: csvLines.length - 1, recovered, pageErrors: errors.length };
+    return { passed: failures.length === 0, failures, failedWrite, failedStorageCsvRows: csvLines.length - 1, recovered, afterReload, pageErrors: errors.length };
   } finally {
     await context.close();
   }
