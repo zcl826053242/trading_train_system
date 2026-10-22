@@ -9,6 +9,12 @@ async (page) => {
     await context.route('**/unpkg.com/**', route => route.abort());
     await context.addInitScript(() => {
       window.__failTradeStorage = true;
+      window.__capturedCsv = null;
+      const createObjectURL = URL.createObjectURL.bind(URL);
+      URL.createObjectURL = blob => {
+        if (blob instanceof Blob && blob.type.includes('text/csv')) blob.text().then(text => { window.__capturedCsv = text; });
+        return createObjectURL(blob);
+      };
       const setItem = Storage.prototype.setItem;
       Storage.prototype.setItem = function (key, value) {
         if (key === 'trend-lab-trades' && window.__failTradeStorage) throw new DOMException('quota exceeded', 'QuotaExceededError');
@@ -23,23 +29,38 @@ async (page) => {
     await target.waitForFunction(() => activeWorkspace === 'market');
     await target.evaluate(() => setDataMode('sim'));
     await target.waitForFunction(() => state.dataMode === 'sim' && Boolean(visibleClose()) && !document.querySelector('#openPosition').disabled);
-    await target.locator('#openPosition').click();
+    const stageTradesBefore = await target.evaluate(() => stageState.progress[stageState.active].trades);
+    await target.locator('#openPosition').dblclick();
     await target.waitForFunction(() => Boolean(sim.position) && !document.querySelector('#closePosition').disabled);
-    await target.locator('#closePosition').click();
+    await target.locator('#closePosition').dblclick();
     await target.waitForFunction(() => !sim.position && sim.trades.length === 1 && !document.querySelector('#tradeStorageWarning').hidden);
     const failedWrite = await target.evaluate(() => ({
       warningVisible: !document.querySelector('#tradeStorageWarning').hidden,
       tradeCount: sim.trades.length,
+      symbol: sim.trades[0]?.symbol,
+      stageTrades: stageState.progress[stageState.active].trades,
       warningText: document.querySelector('#tradeStorageWarning').textContent.trim()
     }));
-    if (!failedWrite.warningVisible || failedWrite.tradeCount !== 1 || !failedWrite.warningText.includes('导出交易 CSV')) {
+    if (!failedWrite.warningVisible || failedWrite.tradeCount !== 1 || failedWrite.stageTrades !== stageTradesBefore + 1 || !failedWrite.warningText.includes('导出交易 CSV')) {
       failures.push(`Storage failure did not preserve and explain the trade: ${JSON.stringify(failedWrite)}`);
     }
 
+    await target.locator('[data-nav-target="review"]').click();
+    await target.waitForFunction(() => activeWorkspace === 'review');
+    await target.locator('#exportReview').click();
+    await target.waitForFunction(() => typeof window.__capturedCsv === 'string');
+    const failedStorageCsv = await target.evaluate(() => window.__capturedCsv);
+    const csvLines = failedStorageCsv.replace(/^\uFEFF/, '').split(/\r?\n/);
+    if (csvLines.length !== 2 || !csvLines[1].includes('模拟交易') || !csvLines[1].includes(failedWrite.symbol) || !csvLines[1].includes('手动平仓')) {
+      failures.push(`CSV export did not include the trade held only in memory: ${JSON.stringify(csvLines)}`);
+    }
+
     await target.evaluate(() => { window.__failTradeStorage = false; });
-    await target.locator('#openPosition').click();
+    await target.locator('[data-nav-target="market"]').click();
+    await target.waitForFunction(() => activeWorkspace === 'market');
+    await target.locator('#openPosition').dblclick();
     await target.waitForFunction(() => Boolean(sim.position));
-    await target.locator('#closePosition').click();
+    await target.locator('#closePosition').dblclick();
     await target.waitForFunction(() => !sim.position && sim.trades.length === 2 && document.querySelector('#tradeStorageWarning').hidden);
     const recovered = await target.evaluate(() => ({
       warningHidden: document.querySelector('#tradeStorageWarning').hidden,
@@ -50,8 +71,8 @@ async (page) => {
       failures.push(`Recovered storage did not persist both trades and clear the warning: ${JSON.stringify(recovered)}`);
     }
     if (errors.length) failures.push(`pageerror: ${errors.join(' | ')}`);
-    return { passed: failures.length === 0, failures, failedWrite, recovered, pageErrors: errors.length };
+    return { passed: failures.length === 0, failures, failedWrite, failedStorageCsvRows: csvLines.length - 1, recovered, pageErrors: errors.length };
   } finally {
     await context.close();
   }
-};
+}
