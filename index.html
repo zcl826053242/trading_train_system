@@ -4973,7 +4973,7 @@
       steps.push({ id: 'trades', title: '完成模拟操盘', done: progress.trades >= definition.trades,
         detail: `${Math.min(progress.trades, definition.trades)} / ${definition.trades} 笔已平仓交易`,
         goal: `先设置保证金、杠杆、止损和止盈；完成 ${definition.trades} 笔开仓到平仓的模拟交易，只开仓不计完成。`,
-        label: sim.position || state.replayMode ? '继续模拟操盘' : '开始模拟操盘' });
+        label: sim.position || (state.replayMode && replayTraining.id && !replayTraining.saved) ? '继续模拟操盘' : '开始模拟操盘' });
       const resume = canResumeStageReplay();
       const draft = resume ? ` · 当前 ${state.revealCount} / ${state.sessionLength} 根${state.replayPaused ? '（已暂停）' : ''}` : '';
       steps.push({ id: 'checks', title: '历史盲测与风险计划', done: progress.checks >= definition.checks && (!definition.replay || progress.replay),
@@ -5106,8 +5106,9 @@
         return;
       }
       if (current?.id === 'trades') {
-        if (state.dataMode !== 'sim' && !setDataMode('sim')) return;
-        setWorkspace(state.replayMode ? 'replay' : 'market');
+        const activeReplay = Boolean(state.replayMode && replayTraining.id && !replayTraining.saved);
+        if ((state.dataMode !== 'sim' || (state.replayMode && !activeReplay)) && !setDataMode('sim')) return;
+        setWorkspace(activeReplay ? 'replay' : 'market');
         document.getElementById('chartCoach').textContent = '本阶段下一步：在模拟行情中先写出交易依据和失效位，再开仓并平仓一笔小仓模拟交易，检查计划是否可执行。这里不会连接真实账户或下单。';
         document.getElementById('chartStage').scrollIntoView({ behavior: 'smooth', block: 'center' });
         if (window.matchMedia('(max-width: 1100px)').matches) requestAnimationFrame(() => document.getElementById('openPosition')?.focus());

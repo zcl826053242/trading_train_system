@@ -86,6 +86,18 @@ for (const replay of [false, true]) {
   assert.ok(!calls.some(call => call[0] === 'source'), 'Continuing a simulation must never reset a replay or account');
   assert.ok(calls.some(call => call[0] === 'workspace' && call[1] === (replay ? 'replay' : 'market')));
 }
+{
+  const { c, calls, stageState, state } = harness();
+  stageState.active = 1;
+  Object.assign(stageState.progress[1], { questions: 6, correct: 4 });
+  Object.assign(state, { replayMode: true });
+  Object.assign(c.replayTraining, { id: 'completed-session', mode: 'blind', saved: true });
+  assert.equal(c.getTrainingRoute().current.id, 'trades');
+  assert.equal(c.getTrainingRoute().current.label, '开始模拟操盘', 'A saved replay must not be advertised as an active trading session');
+  c.continueTrainingRoute();
+  assert.equal(state.replayMode, false, 'Completed replay context must be left before entering a new simulation trade task');
+  assert.deepEqual(calls, [['source', 'sim'], ['workspace', 'market']]);
+}
 for (const paused of [false, true]) for (const count of [25, 60]) {
   const { c, calls, stageState, state } = harness();
   stageState.active = 2;
