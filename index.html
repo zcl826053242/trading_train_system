@@ -6217,13 +6217,13 @@
       const side = sim.side === 'long' ? 1 : -1;
       const quantity = notional / entry;
       const entryFee = notional * sim.feeRate;
-      const estimate = distance => {
-        const trigger = entry * (1 + side * distance / 100);
+      const estimate = (distance, favorable) => {
+        const trigger = entry * (1 + side * distance * (favorable ? 1 : -1) / 100);
         const exit = trigger * (1 - side * sim.slippage);
         const pnl = side * (exit - entry) * quantity - entryFee - exit * quantity * sim.feeRate;
         return { trigger, pnl };
       };
-      const stop = estimate(stopPct), target = estimate(targetPct);
+      const stop = estimate(stopPct, false), target = estimate(targetPct, true);
       document.getElementById('simOrderPreview').textContent = `预计数量 ${quantity.toFixed(6)} · 名义仓位 ${format(notional)} USDT · 开仓费 ${format(entryFee)} USDT\n止损触发 ${format(stop.trigger)} · 预计净损益 ${format(stop.pnl)} USDT\n止盈触发 ${format(target.trigger)} · 预计净损益 +${format(target.pnl)} USDT`;
     }
     function settlePosition(price, reason) {

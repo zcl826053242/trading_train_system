@@ -33,16 +33,18 @@ async (page) => {
         const notional = margin * leverage;
         const entry = price * (1 + side * sim.slippage);
         const quantity = notional / entry;
-        const estimate = distance => {
-          const trigger = entry * (1 + side * distance / 100);
+        const estimate = (distance, favorable) => {
+          const trigger = entry * (1 + side * distance * (favorable ? 1 : -1) / 100);
           const exit = trigger * (1 - side * sim.slippage);
           return { trigger, pnl: side * (exit - entry) * quantity - notional * sim.feeRate - exit * quantity * sim.feeRate };
         };
         const format = value => Number(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        const stop = estimate(stopPct), target = estimate(targetPct);
+        const stop = estimate(stopPct, false), target = estimate(targetPct, true);
         return {
           stopText: `止损触发 ${format(stop.trigger)} · 预计净损益 ${format(stop.pnl)} USDT`,
-          targetText: `止盈触发 ${format(target.trigger)} · 预计净损益 +${format(target.pnl)} USDT`
+          targetText: `止盈触发 ${format(target.trigger)} · 预计净损益 +${format(target.pnl)} USDT`,
+          stopPnl: stop.pnl,
+          targetPnl: target.pnl
         };
       });
       const verifyPreview = async label => {
@@ -51,6 +53,7 @@ async (page) => {
         if (!text.includes(values.stopText) || !text.includes(values.targetText)) {
           failures.push(`${viewport.width}/${label}: preview does not match modeled fee/slippage estimate: ${text}`);
         }
+        if (!(values.stopPnl < 0 && values.targetPnl > 0)) failures.push(`${viewport.width}/${label}: stop/target net PnL signs are invalid: ${JSON.stringify(values)}`);
         return text;
       };
       const longPreview = await verifyPreview('long-default');
