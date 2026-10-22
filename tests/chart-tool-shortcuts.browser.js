@@ -27,7 +27,9 @@ async (page) => {
 
       await target.keyboard.press('Alt+h');
       if (await target.evaluate(() => state.tool) !== 'hline') failures.push(`${name}: Alt+H did not activate horizontal line`);
-      await target.mouse.click(...Object.values(await point(.55, .6)));
+      // The horizontal-line tool only draws on the main price pane. 0.45 stays above
+      // the volume pane in both engines; 0.60 can land on its readout after layout.
+      await target.mouse.click(...Object.values(await point(.55, .45)));
       if (await target.evaluate(() => proChart.drawings.at(-1)?.edit?.type) !== 'horizontal') failures.push(`${name}: Alt+H did not create a horizontal line`);
 
       await target.keyboard.press('Alt+v');

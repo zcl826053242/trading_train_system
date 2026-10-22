@@ -3073,7 +3073,12 @@
       const panes = proChart.chart.panes(), rect = chart.getBoundingClientRect();
       const names = panes.map(pane => pane === panes[0] ? 'main' : pane === proChart.volumePane ? 'volume' : Object.keys(proChart.indicators).find(name => proChart.indicators[name].pane === pane));
       if (names.some(name => !name)) return null;
-      return { names, heights: panes.map(pane => pane.getHeight()), tops: panes.map(pane => pane.getHTMLElement().getBoundingClientRect().top - rect.top), fallback: false };
+      const nodes = panes.map(pane => pane.getHTMLElement?.());
+      // Lightweight Charts can briefly detach a pane while an indicator set is
+      // being rebuilt. Do not let the resize/separator observer dereference that
+      // transient null node; the next render will retry once the pane is mounted.
+      if (nodes.some(node => !node)) return null;
+      return { names, heights: panes.map(pane => pane.getHeight()), tops: nodes.map(node => node.getBoundingClientRect().top - rect.top), fallback: false };
     }
     function applyProfessionalPaneLayout() {
       if (!proChart.chart) return;
