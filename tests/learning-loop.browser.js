@@ -34,6 +34,21 @@ async (page) => {
 
       const initialState = await loopState();
       let state = initialState;
+      const moreLearning = target.locator('.home-more-learning');
+      if (await moreLearning.locator('summary').textContent().then(text => !text.includes('更多练习与训练记录')) || await moreLearning.getAttribute('open') !== null) {
+        failures.push(`${name}: secondary modules should be grouped behind one closed disclosure by default`);
+      }
+      if (await target.locator('#homeLearningLoop').isVisible()) failures.push(`${name}: standalone replay workflow should not compete with the current stage route`);
+      if (await moreLearning.locator('[data-home-action]').count() !== 8) failures.push(`${name}: grouping removed or duplicated secondary destinations`);
+      await moreLearning.locator('summary').click();
+      if (!await target.locator('#homeLearningLoop').isVisible()) failures.push(`${name}: independent replay workflow not reachable inside secondary routes`);
+      if (await moreLearning.locator('[data-home-action="indicators"]').isVisible() !== true) failures.push(`${name}: secondary learning routes are not reachable from the disclosure`);
+      await moreLearning.locator('[data-home-action="indicators"]').click();
+      if (await target.evaluate(() => activeWorkspace) !== 'indicators') failures.push(`${name}: grouped indicator course destination failed`);
+      await target.locator('[data-nav-target="home"]').click();
+      await moreLearning.locator('[data-home-action="practice"]').click();
+      if (await target.evaluate(() => activeWorkspace) !== 'practice') failures.push(`${name}: grouped practice destination failed`);
+      await target.locator('[data-nav-target="home"]').click();
       if (state.steps.length !== 3 || state.steps[0].active !== true || state.steps[0].disabled || state.steps[1].disabled !== true || state.steps[2].disabled !== true) {
         failures.push(`${name}: blank home loop did not expose only the setup step`);
       }
@@ -95,7 +110,9 @@ async (page) => {
         if (state.steps.find(step => step.id === 'review')?.disabled || state.steps.find(step => step.id === 'review')?.active !== true) {
           failures.push(`completed replay loop state did not survive reload: ${JSON.stringify(state.steps)}`);
         }
-        results.push({ case: 'completed-replay', started, reloaded: state });
+        const secondaryCollapsedAfterReload = await target.locator('.home-more-learning').getAttribute('open') === null;
+        if (!secondaryCollapsedAfterReload) failures.push('secondary learning destinations did not start collapsed after reload');
+        results.push({ case: 'completed-replay', started, reloaded: state, secondaryCollapsedAfterReload });
       }
 
       if (errors.length) failures.push(`${name}: ${errors.join('; ')}`);

@@ -15,6 +15,8 @@ async (page) => {
       await target.locator('[data-nav-target="home"]').click();
       const cards = await target.locator('[data-home-action]').evaluateAll(nodes => nodes.map(node => ({ action: node.dataset.homeAction, label: node.textContent.trim() })));
       if (cards.length !== 8 || new Set(cards.map(card => card.action)).size !== 6) failures.push(`${name}: home stack/loop actions are missing or duplicated unexpectedly`);
+      if (await target.locator('.home-more-learning').getAttribute('open') !== null) failures.push(`${name}: secondary destinations should start collapsed`);
+      await target.locator('.home-more-learning > summary').click();
       const routes = [['training', 'training'], ['practice', 'practice'], ['risk', 'risk'], ['indicators', 'indicators'], ['review', 'review']];
       for (const [action, expected] of routes) {
         await target.locator('[data-nav-target="home"]').click();

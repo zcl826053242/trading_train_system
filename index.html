@@ -824,6 +824,10 @@
     .home-grid .surface-card { min-width: 0; padding: 16px; }
     .home-support { border-top: 1px solid #e6e8eb; }
     .home-support > summary { padding: 10px 2px; color: #606975; font-size: 11px; cursor: pointer; }
+    .home-more-learning { margin-top: 14px; }
+    .home-more-learning > summary { display: flex; align-items: baseline; gap: 10px; padding: 12px 4px; color: #34445b; font-size: 12px; font-weight: 600; }
+    .home-more-learning > summary span { color: #7a8796; font-size: 10px; font-weight: 400; }
+    .home-more-learning[open] > summary { margin-bottom: 8px; border-bottom: 1px solid #e6e8eb; }
     .home-support[open] > summary { margin-bottom: 8px; }
     .home-grid .home-card-head h3 { font-size: 14px; }
     .home-grid .home-card-head p { margin: 4px 0 0; color: var(--muted); font-size: 10px; }
@@ -1534,8 +1538,11 @@
       </div>
       <div class="home-grid home-grid-primary">
         <article class="surface-card home-plan-card"><div class="home-card-head"><div><h3>今日训练路线</h3><p>每完成一项，下一项会自动变成主任务。</p></div><span class="home-plan-time">约 15 分钟</span></div><div class="home-plan-list" id="homePlanList"></div></article>
+      </div>
+      <details class="home-support home-more-learning">
+        <summary>更多练习与训练记录 <span>按需打开，默认沿着上方路线继续</span></summary>
         <article class="surface-card home-loop-card" id="homeLearningLoop" aria-labelledby="homeLearningLoopTitle">
-          <div class="home-card-head"><div><h3 id="homeLearningLoopTitle">三步训练闭环</h3><p>先选节奏，再逐根推演，最后回到报告练弱项；不需要先记住所有模块入口。</p></div><span class="home-plan-time" id="homeLoopStatus">从选择开始</span></div>
+          <div class="home-card-head"><div><h3 id="homeLearningLoopTitle">自主历史训练</h3><p>阶段课程之外，可独立完成一场回放并回看报告。</p></div><span class="home-plan-time" id="homeLoopStatus">从选择开始</span></div>
           <ol class="home-loop-steps" id="homeLoopSteps" aria-label="训练闭环">
             <li class="home-loop-step active" data-loop-step="setup"><span class="home-loop-index">01</span><span class="home-loop-copy"><strong>选择周期与长度</strong><small id="homeLoopSetupMeta">1H · 60 根 · 双盲判断</small></span><button class="home-loop-action" type="button" data-loop-action="setup">开始</button></li>
             <li class="home-loop-step locked" data-loop-step="replay"><span class="home-loop-index">02</span><span class="home-loop-copy"><strong>逐根推演并记录</strong><small id="homeLoopReplayMeta">完成设置后解锁</small></span><button class="home-loop-action" type="button" data-loop-action="replay" disabled>待解锁</button></li>
@@ -1544,9 +1551,8 @@
         </article>
       </div>
       <section class="home-stack" aria-labelledby="homeStackTitle">
-        <span class="home-section-kicker">TRAINING STACK</span>
-        <h3 id="homeStackTitle">从看图到复盘，四个入口就够了</h3>
-        <p>按当前任务选择下一步，不需要同时打开课程、指标、题库和交易面板。</p>
+        <h3 id="homeStackTitle">其他训练入口</h3>
+        <p>需要专项补练时，再从这里进入课程、指标或复盘。</p>
         <div class="home-stack-grid">
           <article class="home-stack-card"><span class="home-stack-index">01</span><h4>双盲历史训练</h4><p>隐藏未来走势，逐根写判断，再用下一根 K 线验证。</p><button type="button" data-home-action="replay">开始训练</button></article>
           <article class="home-stack-card"><span class="home-stack-index">02</span><h4>阶段课程</h4><p>先学结构、动能和风险，再进入有门槛的专项练习。</p><button type="button" data-home-action="training">进入课程</button></article>
@@ -1555,9 +1561,8 @@
         </div>
       </section>
       <section class="home-topics" aria-labelledby="homeTopicsTitle">
-        <span class="home-section-kicker">LEARNING LOOP</span>
-        <h3 id="homeTopicsTitle">把一次训练变成下一次目标</h3>
-        <p>训练结束只做一件事：选出一个具体行为，回到对应内容重练。</p>
+        <h3 id="homeTopicsTitle">按主题补练</h3>
+        <p>选一个当前薄弱点练习，训练结束后再回到上方的学习路线。</p>
         <div class="home-topic-grid">
           <article class="home-topic-card"><h4>结构优先</h4><p>先记录 HH / HL、LH / LL 或区间，再决定是否需要指标。</p><button type="button" data-home-action="practice">练结构题</button></article>
           <article class="home-topic-card"><h4>风险预算</h4><p>先定单笔亏损上限，再反推仓位和保证金。</p><button type="button" data-home-action="risk">做风险实验</button></article>
@@ -1565,8 +1570,6 @@
           <article class="home-topic-card"><h4>逐步加难</h4><p>从 1H、60 根开始，完成后再增加周期和场次长度。</p><button type="button" data-home-action="replay">选择场次</button></article>
         </div>
       </section>
-      <details class="home-support">
-        <summary>训练数据与更多练习</summary>
       <div class="home-overview home-overview-stats">
         <article class="home-stat-card"><span class="home-eyebrow">训练场次</span><strong id="homeSessionCount">0</strong><small>已完成历史盲测</small></article>
         <article class="home-stat-card"><span class="home-eyebrow">连续训练</span><strong id="homeStreak">0 天</strong><small>按本地训练日期计算</small></article>
