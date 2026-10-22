@@ -3753,7 +3753,7 @@
       proChart.riskLines.forEach(line => { try { proChart.riskLineOwner?.removePriceLine(line); } catch (_) {} }); proChart.riskLines = []; proChart.riskLineOwner = priceSeries;
       proChart.extremeLines.forEach(line => { try { proChart.extremeLineOwner?.removePriceLine(line); } catch (_) {} }); proChart.extremeLines = []; proChart.extremeLineOwner = priceSeries;
       if (state.chartDisplay.highLow && data.length) for (const [price, title, color] of [[data[data.length - 1].high, 'H', '#0ecb81'], [data[data.length - 1].low, 'L', '#f6465d']]) proChart.extremeLines.push(priceSeries.createPriceLine({ price, color, lineVisible: false, axisLabelVisible: true, title }));
-      if (state.replayMode && sim.position) for (const [price, color, title] of [[sim.position.stop, '#f6465d', '止损'], [sim.position.target, '#0ecb81', '止盈']]) proChart.riskLines.push(priceSeries.createPriceLine({ price, color, lineWidth: 1, lineStyle: window.LightweightCharts.LineStyle.Dashed, axisLabelVisible: true, title }));
+      if (sim.position) for (const [price, color, title, lineStyle] of [[sim.position.entry, '#f0b90b', '入场', window.LightweightCharts.LineStyle.Solid], [sim.position.stop, '#f6465d', '止损', window.LightweightCharts.LineStyle.Dashed], [sim.position.target, '#0ecb81', '止盈', window.LightweightCharts.LineStyle.Dashed]]) proChart.riskLines.push(priceSeries.createPriceLine({ price, color, lineWidth: 1, lineStyle, axisLabelVisible: true, title }));
       document.getElementById('chartIntervalLabel').textContent = state.timeframe;
       updateChartOhlc(data[data.length - 1], data.length - 1, data); updateSummary(data, e20, e60);
       configureChartInspection(data, 0, data.length - 1, index => {
@@ -4711,7 +4711,7 @@
       const psar = state.indicator.psar ? calcParabolicSar(calculationData, state.indicatorParams.psar.step, state.indicatorParams.psar.max).slice(contextStart, contextStart + visibleCount) : [];
       const smaValues = Object.fromEntries([5, 10, 20, 60, 120].filter(period => state.sma[period]).map(period => [period, sma(sourceCloses, period).slice(contextStart, contextStart + visibleCount)]));
       const bollinger = state.indicator.bb ? calcBollinger(sourceCloses, state.indicatorParams.bb).slice(contextStart, contextStart + visibleCount) : [];
-      const riskLevels = state.replayMode && sim.position ? [sim.position.stop, sim.position.target] : [];
+      const riskLevels = sim.position ? [sim.position.entry, sim.position.stop, sim.position.target] : [];
       const indicatorPrices = [...psar.filter(Boolean).map(item => item.value), ...Object.values(smaValues).flat().filter(Number.isFinite), ...bollinger.filter(Boolean).flatMap(item => [item.upper, item.lower]), ...(state.show20 ? e20 : []), ...(state.show60 ? e60 : [])];
       const min = Math.min(...visualData.map(d => d.low), ...indicatorPrices, ...riskLevels), max = Math.max(...visualData.map(d => d.high), ...indicatorPrices, ...riskLevels);
       const pad = Math.max(max - min, Math.abs(max) * .001, .01) * .10;
@@ -4793,12 +4793,12 @@
           mainGroup.appendChild(el('text', { x: x(i), y: yy, 'text-anchor': 'middle', fill: isHigh ? colors.orange : colors.blue }, label));
         });
       }
-      if (state.replayMode && sim.position) {
-        [[sim.position.stop, colors.red, '止损'], [sim.position.target, colors.teal, '止盈']].forEach(([price, color, label]) => {
+      if (sim.position) {
+        [[sim.position.entry, colors.orange, '入场'], [sim.position.stop, colors.red, '止损'], [sim.position.target, colors.teal, '止盈']].forEach(([price, color, label]) => {
           const yy = y(price);
           if (yy >= plot.y && yy <= plot.y + plot.h) {
-            mainGroup.appendChild(el('line', { x1: plot.x, x2: plot.x + plot.w, y1: yy, y2: yy, stroke: color, 'stroke-width': 1.4, 'stroke-dasharray': '5 4' }));
-            mainGroup.appendChild(el('text', { x: plot.x + plot.w - 3, y: yy - 4, 'text-anchor': 'end', fill: color }, `${label} ${formatChartPrice(price)}`));
+            mainGroup.appendChild(el('line', { x1: plot.x, x2: plot.x + plot.w, y1: yy, y2: yy, stroke: color, 'stroke-width': 1.4, 'stroke-dasharray': label === '入场' ? 'none' : '5 4', 'data-risk-line': label }));
+            mainGroup.appendChild(el('text', { x: plot.x + plot.w - 3, y: yy - 4, 'text-anchor': 'end', fill: color, 'data-risk-label': label }, `${label} ${formatChartPrice(price)}`));
           }
         });
       }

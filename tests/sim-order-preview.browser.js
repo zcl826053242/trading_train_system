@@ -1,12 +1,13 @@
 // 真实 UI 验证止损/止盈净值预览与短屏交易抽屉；本地服务端口 4188。
 async (page) => {
   const failures = [], results = [];
-  for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 667 }, { width: 320, height: 667 }]) {
+  for (const fallback of [false, true]) for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 667 }, { width: 320, height: 667 }]) {
     const context = await page.context().browser().newContext({ viewport });
-    const errors = [];
+    const errors = [], name = `${viewport.width}/${fallback ? 'fallback' : 'professional'}`;
     try {
       await context.route('https://fapi.binance.com/fapi/v1/klines**', route => route.abort());
       await context.route('**/unpkg.com/**', route => route.abort());
+      if (fallback) await context.route('**/vendor/lightweight-charts*', route => route.abort());
       const target = await context.newPage();
       target.on('pageerror', error => errors.push(error.message));
       await target.goto('http://127.0.0.1:4188/', { waitUntil: 'domcontentloaded' });
@@ -51,9 +52,9 @@ async (page) => {
         const values = await expected();
         const text = await target.locator('#simOrderPreview').textContent();
         if (!text.includes(values.stopText) || !text.includes(values.targetText)) {
-          failures.push(`${viewport.width}/${label}: preview does not match modeled fee/slippage estimate: ${text}`);
+          failures.push(`${name}/${label}: preview does not match modeled fee/slippage estimate: ${text}`);
         }
-        if (!(values.stopPnl < 0 && values.targetPnl > 0)) failures.push(`${viewport.width}/${label}: stop/target net PnL signs are invalid: ${JSON.stringify(values)}`);
+        if (!(values.stopPnl < 0 && values.targetPnl > 0)) failures.push(`${name}/${label}: stop/target net PnL signs are invalid: ${JSON.stringify(values)}`);
         return text;
       };
       const longPreview = await verifyPreview('long-default');
@@ -83,16 +84,26 @@ async (page) => {
           const inside = rect => rect.top >= box.top && rect.bottom <= box.bottom;
           return { open: drawer.open, targetReachable: inside(input), actionsReachable: inside(open) && inside(close), openDisabled: document.getElementById('openPosition').disabled };
         });
-        if (!drawerState.open || !drawerState.targetReachable || !drawerState.actionsReachable || drawerState.openDisabled) failures.push(`${viewport.width}/mobile drawer controls not reachable: ${JSON.stringify(drawerState)}`);
+        if (!drawerState.open || !drawerState.targetReachable || !drawerState.actionsReachable || drawerState.openDisabled) failures.push(`${name}/mobile drawer controls not reachable: ${JSON.stringify(drawerState)}`);
       }
       await target.locator('#openPosition').click();
       await target.waitForFunction(() => Boolean(sim.position));
+      const positionOverlay = await target.evaluate(() => {
+        const lines = proChart.chart
+          ? proChart.riskLines.map(line => line.options())
+          : [...document.querySelectorAll('#chart [data-risk-label]')].map(node => ({ title: node.getAttribute('data-risk-label') }));
+        return { replayMode: state.replayMode, labels: lines.map(line => line.title), prices: lines.map(line => line.price), expected: [sim.position.entry, sim.position.stop, sim.position.target] };
+      });
+      if (positionOverlay.replayMode || JSON.stringify(positionOverlay.labels) !== JSON.stringify(['入场', '止损', '止盈'])) failures.push(`${name}: active simulated position is missing chart entry/stop/target overlays: ${JSON.stringify(positionOverlay)}`);
+      if (!fallback && positionOverlay.prices.some((price, index) => Math.abs(price - positionOverlay.expected[index]) > 0.000001)) failures.push(`${name}: professional chart overlay levels do not match the open position: ${JSON.stringify(positionOverlay)}`);
       await target.locator('#closePosition').click();
       await target.waitForFunction(() => !sim.position);
-      if (errors.length) failures.push(`${viewport.width}: pageerror ${errors.join(' | ')}`);
-      results.push({ width: viewport.width, longPreview, shortPreview, pageErrors: errors.length });
+      const afterClose = await target.evaluate(() => proChart.chart ? proChart.riskLines.length : document.querySelectorAll('#chart [data-risk-label]').length);
+      if (afterClose !== 0) failures.push(`${name}: position overlays remain after the position was closed`);
+      if (errors.length) failures.push(`${name}: pageerror ${errors.join(' | ')}`);
+      results.push({ name, longPreview, shortPreview, positionOverlay, pageErrors: errors.length });
     } catch (error) {
-      failures.push(`${viewport.width}: ${error.message}`);
+      failures.push(`${name}: ${error.message}`);
     } finally {
       await context.close();
     }
