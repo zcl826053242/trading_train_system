@@ -3298,9 +3298,18 @@
       drawingOverlay.id = 'chartDrawingOverlay'; drawingOverlay.setAttribute('aria-hidden', 'true');
       document.getElementById('chart').append(drawingOverlay);
       const mainPriceFormat = chartPriceFormat();
-      const candles = chart.addSeries(L.CandlestickSeries, { priceFormat: mainPriceFormat, upColor: '#0ecb81', downColor: '#f6465d', borderUpColor: '#0ecb81', borderDownColor: '#f6465d', wickUpColor: '#0ecb81', wickDownColor: '#f6465d', priceLineVisible: true, lastValueVisible: true });
-      const heikin = chart.addSeries(L.CandlestickSeries, { priceFormat: mainPriceFormat, upColor: '#0ecb81', downColor: '#f6465d', borderUpColor: '#0ecb81', borderDownColor: '#f6465d', wickUpColor: '#0ecb81', wickDownColor: '#f6465d', priceLineVisible: true, lastValueVisible: true });
-      const line = chart.addSeries(L.LineSeries, { priceFormat: mainPriceFormat, color: '#f0b90b', lineWidth: 2, priceLineVisible: true, lastValueVisible: true });
+      // Lightweight Charts 的 priceLine 不会参与自动价格范围；把教学持仓的三条风险线
+      // 合并进当前主图的 autoscale，避免止盈/止损在窄屏或极端距离时被裁到图外。
+      const includeRiskLevelsInAutoscale = original => {
+        const info = original();
+        if (!info || !sim.position || !info.priceRange) return info;
+        const levels = [sim.position.entry, sim.position.stop, sim.position.target].filter(Number.isFinite);
+        if (!levels.length) return info;
+        return { ...info, priceRange: { minValue: Math.min(info.priceRange.minValue, ...levels), maxValue: Math.max(info.priceRange.maxValue, ...levels) } };
+      };
+      const candles = chart.addSeries(L.CandlestickSeries, { priceFormat: mainPriceFormat, upColor: '#0ecb81', downColor: '#f6465d', borderUpColor: '#0ecb81', borderDownColor: '#f6465d', wickUpColor: '#0ecb81', wickDownColor: '#f6465d', priceLineVisible: true, lastValueVisible: true, autoscaleInfoProvider: includeRiskLevelsInAutoscale });
+      const heikin = chart.addSeries(L.CandlestickSeries, { priceFormat: mainPriceFormat, upColor: '#0ecb81', downColor: '#f6465d', borderUpColor: '#0ecb81', borderDownColor: '#f6465d', wickUpColor: '#0ecb81', wickDownColor: '#f6465d', priceLineVisible: true, lastValueVisible: true, autoscaleInfoProvider: includeRiskLevelsInAutoscale });
+      const line = chart.addSeries(L.LineSeries, { priceFormat: mainPriceFormat, color: '#f0b90b', lineWidth: 2, priceLineVisible: true, lastValueVisible: true, autoscaleInfoProvider: includeRiskLevelsInAutoscale });
       const psarSeries = chart.addSeries(L.LineSeries, { priceFormat: mainPriceFormat, color: '#f0b90b', lineVisible: false, pointMarkersVisible: true, pointMarkersRadius: 2, priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: true });
       const ema20 = chart.addSeries(L.LineSeries, { priceFormat: mainPriceFormat, color: '#f0b90b', lineWidth: 1, priceLineVisible: false, lastValueVisible: false });
       const ema60 = chart.addSeries(L.LineSeries, { priceFormat: mainPriceFormat, color: '#5b8def', lineWidth: 1, priceLineVisible: false, lastValueVisible: false });
@@ -4794,12 +4803,26 @@
         });
       }
       if (sim.position) {
-        [[sim.position.entry, colors.orange, '入场'], [sim.position.stop, colors.red, '止损'], [sim.position.target, colors.teal, '止盈']].forEach(([price, color, label]) => {
-          const yy = y(price);
-          if (yy >= plot.y && yy <= plot.y + plot.h) {
-            mainGroup.appendChild(el('line', { x1: plot.x, x2: plot.x + plot.w, y1: yy, y2: yy, stroke: color, 'stroke-width': 1.4, 'stroke-dasharray': label === '入场' ? 'none' : '5 4', 'data-risk-line': label }));
-            mainGroup.appendChild(el('text', { x: plot.x + plot.w - 3, y: yy - 4, 'text-anchor': 'end', fill: color, 'data-risk-label': label }, `${label} ${formatChartPrice(price)}`));
-          }
+        const riskRows = [[sim.position.entry, colors.orange, '入场'], [sim.position.stop, colors.red, '止损'], [sim.position.target, colors.teal, '止盈']]
+          .map(([price, color, label]) => ({ price, color, label, yy: y(price) }))
+          .filter(row => row.yy >= plot.y && row.yy <= plot.y + plot.h)
+          .sort((a, b) => a.yy - b.yy);
+        // 近距离止损/入场价在窄屏上很容易让文字相互覆盖；保持线在真实价格位置，
+        // 只对右侧标签做最小间距排版，并把整体限制在主图边界内。
+        const labelGap = 14, labelTop = plot.y + 10, labelBottom = plot.y + plot.h - 2;
+        const labelYs = riskRows.map(row => row.yy - 4);
+        for (let i = 1; i < labelYs.length; i++) labelYs[i] = Math.max(labelYs[i], labelYs[i - 1] + labelGap);
+        if (labelYs.length && labelYs.at(-1) > labelBottom) {
+          const shift = labelYs.at(-1) - labelBottom;
+          for (let i = 0; i < labelYs.length; i++) labelYs[i] -= shift;
+        }
+        if (labelYs.length && labelYs[0] < labelTop) {
+          const shift = labelTop - labelYs[0];
+          for (let i = 0; i < labelYs.length; i++) labelYs[i] += shift;
+        }
+        riskRows.forEach((row, index) => {
+          mainGroup.appendChild(el('line', { x1: plot.x, x2: plot.x + plot.w, y1: row.yy, y2: row.yy, stroke: row.color, 'stroke-width': 1.4, 'stroke-dasharray': row.label === '入场' ? 'none' : '5 4', 'data-risk-line': row.label }));
+          mainGroup.appendChild(el('text', { x: plot.x + plot.w - 3, y: labelYs[index], 'text-anchor': 'end', fill: row.color, stroke: '#0b0e11', 'stroke-width': 3, 'paint-order': 'stroke', 'stroke-linejoin': 'round', 'data-risk-label': row.label, 'data-risk-label-y': labelYs[index] }, `${row.label} ${formatChartPrice(row.price)}`));
         });
       }
       const fallbackPaneScales = {};

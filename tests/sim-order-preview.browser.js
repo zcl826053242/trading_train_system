@@ -90,12 +90,43 @@ async (page) => {
       await target.waitForFunction(() => Boolean(sim.position));
       const positionOverlay = await target.evaluate(() => {
         const lines = proChart.chart
-          ? proChart.riskLines.map(line => line.options())
-          : [...document.querySelectorAll('#chart [data-risk-label]')].map(node => ({ title: node.getAttribute('data-risk-label') }));
-        return { replayMode: state.replayMode, labels: lines.map(line => line.title), prices: lines.map(line => line.price), expected: [sim.position.entry, sim.position.stop, sim.position.target] };
+          ? proChart.riskLines.map(line => {
+            const options = line.options();
+            return { title: options.title, price: options.price, color: options.color, dashed: options.lineStyle === window.LightweightCharts.LineStyle.Dashed };
+          })
+          : [...document.querySelectorAll('#chart [data-risk-label]')].map(node => {
+            const title = node.getAttribute('data-risk-label');
+            const line = document.querySelector(`#chart [data-risk-line="${title}"]`);
+            return { title, priceText: node.textContent.trim(), color: node.getAttribute('fill'), dashed: line?.getAttribute('stroke-dasharray') !== 'none', labelY: Number(node.getAttribute('data-risk-label-y')) };
+          });
+        const expected = [sim.position.entry, sim.position.stop, sim.position.target];
+        return {
+          replayMode: state.replayMode,
+          lines,
+          expected,
+          expectedLabels: expected.map(formatChartPrice),
+          expectedColors: ['#f0b90b', '#f6465d', '#0ecb81']
+        };
       });
-      if (positionOverlay.replayMode || JSON.stringify(positionOverlay.labels) !== JSON.stringify(['入场', '止损', '止盈'])) failures.push(`${name}: active simulated position is missing chart entry/stop/target overlays: ${JSON.stringify(positionOverlay)}`);
-      if (!fallback && positionOverlay.prices.some((price, index) => Math.abs(price - positionOverlay.expected[index]) > 0.000001)) failures.push(`${name}: professional chart overlay levels do not match the open position: ${JSON.stringify(positionOverlay)}`);
+      const expectedTitles = ['入场', '止损', '止盈'];
+      const linesByTitle = Object.fromEntries(positionOverlay.lines.map(line => [line.title, line]));
+      if (positionOverlay.replayMode || expectedTitles.some(title => !linesByTitle[title])) failures.push(`${name}: active simulated position is missing chart entry/stop/target overlays: ${JSON.stringify(positionOverlay)}`);
+      expectedTitles.forEach((title, index) => {
+        const line = linesByTitle[title];
+        if (!line) return;
+        if (line.color.toLowerCase() !== positionOverlay.expectedColors[index]) failures.push(`${name}: ${title} line color does not match its risk role: ${JSON.stringify(positionOverlay)}`);
+        if (line.dashed !== (index > 0)) failures.push(`${name}: ${title} line style does not match its risk role: ${JSON.stringify(positionOverlay)}`);
+        if (fallback && !line.priceText.includes(positionOverlay.expectedLabels[index])) failures.push(`${name}: fallback ${title} price label does not match the open position: ${JSON.stringify(positionOverlay)}`);
+        if (!fallback && Math.abs(line.price - positionOverlay.expected[index]) > 0.000001) failures.push(`${name}: professional ${title} level does not match the open position: ${JSON.stringify(positionOverlay)}`);
+      });
+      if (!fallback) {
+        const visibleRange = await target.evaluate(() => proChart.chart.panes()[0].priceScale('right').getVisibleRange());
+        if (!visibleRange || positionOverlay.expected.some(price => price < visibleRange.from - 0.000001 || price > visibleRange.to + 0.000001)) failures.push(`${name}: professional price scale clips a simulated risk level: ${JSON.stringify({ visibleRange, expected: positionOverlay.expected })}`);
+      }
+      if (fallback) {
+        const labelYs = positionOverlay.lines.map(line => line.labelY).sort((a, b) => a - b);
+        if (labelYs.some((value, index) => !Number.isFinite(value) || (index > 0 && value - labelYs[index - 1] < 13))) failures.push(`${name}: fallback risk labels overlap: ${JSON.stringify(positionOverlay)}`);
+      }
       await target.locator('#closePosition').click();
       await target.waitForFunction(() => !sim.position);
       const afterClose = await target.evaluate(() => proChart.chart ? proChart.riskLines.length : document.querySelectorAll('#chart [data-risk-label]').length);
