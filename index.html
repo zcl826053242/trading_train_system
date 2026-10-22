@@ -336,7 +336,7 @@
     .sim-controls input { min-width: 0; width: 100%; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); color: var(--ink); padding: 6px 7px; font-size: 11px; }
     .sim-allocation { display: flex; gap: 6px; margin-top: 8px; }
     .sim-allocation button { flex: 1; padding: 6px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); color: var(--ink); font-size: 10px; }
-    .sim-order-preview { margin-top: 8px; color: var(--muted); font-size: 10px; line-height: 1.6; }
+    .sim-order-preview { margin-top: 8px; color: var(--muted); font-size: 10px; line-height: 1.6; white-space: pre-line; }
     .sim-side { display: flex; gap: 6px; margin-bottom: 8px; }
     .sim-side button { flex: 1; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); color: var(--muted); padding: 6px; font-size: 11px; }
     .sim-side button.active[data-side="long"] { background: var(--teal-soft); border-color: var(--teal); color: var(--teal); }
@@ -6202,12 +6202,29 @@
       const price = visibleClose()?.close;
       const margin = Number(document.getElementById('simMargin').value);
       const leverage = Number(document.getElementById('simLeverage').value);
+      const stopPct = Number(document.getElementById('simStop').value);
+      const targetPct = Number(document.getElementById('simTarget').value);
       const entry = price * (sim.side === 'long' ? 1 + sim.slippage : 1 - sim.slippage);
       const notional = margin * leverage;
-      document.getElementById('simRiskSummary').textContent = `止损 ${document.getElementById('simStop').value}% · 止盈 ${document.getElementById('simTarget').value}%`;
-      document.getElementById('simOrderPreview').textContent = price && margin > 0 && leverage >= 1 && leverage <= 20 && Number.isFinite(notional)
-        ? `预计数量 ${(notional / entry).toFixed(6)} 样本单位 · 名义仓位 ${notional.toFixed(2)} USDT · 开仓费约 ${(notional * sim.feeRate).toFixed(2)} USDT`
-        : '填写有效保证金和杠杆后显示预计数量。';
+      const valid = price > 0 && margin > 0 && margin <= sim.balance && leverage >= 1 && leverage <= 20
+        && stopPct >= 0.1 && stopPct <= 20 && targetPct >= 0.1 && targetPct <= 50 && Number.isFinite(notional);
+      const format = value => Number(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      document.getElementById('simRiskSummary').textContent = `止损 ${Number.isFinite(stopPct) ? stopPct : '—'}% · 止盈 ${Number.isFinite(targetPct) ? targetPct : '—'}%`;
+      if (!valid) {
+        document.getElementById('simOrderPreview').textContent = '保证金、杠杆或止盈止损参数超出可用范围。';
+        return;
+      }
+      const side = sim.side === 'long' ? 1 : -1;
+      const quantity = notional / entry;
+      const entryFee = notional * sim.feeRate;
+      const estimate = distance => {
+        const trigger = entry * (1 + side * distance / 100);
+        const exit = trigger * (1 - side * sim.slippage);
+        const pnl = side * (exit - entry) * quantity - entryFee - exit * quantity * sim.feeRate;
+        return { trigger, pnl };
+      };
+      const stop = estimate(stopPct), target = estimate(targetPct);
+      document.getElementById('simOrderPreview').textContent = `预计数量 ${quantity.toFixed(6)} · 名义仓位 ${format(notional)} USDT · 开仓费 ${format(entryFee)} USDT\n止损触发 ${format(stop.trigger)} · 预计净损益 ${format(stop.pnl)} USDT\n止盈触发 ${format(target.trigger)} · 预计净损益 +${format(target.pnl)} USDT`;
     }
     function settlePosition(price, reason) {
       const p = sim.position; if (!p) return;
