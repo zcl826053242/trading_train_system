@@ -1459,6 +1459,10 @@
     .chart-pane-separator { position: absolute; left: 0; width: 100%; height: 10px; margin-top: -5px; cursor: row-resize; pointer-events: auto; touch-action: none; outline: none; }
     .chart-pane-separator::after { content: ''; position: absolute; left: 0; right: 0; top: 4px; height: 1px; background: #2b3139; }
     .chart-pane-separator:hover::after, .chart-pane-separator:focus-visible::after, .chart-pane-separator[data-dragging]::after { height: 2px; background: #f0b90b; }
+    .chart-pane-actions { position: absolute; inset: 0; z-index: 5; pointer-events: none; overflow: hidden; }
+    .chart-pane-focus { position: absolute; width: 26px; height: 24px; padding: 0; border: 1px solid #343a40; border-radius: 3px; background: #181c22; color: #aeb7c4; font-size: 17px; line-height: 20px; cursor: pointer; pointer-events: auto; }
+    .chart-pane-focus:hover, .chart-pane-focus:focus-visible, .chart-pane-focus[aria-pressed="true"] { color: #f0b90b; border-color: #f0b90b; outline: none; }
+    #chart.chart-pane-focused-sub #chartDrawingOverlay { display: none; }
     .chart-pane-layout-settings { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 9px 0; color: #848e9c; font-size: 11px; }
     .chart-pane-layout-settings button { border: 1px solid #343a40; border-radius: 3px; background: #202328; color: #eaecef; padding: 6px 9px; cursor: pointer; font: inherit; }
     .chart-pane-layout-settings button:focus-visible { outline: 1px solid #f0b90b; }
@@ -1747,10 +1751,11 @@
           </div>
           <div class="chart-stage" id="chartStage">
             <div class="chart-pane-legends" id="chartPaneLegends" aria-label="各图表面板指标读数"></div>
+            <div class="chart-pane-actions" id="chartPaneActions" aria-label="图表窗格放大与还原"></div>
             <div class="chart-pane-separators" id="chartPaneSeparators" aria-label="图表面板高度调整"></div>
             <span class="chart-screen-reader" id="chartPaneResizeStatus" role="status" aria-live="polite"></span>
             <div id="chart" role="group" tabindex="0" aria-label="行情 K 线图" aria-describedby="chartKeyboardHelp"></div>
-            <span id="chartKeyboardHelp" class="chart-screen-reader">聚焦图表后，左右方向键逐根查看，Home 和 End 查看已加载范围首尾，Escape 恢复最新读数。Tab 离开图表。</span>
+            <span id="chartKeyboardHelp" class="chart-screen-reader">聚焦图表后，左右方向键逐根查看，Home 和 End 查看已加载范围首尾。双击绘图区或使用窗格按钮放大与还原；Escape 优先还原窗格，否则恢复最新读数。Tab 离开图表。</span>
             <span id="chartInspectionStatus" class="chart-screen-reader" role="status" aria-live="polite" aria-atomic="true"></span>
             <div class="chart-tooltip" id="chartTooltip" role="tooltip" hidden></div>
             <button type="button" id="finishAnyWaves" class="drawing-finish-btn" hidden><i data-lucide="check" aria-hidden="true"></i>完成自由折线</button>
@@ -2816,6 +2821,7 @@
       proChart.riskLines = []; proChart.extremeLines = [];
       proChart.riskLineOwner = null; proChart.extremeLineOwner = null;
       proChart.visibleRows = []; proChart.readoutRows = []; proChart.readoutOffset = 0; proChart.readoutData = null; proChart.psarValues = [];
+      validateChartPaneFocus();
       proChart.viewKey = '';
       configureChartInspection([], 0, -1, null, null);
       renderChartPaneLegends({ main: [], volume: [], rsi: [], macd: [], kdj: [] });
@@ -2877,7 +2883,70 @@
     }
     const proChart = { chart: null, candles: null, heikin: null, line: null, ema20: null, ema60: null, psarSeries: null, psarValues: [], smaSeries: {}, volume: null, volumeSmaSeries: {}, volumePane: null, indicators: {}, drawings: [], riskLines: [], riskLineOwner: null, extremeLines: [], extremeLineOwner: null, lastTimes: [], viewKey: '', editingDrawing: null, measurePoint: null, shapePoints: [], drawingOverlay: null };
     const practiceChart = { chart: null, candles: null, ema20: null, ema60: null, volume: null, volumePane: null, resizeObserver: null };
-    const chartPaneSizing = { layouts: loadChartPaneLayouts(), drag: null };
+    const chartPaneSizing = { layouts: loadChartPaneLayouts(), drag: null, focused: null, normalHeights: null, focusedChart: false };
+    const chartPaneLabels = { main: '主图', volume: '成交量', rsi: 'RSI', macd: 'MACD', kdj: 'KDJ' };
+    function toggleChartPaneFocus(name = chartPaneSizing.focused) {
+      if (!chartPaneNames().includes(name) || !proChart.visibleRows?.length) return;
+      if (chartPaneSizing.drag) finishChartPaneResize({ pointerId: chartPaneSizing.drag.pointerId }, true);
+      if (!chartPaneSizing.focused) chartPaneSizing.normalHeights = chartPaneSnapshot()?.heights;
+      chartPaneSizing.focused = chartPaneSizing.focused === name ? null : name;
+      clearChartInspection();
+      hideChartTooltip();
+      if (proChart.chart) { applyProfessionalPaneLayout(); scheduleChartOverlay(); }
+      else renderChart();
+      syncChartAxisControls();
+      document.getElementById('chartPaneResizeStatus').textContent = chartPaneSizing.focused
+        ? `${chartPaneLabels[name]}窗格已放大；再次点击还原按钮、双击绘图区或按 Escape 恢复原布局。`
+        : '已还原窗格布局，面板比例、绘图和训练进度保持不变。';
+    }
+    function validateChartPaneFocus() {
+      if (chartPaneSizing.focused && (!chartPaneNames().includes(chartPaneSizing.focused) || !proChart.visibleRows?.length)) chartPaneSizing.focused = null;
+      document.getElementById('chart').classList.toggle('chart-pane-focused-sub', Boolean(chartPaneSizing.focused && chartPaneSizing.focused !== 'main'));
+    }
+    function chartPaneAtPoint(event) {
+      const snapshot = chartPaneSnapshot(), rect = document.getElementById('chart').getBoundingClientRect();
+      if (!snapshot) return null;
+      const x = event.clientX - rect.left, y = event.clientY - rect.top;
+      const width = proChart.chart ? proChart.chart.timeScale().width() : Number(document.querySelector('#chart svg.chart-fallback')?.dataset.plotWidth) + 8;
+      // 坐标轴双击保留自动缩放语义；只有绘图区可以放大窗格。
+      if (x < 0 || x >= width) return null;
+      return snapshot.names.find((name, i) => (!chartPaneSizing.focused || chartPaneSizing.focused === name) && y >= snapshot.tops[i] && y < snapshot.tops[i] + snapshot.heights[i]) || null;
+    }
+    function renderChartPaneActions() {
+      validateChartPaneFocus();
+      const layer = document.getElementById('chartPaneActions'), snapshot = chartPaneSnapshot();
+      layer.hidden = !snapshot;
+      if (!snapshot) { layer.replaceChildren(); return; }
+      const rect = document.getElementById('chart').getBoundingClientRect(), origin = layer.getBoundingClientRect();
+      const width = proChart.chart ? proChart.chart.timeScale().width() : Number(document.querySelector('#chart svg.chart-fallback')?.dataset.plotWidth) + 8;
+      for (const node of [...layer.children]) if (!snapshot.names.includes(node.dataset.paneFocus)) node.remove();
+      snapshot.names.forEach((name, i) => {
+        let button = layer.querySelector(`[data-pane-focus="${name}"]`);
+        if (!button) {
+          button = document.createElement('button'); button.type = 'button'; button.className = 'chart-pane-focus'; button.dataset.paneFocus = name; layer.append(button);
+        }
+        const active = chartPaneSizing.focused === name;
+        button.hidden = Boolean(chartPaneSizing.focused && !active);
+        button.textContent = active ? '↙' : '⛶';
+        button.setAttribute('aria-pressed', String(active));
+        button.setAttribute('aria-label', `${active ? '还原' : '放大'}${chartPaneLabels[name]}窗格`); button.title = button.getAttribute('aria-label');
+        button.style.left = `${rect.left - origin.left + Math.max(0, width - 31)}px`;
+        button.style.top = `${rect.top - origin.top + snapshot.tops[i] + 3}px`;
+      });
+    }
+    document.getElementById('chartPaneActions').addEventListener('click', event => {
+      const button = event.target.closest('[data-pane-focus]');
+      if (button) toggleChartPaneFocus(button.dataset.paneFocus);
+    });
+    document.getElementById('chart').addEventListener('dblclick', event => {
+      if (state.tool !== 'cursor' || proChart.editingDrawing) return;
+      const name = chartPaneAtPoint(event);
+      if (name) { event.preventDefault(); event.stopImmediatePropagation(); toggleChartPaneFocus(name); }
+    }, true);
+    document.addEventListener('keydown', event => {
+      if (event.key !== 'Escape' || !chartPaneSizing.focused || event.defaultPrevented || document.querySelector('dialog[open]') || event.target.closest('input, textarea, select, [contenteditable="true"]')) return;
+      event.preventDefault(); event.stopImmediatePropagation(); toggleChartPaneFocus();
+    }, true);
     function loadChartPaneLayouts() {
       try {
         const saved = JSON.parse(localStorage.getItem('trend-lab-pane-layouts') || 'null');
@@ -2934,8 +3003,49 @@
     }
     function applyProfessionalPaneLayout() {
       if (!proChart.chart) return;
+      validateChartPaneFocus();
       const panes = proChart.chart.panes(), names = chartPaneNames(), weights = chartPaneSizing.layouts[names.join(',')];
       if (panes.length !== names.length) return;
+      const chart = proChart.chart, container = document.getElementById('chart');
+      const focused = chartPaneSizing.focused;
+      if (focused) {
+        // Lightweight Charts 5.0.8 保留每个 pane 至少 2px。额外的内部高度只用于
+        // 隐藏行和分隔线；选中窗格使用全部实际视口，不重建数据或修改保存比例。
+        const extra = (panes.length - 1) * 3;
+        const height = Math.floor(container.clientHeight), width = container.clientWidth;
+        const axis = chart.options().timeScale.visible ? Math.max(28, chart.timeScale().height()) : 0;
+        const heights = names.map(name => name === focused ? Math.max(2, height - axis) : 2);
+        if (chart.autoSizeActive()) chart.applyOptions({ autoSize: false });
+        if (proChart.focusSizeKey !== `${width},${height},${focused},${names}`) {
+          panes.forEach((pane, i) => pane.setStretchFactor(heights[i]));
+          chart.resize(width, height + extra, true);
+          proChart.focusSizeKey = `${width},${height},${focused},${names}`;
+        }
+        let offset = 0;
+        panes.forEach((pane, i) => {
+          const node = pane.getHTMLElement();
+          node.style.visibility = names[i] === focused ? '' : 'hidden';
+          node.style.transform = names[i] === focused ? `translateY(${-offset}px)` : '';
+          const separator = node.nextElementSibling;
+          if (i < panes.length - 1 && separator) separator.style.visibility = 'hidden';
+          offset += pane.getHeight() + (i < panes.length - 1 ? 1 : 0);
+        });
+        const axisRow = panes.at(-1).getHTMLElement()?.parentElement.lastElementChild;
+        if (axisRow) axisRow.style.transform = `translateY(${-extra}px)`;
+        chartPaneSizing.focusedChart = true;
+        return;
+      }
+      if (chartPaneSizing.focusedChart) {
+        for (const pane of panes) {
+          const node = pane.getHTMLElement(); node.style.visibility = ''; node.style.transform = '';
+          if (node.nextElementSibling) { node.nextElementSibling.style.visibility = ''; node.nextElementSibling.style.transform = ''; }
+        }
+        chartPaneSizing.focusedChart = false; proChart.focusSizeKey = null; proChart.paneLayoutKey = null;
+        const heights = chartPaneSizing.normalHeights;
+        if (!weights && heights?.length === panes.length) panes.forEach((pane, i) => pane.setStretchFactor(heights[i]));
+        chart.resize(container.clientWidth, container.clientHeight, true);
+        chart.applyOptions({ autoSize: true });
+      }
       const layoutKey = JSON.stringify([names, weights || null]);
       if (!weights) {
         if (proChart.paneLayoutKey !== layoutKey) panes.forEach((pane, i) => pane.setStretchFactor(i === 0 ? 7 : i === 1 ? 3.5 : 2.1));
@@ -2950,7 +3060,7 @@
     }
     function renderChartPaneSeparators() {
       const layer = document.getElementById('chartPaneSeparators'), snapshot = chartPaneSnapshot();
-      layer.hidden = !snapshot;
+      layer.hidden = !snapshot || Boolean(chartPaneSizing.focused);
       if (!snapshot) { layer.replaceChildren(); return; }
       const { names, heights, tops, fallback } = snapshot;
       const chart = document.getElementById('chart').getBoundingClientRect(), origin = layer.getBoundingClientRect();
@@ -2973,6 +3083,7 @@
       }
     }
     function resizeChartPanePair(snapshot, index, delta) {
+      if (chartPaneSizing.focused) return;
       const { names, heights, fallback } = snapshot, total = heights.reduce((a, b) => a + b, 0);
       const minimums = chartPaneMinimums(names, total, fallback), next = [...heights], pair = heights[index] + heights[index + 1];
       next[index] = Math.max(minimums[index], Math.min(pair - minimums[index + 1], heights[index] + delta));
@@ -2982,6 +3093,7 @@
       else { applyProfessionalPaneLayout(); scheduleChartOverlay(); }
     }
     function resetChartPaneLayout() {
+      chartPaneSizing.focused = null; validateChartPaneFocus();
       chartPaneSizing.layouts = {};
       if (proChart.chart) proChart.chart.panes().forEach((pane, i) => pane.setStretchFactor(i === 0 ? 7 : pane === proChart.volumePane ? 3.5 : 2.1));
       else renderChart();
@@ -3274,11 +3386,11 @@
         const x = Number(svg.dataset.plotX), width = Number(svg.dataset.plotWidth);
         for (const legend of layer.children) {
           const top = tops[legend.dataset.paneLegend];
-          legend.hidden = top == null || legend.dataset.hasValues !== 'true';
+          legend.hidden = top == null || legend.dataset.hasValues !== 'true' || Boolean(chartPaneSizing.focused && chartPaneSizing.focused !== legend.dataset.paneLegend);
           if (legend.hidden) continue;
           legend.style.left = `${rect.left - origin.left + x / box.width * rect.width}px`;
           legend.style.top = `${rect.top - origin.top + top / box.height * rect.height}px`;
-          legend.style.width = `${width / box.width * rect.width}px`;
+          legend.style.width = `${Math.max(0, width / box.width * rect.width - 34)}px`;
           legend.style.maxHeight = '28px';
         }
         return;
@@ -3289,11 +3401,11 @@
       for (const legend of layer.children) {
         const element = panes[legend.dataset.paneLegend]?.getHTMLElement();
         if (!element) { legend.hidden = true; continue; }
-        legend.hidden = legend.dataset.hasValues !== 'true';
+        legend.hidden = legend.dataset.hasValues !== 'true' || Boolean(chartPaneSizing.focused && chartPaneSizing.focused !== legend.dataset.paneLegend);
         const rect = element.getBoundingClientRect();
         legend.style.left = `${rect.left - origin.left + 4}px`;
         legend.style.top = `${rect.top - origin.top + 3}px`;
-        legend.style.width = `${width}px`;
+        legend.style.width = `${Math.max(0, width - 25)}px`;
         legend.style.maxHeight = `${Math.max(0, rect.height - 6)}px`;
       }
     }
@@ -3544,8 +3656,12 @@
           const from = index < range.from ? index - 1 : index - width + 1;
           scale.setVisibleLogicalRange({ from, to: from + width });
         }
-        const row = data[index], series = activeChartSeries(), displayRow = state.chartType === 'heikin' ? visualData[index] : row;
-        proChart.chart.setCrosshairPosition(displayRow.close, row.time, series);
+        const row = data[index], displayRow = state.chartType === 'heikin' ? visualData[index] : row;
+        const focused = chartPaneSizing.focused;
+        const series = focused === 'volume' ? proChart.volume : proChart.indicators[focused]?.series.find(item => item.seriesType() === 'Line') || activeChartSeries();
+        const value = focused && focused !== 'main' ? series.dataByIndex(index)?.value : displayRow.close;
+        if (Number.isFinite(value)) proChart.chart.setCrosshairPosition(value, row.time, series);
+        else proChart.chart.clearCrosshairPosition();
         updateChartOhlc(row, index, data);
       }, () => {
         proChart.chart.clearCrosshairPosition();
@@ -3583,6 +3699,7 @@
     }
     let drawingSequence = 0;
     function drawingSurface() {
+      if (chartPaneSizing.focused && chartPaneSizing.focused !== 'main') return null;
       if (proChart.fallback) { proChart.fallback.refresh(); return proChart.fallback; }
       const chart = proChart.chart;
       if (!chart) return null;
@@ -3667,6 +3784,7 @@
         renderDrawingOverlay();
         positionChartPaneLegends();
         renderChartPaneSeparators();
+        renderChartPaneActions();
       });
     }
     function renderDrawingOverlay() {
@@ -4387,7 +4505,7 @@
       if (fallbackResizeFrame !== null) cancelAnimationFrame(fallbackResizeFrame);
       fallbackResizeFrame = requestAnimationFrame(() => { fallbackResizeFrame = null; renderChart(); });
     });
-    function fallbackChartLayout(width, height, paneCount, axisWidth = 72, customHeights = null) {
+    function fallbackChartLayout(width, height, paneCount, axisWidth = 72, customHeights = null, focusIndex = -1) {
       // SVG 使用 CSS 像素坐标；各面板单独预留 26px 图例，避免缩放后遮住数据。
       const available = Math.max(100, height - 28);
       const unit = available / (7 + 3.5 + paneCount * 2.1);
@@ -4396,7 +4514,7 @@
       const minimumPane = paneCount ? Math.max(0, Math.min(72, (available - 198) / paneCount)) : 0;
       const paneStep = paneCount ? Math.max(unit * 2.1, minimumPane) : 0;
       const paneStart = available - paneCount * paneStep;
-      const heights = customHeights || [paneStart * 2 / 3, paneStart / 3, ...Array(paneCount).fill(paneStep)];
+      const heights = focusIndex >= 0 ? Array.from({ length: paneCount + 2 }, (_, i) => i === focusIndex ? available : 0) : customHeights || [paneStart * 2 / 3, paneStart / 3, ...Array(paneCount).fill(paneStep)];
       const [mainHeight, volumeHeight] = heights;
       return {
         plot: { x: 8, y: 36, w: Math.max(40, width - axisWidth - 8), h: Math.max(1, mainHeight - 44),
@@ -4435,10 +4553,12 @@
       if (!sourceData.length) {
         container.replaceChildren();
         proChart.fallback = null; proChart.visibleRows = []; proChart.readoutRows = []; proChart.readoutOffset = 0; proChart.readoutData = null;
+        validateChartPaneFocus();
         clearChartReadouts();
         renderChartEmptyState();
         syncChartAxisControls();
         renderChartPaneSeparators();
+        renderChartPaneActions();
         return;
       }
       renderChartEmptyState();
@@ -4447,14 +4567,14 @@
       const W = Math.max(200, container.clientWidth || 900);
       const svg = el('svg', { class: 'chart-fallback', preserveAspectRatio: 'none', role: 'img', 'aria-labelledby': 'chartTitle chartDesc' });
       container.replaceChildren(svg);
-      syncChartAxisControls();
       const paneNames = ['rsi', 'macd', 'kdj'].filter(key => state.indicator[key]);
       container.classList.add('chart-fallback-mode');
       const H = container.clientHeight || 540;
       const names = ['main', 'volume', ...paneNames], weights = chartPaneSizing.layouts[names.join(',')];
+      if (chartPaneSizing.focused && !names.includes(chartPaneSizing.focused)) chartPaneSizing.focused = null;
       const available = Math.max(100, H - 28);
       const customHeights = weights ? distributeChartPaneHeights(available, weights, chartPaneMinimums(names, available, true)) : null;
-      const { plot, paneStep, paneStart, volumeTop, heights: paneHeights, tops: paneTops } = fallbackChartLayout(W, H, paneNames.length, 72, customHeights);
+      const { plot, paneStep, paneStart, volumeTop, heights: paneHeights, tops: paneTops } = fallbackChartLayout(W, H, paneNames.length, 72, customHeights, names.indexOf(chartPaneSizing.focused));
       svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
       svg.dataset.plotX = plot.x; svg.dataset.plotWidth = plot.w; svg.dataset.plotY = plot.y; svg.dataset.plotHeight = plot.h;
       svg.dataset.paneHeights = JSON.stringify(paneHeights);
@@ -4500,10 +4620,16 @@
       svg.dataset.chartType = state.chartType;
       svg.replaceChildren(el('title', { id: 'chartTitle' }, `${sourceLabel} · ${chartUsesHeikinAshi() ? 'Heikin Ashi 合成K线图' : '基础 K 线图'}`), el('desc', { id: 'chartDesc' }, chartUsesHeikinAshi() ? '合成蜡烛仅用于视觉观察；成交量、指标、账户和训练判断使用原始 K 线，指标只计算已揭示的行情。' : '图表库不可用时使用基础图表，指标按已揭示的行情计算。'));
       svg.appendChild(el('rect', { x: 0, y: 0, width: W, height: H, fill: '#0b0e11' }));
+      const mainGroup = el('g', { 'data-chart-pane': 'main' }), volumeGroup = el('g', { 'data-chart-pane': 'volume' });
+      svg.append(mainGroup, volumeGroup);
+      if (chartPaneSizing.focused === 'volume') for (const fraction of [0, .5, 1]) {
+        const yy = plot.volY + fraction * plot.volH;
+        volumeGroup.append(el('line', { x1: plot.x, x2: plot.x + plot.w, y1: yy, y2: yy, stroke: colors.grid }), el('text', { x: plot.x + plot.w + 7, y: yy + 4, fill: colors.muted }, (maxVol * (1 - fraction)).toFixed(0)));
+      }
       for (let n = 0; n <= 4; n++) {
         const yy = plot.y + plot.h * n / 4; const val = hi - (hi - lo) * n / 4;
-        svg.appendChild(el('line', { x1: plot.x, x2: plot.x + plot.w, y1: yy, y2: yy, stroke: colors.grid, 'stroke-width': 1 }));
-        svg.appendChild(el('text', { x: plot.x + plot.w + 7, y: yy + 4, fill: colors.muted }, formatChartPrice(val)));
+        mainGroup.appendChild(el('line', { x1: plot.x, x2: plot.x + plot.w, y1: yy, y2: yy, stroke: colors.grid, 'stroke-width': 1 }));
+        mainGroup.appendChild(el('text', { x: plot.x + plot.w + 7, y: yy + 4, fill: colors.muted }, formatChartPrice(val)));
       }
       for (let n = 0; n < 5; n++) {
         const idx = Math.floor((data.length - 1) * n / 4), xx = x(idx);
@@ -4511,22 +4637,22 @@
         const tickLabel = live && !state.replayMode && data[idx].openTime ? new Date(data[idx].openTime).toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' }) : `${idx + 1}`;
         svg.appendChild(el('text', { x: xx, y: H - 16, 'text-anchor': 'middle' }, tickLabel));
       }
-      svg.appendChild(el('line', { x1: plot.x, x2: plot.x + plot.w, y1: volumeTop - 3, y2: volumeTop - 3, stroke: colors.grid }));
+      volumeGroup.appendChild(el('line', { x1: plot.x, x2: plot.x + plot.w, y1: volumeTop - 3, y2: volumeTop - 3, stroke: colors.grid }));
       svg.appendChild(el('text', { x: plot.x + plot.w, y: H - 3, 'text-anchor': 'end', fill: colors.muted }, `${state.timeframe} · ${sourceLabel} · ${data.length} 根`));
       data.forEach((d, i) => {
         const xx = x(i), candleW = Math.max(2, Math.min(13, plot.w / data.length * .56));
         const rawColor = d.close >= d.open ? colors.teal : colors.red;
         const visual = state.chartType === 'heikin' ? visualData[i] : d;
         const visualUp = visual.close >= visual.open, visualColor = visualUp ? colors.teal : colors.red;
-        if (state.chartType === 'candles' || state.chartType === 'heikin') svg.appendChild(el('line', { x1: xx, x2: xx, y1: y(visual.high), y2: y(visual.low), stroke: visualColor, 'stroke-width': 1 }));
-        if (state.chartType === 'candles' || state.chartType === 'heikin') svg.appendChild(el('rect', { x: xx - candleW / 2, y: Math.min(y(visual.open), y(visual.close)), width: candleW, height: Math.max(2, Math.abs(y(visual.open) - y(visual.close))), fill: visualColor, stroke: visualColor, rx: 1 }));
+        if (state.chartType === 'candles' || state.chartType === 'heikin') mainGroup.appendChild(el('line', { x1: xx, x2: xx, y1: y(visual.high), y2: y(visual.low), stroke: visualColor, 'stroke-width': 1 }));
+        if (state.chartType === 'candles' || state.chartType === 'heikin') mainGroup.appendChild(el('rect', { x: xx - candleW / 2, y: Math.min(y(visual.open), y(visual.close)), width: candleW, height: Math.max(2, Math.abs(y(visual.open) - y(visual.close))), fill: visualColor, stroke: visualColor, rx: 1 }));
         const vh = d.volume / maxVol * plot.volH;
-        svg.appendChild(el('rect', { x: xx - candleW / 2, y: plot.volY + plot.volH - vh, width: candleW, height: vh, fill: rawColor, opacity: .32, rx: 1, 'data-volume-bar': '' }));
+        volumeGroup.appendChild(el('rect', { x: xx - candleW / 2, y: plot.volY + plot.volH - vh, width: candleW, height: vh, fill: rawColor, opacity: .32, rx: 1, 'data-volume-bar': '' }));
       });
-      if (state.chartType === 'line') svg.appendChild(el('path', { d: pathFor(closes, x, y), fill: 'none', stroke: '#f0b90b', 'stroke-width': 2 }));
-      if (state.show20) svg.appendChild(el('path', { d: pathFor(e20, x, y), fill: 'none', stroke: colors.orange, 'stroke-width': 2.2 }));
-      if (state.show60) svg.appendChild(el('path', { d: pathFor(e60, x, y), fill: 'none', stroke: colors.blue, 'stroke-width': 2 }));
-      const drawValues = (values, mapY, color, parent = svg) => {
+      if (state.chartType === 'line') mainGroup.appendChild(el('path', { d: pathFor(closes, x, y), fill: 'none', stroke: '#f0b90b', 'stroke-width': 2 }));
+      if (state.show20) mainGroup.appendChild(el('path', { d: pathFor(e20, x, y), fill: 'none', stroke: colors.orange, 'stroke-width': 2.2 }));
+      if (state.show60) mainGroup.appendChild(el('path', { d: pathFor(e60, x, y), fill: 'none', stroke: colors.blue, 'stroke-width': 2 }));
+      const drawValues = (values, mapY, color, parent = mainGroup) => {
         let path = '', connected = false;
         values.forEach((value, i) => {
           if (!Number.isFinite(value)) { connected = false; return; }
@@ -4535,29 +4661,30 @@
         if (path) parent.appendChild(el('path', { d: path, fill: 'none', stroke: color, 'stroke-width': 1.3 }));
       };
       Object.entries(smaValues).forEach(([period, values]) => drawValues(values, y, ({ 5: '#f0b90b', 10: '#d86b9a', 20: '#5b8def', 60: '#0ecb81', 120: '#b28be3' })[period]));
-      psar.forEach((item, i) => { if (item) svg.appendChild(el('circle', { cx: x(i), cy: y(item.value), r: 2, fill: '#f0b90b', 'data-sar-index': start + i, 'data-sar-value': item.value })); });
+      psar.forEach((item, i) => { if (item) mainGroup.appendChild(el('circle', { cx: x(i), cy: y(item.value), r: 2, fill: '#f0b90b', 'data-sar-index': start + i, 'data-sar-value': item.value })); });
       for (const key of ['upper', 'mid', 'lower']) drawValues(bollinger.map(item => item?.[key]), y, key === 'mid' ? '#f0b90b' : '#c084fc');
       for (const period of [5, 10, 20]) {
-        if (state.volumeSma[period]) drawValues(sma(sourceVolumes, period).slice(contextStart, contextStart + visibleCount), value => plot.volY + plot.volH - value / Math.max(1, maxVol) * plot.volH, ({ 5: '#f0b90b', 10: '#5b8def', 20: '#0ecb81' })[period]);
+        if (state.volumeSma[period]) drawValues(sma(sourceVolumes, period).slice(contextStart, contextStart + visibleCount), value => plot.volY + plot.volH - value / Math.max(1, maxVol) * plot.volH, ({ 5: '#f0b90b', 10: '#5b8def', 20: '#0ecb81' })[period], volumeGroup);
       }
       if (state.showStructure && state.chartType === 'candles') {
         const picks = downModeFor(state.scenario) ? [6, 14, 22, 30, 38] : ['range', 'falseBreak', 'squeeze', 'volatility'].includes(state.scenario) ? [7, 15, 23, 31, 39] : [7, 13, 20, 28, 36];
         picks.filter(i => i < data.length).forEach((i, j) => {
           const isHigh = j % 2 === 0; const yy = isHigh ? y(data[i].high) - 9 : y(data[i].low) + 15;
-          svg.appendChild(el('circle', { cx: x(i), cy: isHigh ? y(data[i].high) : y(data[i].low), r: 3.2, fill: isHigh ? colors.orange : colors.blue }));
+          mainGroup.appendChild(el('circle', { cx: x(i), cy: isHigh ? y(data[i].high) : y(data[i].low), r: 3.2, fill: isHigh ? colors.orange : colors.blue }));
           const label = downModeFor(state.scenario) ? (isHigh ? 'LH' : 'LL') : ['range', 'falseBreak', 'squeeze', 'volatility'].includes(state.scenario) ? '↔' : (isHigh ? 'HH' : 'HL');
-          svg.appendChild(el('text', { x: x(i), y: yy, 'text-anchor': 'middle', fill: isHigh ? colors.orange : colors.blue }, label));
+          mainGroup.appendChild(el('text', { x: x(i), y: yy, 'text-anchor': 'middle', fill: isHigh ? colors.orange : colors.blue }, label));
         });
       }
       if (state.replayMode && sim.position) {
         [[sim.position.stop, colors.red, '止损'], [sim.position.target, colors.teal, '止盈']].forEach(([price, color, label]) => {
           const yy = y(price);
           if (yy >= plot.y && yy <= plot.y + plot.h) {
-            svg.appendChild(el('line', { x1: plot.x, x2: plot.x + plot.w, y1: yy, y2: yy, stroke: color, 'stroke-width': 1.4, 'stroke-dasharray': '5 4' }));
-            svg.appendChild(el('text', { x: plot.x + plot.w - 3, y: yy - 4, 'text-anchor': 'end', fill: color }, `${label} ${formatChartPrice(price)}`));
+            mainGroup.appendChild(el('line', { x1: plot.x, x2: plot.x + plot.w, y1: yy, y2: yy, stroke: color, 'stroke-width': 1.4, 'stroke-dasharray': '5 4' }));
+            mainGroup.appendChild(el('text', { x: plot.x + plot.w - 3, y: yy - 4, 'text-anchor': 'end', fill: color }, `${label} ${formatChartPrice(price)}`));
           }
         });
       }
+      const fallbackPaneScales = {};
       paneNames.forEach((name, paneIndex) => {
         const top = paneTops[paneIndex + 2], height = paneHeights[paneIndex + 2] - 5;
         const pane = el('g', { 'data-indicator-pane': name }); svg.appendChild(pane);
@@ -4576,6 +4703,7 @@
         const range = Math.max(maxValue - minValue, .01);
         // 为 HTML 面板图例留出固定行高，不遮挡曲线和柱体。
         const paneY = value => top + height - (value - minValue) / range * Math.max(1, height - 32);
+        fallbackPaneScales[name] = { minValue, maxValue, top: top + 32, bottom: top + height, values: lines[0], y: paneY };
         pane.appendChild(el('line', { x1: plot.x, x2: plot.x + plot.w, y1: top, y2: top, stroke: colors.grid }));
         const curveHeight = Math.max(1, height - 32);
         const ticks = curveHeight >= 48 ? [maxValue, (maxValue + minValue) / 2, minValue] : [maxValue, minValue];
@@ -4594,7 +4722,10 @@
         });
         const lineColors = name === 'macd' ? ['#5b8def', '#f0b90b'] : name === 'rsi' ? ['#c084fc'] : ['#f0b90b', '#5b8def', '#c084fc'];
         lines.forEach((values, i) => drawValues(values, paneY, lineColors[i], pane));
+        if (chartPaneSizing.focused && chartPaneSizing.focused !== name) pane.setAttribute('display', 'none');
       });
+      if (chartPaneSizing.focused && chartPaneSizing.focused !== 'main') mainGroup.setAttribute('display', 'none');
+      if (chartPaneSizing.focused && chartPaneSizing.focused !== 'volume') volumeGroup.setAttribute('display', 'none');
       const crosshair = el('g', { opacity: 0, 'pointer-events': 'none' });
       const crossV = el('line', { y1: plot.y, y2: H - 36, stroke: '#848e9c', 'stroke-width': 1, 'stroke-dasharray': '3 3' });
       const crossH = el('line', { x1: plot.x, x2: plot.x + plot.w, stroke: '#848e9c', 'stroke-width': 1, 'stroke-dasharray': '3 3' });
@@ -4607,7 +4738,14 @@
       const updateCrosshair = evt => {
         const rect = svg.getBoundingClientRect(); const px = (evt.clientX - rect.left) / rect.width * W; const py = (evt.clientY - rect.top) / rect.height * H;
         const idx = Math.max(0, Math.min(data.length - 1, Math.floor((px - plot.x) / plot.w * data.length))); const d = data[idx];
-        const cx = x(idx), cy = Math.max(plot.y, Math.min(plot.y + plot.h, py)); const price = hi - (cy - plot.y) / plot.h * (hi - lo);
+        let cy = Math.max(plot.y, Math.min(plot.y + plot.h, py)), price = hi - (cy - plot.y) / plot.h * (hi - lo);
+        const focus = chartPaneSizing.focused;
+        if (focus === 'volume') { cy = Math.max(plot.volY, Math.min(plot.volY + plot.volH, py)); price = (1 - (cy - plot.volY) / plot.volH) * maxVol; }
+        else if (fallbackPaneScales[focus]) {
+          const scale = fallbackPaneScales[focus]; cy = Math.max(scale.top, Math.min(scale.bottom, py));
+          price = scale.maxValue - (cy - scale.top) / Math.max(1, scale.bottom - scale.top) * (scale.maxValue - scale.minValue);
+        }
+        const cx = x(idx);
         crosshair.setAttribute('opacity', '1'); crossV.setAttribute('x1', cx); crossV.setAttribute('x2', cx); crossH.setAttribute('y1', cy); crossH.setAttribute('y2', cy);
         crossPriceBg.setAttribute('x', plot.x + plot.w + 3); crossPriceBg.setAttribute('y', cy - 9);
         crossPrice.setAttribute('x', plot.x + plot.w + 32); crossPrice.setAttribute('y', cy + 4); crossPrice.textContent = formatChartPrice(price);
@@ -4632,17 +4770,20 @@
       const restoreLatestReadout = () => updateChartOhlc(sourceData[sourceData.length - 1], sourceData.length - 1, sourceData);
       configureChartInspection(sourceData, start, start + data.length - 1, index => {
         const rect = svg.getBoundingClientRect(), localIndex = index - start;
-        updateCrosshair({ clientX: rect.left + x(localIndex) / W * rect.width, clientY: rect.top + y(visualData[localIndex].close) / H * rect.height });
+        const focus = chartPaneSizing.focused, scale = fallbackPaneScales[focus];
+        const inspectionY = focus === 'volume' ? plot.volY + plot.volH * (1 - data[localIndex].volume / maxVol)
+          : scale ? scale.y(scale.values[localIndex] ?? (scale.minValue + scale.maxValue) / 2) : y(visualData[localIndex].close);
+        updateCrosshair({ clientX: rect.left + x(localIndex) / W * rect.width, clientY: rect.top + inspectionY / H * rect.height });
       }, () => {
         hideChartTooltip(); crosshair.setAttribute('opacity', '0');
         restoreLatestReadout();
       });
-      const overlay = el('rect', { x: plot.x, y: plot.y, width: plot.w, height: H - plot.y - 36, fill: 'transparent', 'data-overlay': 'true' });
+      const overlay = el('rect', { x: plot.x, y: chartPaneSizing.focused ? 0 : plot.y, width: plot.w, height: H - (chartPaneSizing.focused ? 0 : plot.y) - 28, fill: 'transparent', 'data-overlay': 'true' });
       // 捕获交给稳定容器，重绘替换 SVG 后仍能接收整次拖动及松开事件。
       container.onpointerdown = evt => {
         container.dataset.dragMoved = '';
         const rect = svg.getBoundingClientRect(), localX = (evt.clientX - rect.left) * W / Math.max(1, rect.width), localY = (evt.clientY - rect.top) * H / Math.max(1, rect.height);
-        if (evt.button === 0 && localX >= plot.x + plot.w && localY >= plot.y && localY <= plot.y + plot.h) {
+        if ((!chartPaneSizing.focused || chartPaneSizing.focused === 'main') && evt.button === 0 && localX >= plot.x + plot.w && localY >= plot.y && localY <= plot.y + plot.h) {
           evt.preventDefault();
           const fraction = Math.max(0, Math.min(1, (localY - plot.y) / plot.h));
           state.fallbackPriceDrag = { pointerId: evt.pointerId, y: evt.clientY, fraction, anchor: hi - fraction * (hi - lo), zoom: priceScale.auto ? 1 : priceScale.zoom };
@@ -4720,6 +4861,7 @@
         zoomFallbackAt(evt.deltaY < 0 ? 1.18 : .85, anchor);
       }, { passive: false });
       container.onwheel = evt => {
+        if (chartPaneSizing.focused && chartPaneSizing.focused !== 'main') return;
         const rect = svg.getBoundingClientRect(), localX = (evt.clientX - rect.left) * W / Math.max(1, rect.width), localY = (evt.clientY - rect.top) * H / Math.max(1, rect.height);
         if (localX < plot.x + plot.w || localY < plot.y || localY > plot.y + plot.h) return;
         evt.preventDefault();
@@ -4728,6 +4870,7 @@
         setFallbackPriceScale(zoom, fraction, anchor);
       };
       container.ondblclick = evt => {
+        if (chartPaneSizing.focused && chartPaneSizing.focused !== 'main') return;
         const rect = svg.getBoundingClientRect(), localX = (evt.clientX - rect.left) * W / Math.max(1, rect.width), localY = (evt.clientY - rect.top) * H / Math.max(1, rect.height);
         if (localX < plot.x + plot.w || localY < plot.y || localY > plot.y + plot.h) return;
         evt.preventDefault(); resetFallbackPriceScale();
@@ -4743,6 +4886,8 @@
       proChart.visibleRows = sourceData.map((row, index) => ({ ...row, time: barTime(row, index) }));
       proChart.fallback = createFallbackDrawingSurface(svg, drawingOverlay, proChart.visibleRows, start, data.length, plot, W, H, lo, hi);
       renderChartPaneSeparators();
+      renderChartPaneActions();
+      syncChartAxisControls();
       proChart.drawings.forEach(drawing => drawing.parts.filter(part => part.type === 'price').forEach(part => { part.owner = proChart.fallback.series; }));
       renderDrawingOverlay();
       const intervalLabel = document.getElementById('chartIntervalLabel'); if (intervalLabel) intervalLabel.textContent = state.timeframe;
@@ -5493,6 +5638,7 @@
     }, true);
     function activateDrawingTool(tool, fromAdvancedMenu = false) {
       if (![...document.querySelectorAll('[data-tool]')].some(button => button.dataset.tool === tool)) return false;
+      if (tool !== 'cursor' && chartPaneSizing.focused && chartPaneSizing.focused !== 'main') toggleChartPaneFocus();
       state.tool = tool; state.pendingDraw = []; proChart.measurePoint = null; proChart.shapePoints = []; proChart.measurePreview = null; proChart.fibPoint = null; proChart.trendPoint = null;
       syncAnyWavesFinishControl(); syncDrawingToolButtons();
       if (fromAdvancedMenu) closeAdvancedDrawingTools(true);
@@ -6835,10 +6981,12 @@
     function syncChartAxisControls() {
       const available = Boolean(window.LightweightCharts && proChart.chart);
       const fallback = !available && Boolean(document.querySelector('#chart svg.chart-fallback'));
+      const focusedSubpane = Boolean(chartPaneSizing.focused && chartPaneSizing.focused !== 'main');
       const axisBar = document.getElementById('chartAxisBar');
       axisBar.classList.remove('fallback-placeholder');
       axisBar.hidden = !available && !fallback;
-      document.querySelectorAll('[data-axis-mode]').forEach(button => { button.hidden = fallback; });
+      document.querySelectorAll('[data-axis-mode]').forEach(button => { button.hidden = fallback; button.disabled = focusedSubpane; });
+      document.getElementById('chartAutoScale').disabled = focusedSubpane;
       const priceMode = document.getElementById('chartPriceScaleMode');
       if (priceMode) priceMode.disabled = fallback;
       if (fallback) {

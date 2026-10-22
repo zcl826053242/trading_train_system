@@ -20,6 +20,7 @@ const coach = { textContent: '' };
 const drawingList = { innerHTML: '' };
 const drawingCount = { textContent: '' };
 const context = vm.createContext({
+  chartPaneSizing: { focused: null },
   state: { tool: 'trendline', chartType: 'candles' },
   proChart: {
     chart: {

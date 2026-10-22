@@ -35,6 +35,12 @@ for (const fallback of [false, true]) for (let count = 0; count <= 3; count++) {
   for (const total of [100, 220, 310, 416, 578, 872]) {
     const mins = context.chartPaneMinimums(names, total, fallback);
     for (let focus = 0; focus < names.length; focus++) {
+      const focused = context.fallbackChartLayout(334, total + 28, count, 72, null, focus);
+      assert.equal(focused.heights[focus], total, 'focused pane fills the available height');
+      assert.equal(focused.tops[focus], 0, 'focused pane starts at the top');
+      focused.heights.forEach((height, i) => assert.equal(height, i === focus ? total : 0));
+    }
+    for (let focus = 0; focus < names.length; focus++) {
       const weights = names.map((_, i) => i === focus ? .999 : .001);
       const heights = context.distributeChartPaneHeights(total, weights, mins);
       assert.ok(Math.abs(heights.reduce((a, b) => a + b, 0) - total) < 1e-6, 'never overflows the time axis');
