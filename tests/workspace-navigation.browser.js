@@ -2,7 +2,7 @@
 // 检查简化后的主线、学习子入口与历史训练入口，不依赖已有浏览器状态。
 async (page) => {
   const failures = [], results = [];
-  for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 844 }]) {
+  for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 844 }, { width: 320, height: 667 }]) {
     const context = await page.context().browser().newContext({ viewport });
     const errors = [], name = `${viewport.width}x${viewport.height}`;
     try {
@@ -34,6 +34,25 @@ async (page) => {
         if (current.workspace !== expectedSub || !current.primary.includes('home') || current.secondary[0] !== expectedSub || current.navHidden || current.route !== label) failures.push(`${name}: learning route ${targetName} was inconsistent: ${JSON.stringify(current)}`);
         learning.push({ targetName, ...current });
       }
+      await target.locator('[data-subworkspace="training"]').click();
+      const stagePage = await target.evaluate(() => ({
+        panelVisible: !document.querySelector('.stage-panel').hidden,
+        duplicateTitle: Boolean(document.querySelector('.workspace-hero[data-learning-view="training"]')),
+        duplicateGrid: Boolean(document.querySelector('.workspace-grid[data-learning-view="training"]')),
+        resetButtons: document.querySelectorAll('#resetStageProgress, #resetTraining').length,
+        actions: ['topStartTraining', 'stageContinueRoute'].map(id => {
+          const node = document.getElementById(id);
+          return { id, text: node?.textContent.trim(), visible: Boolean(node && getComputedStyle(node).display !== 'none' && !node.hidden) };
+        })
+      }));
+      const visibleActions = stagePage.actions.filter(item => item.visible);
+      if (!stagePage.panelVisible || stagePage.duplicateTitle || stagePage.duplicateGrid || stagePage.resetButtons !== 1 || visibleActions.length !== 1 || !visibleActions[0].text.includes('概念学习')) failures.push(`${name}: stage page is not focused on one canonical next action: ${JSON.stringify(stagePage)}`);
+      const continueButton = target.locator('#stageContinueRoute');
+      if (await continueButton.isVisible()) await continueButton.click();
+      else await target.locator('#topStartTraining').click();
+      await target.waitForFunction(() => activeWorkspace === 'market' && state.lesson === 0 && stageState.foundationStarted);
+      const nextAction = await target.evaluate(() => ({ workspace: activeWorkspace, lesson: state.lesson, guideOpen: document.querySelector('.market-help').open, title: document.querySelector('#guideTitle').textContent }));
+      if (!nextAction.guideOpen || !nextAction.title.includes('第 1 步')) failures.push(`${name}: canonical CTA did not resume the current guided learning step: ${JSON.stringify(nextAction)}`);
       await target.locator('[data-nav-target="market"]').click();
       await target.locator('#workspaceStart').click();
       await target.locator('#confirmTrainingStart').click();

@@ -111,5 +111,5 @@ async (page) => {
       await target.close();
     } finally { await context.close(); }
   }
-  return { results, failures };
+  return { passed: failures.length === 0, results, failures };
 }

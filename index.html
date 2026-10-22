@@ -642,6 +642,10 @@
     .stage-actions { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; justify-content: flex-end; }
     .stage-reset { border: 1px solid var(--line); border-radius: 7px; background: var(--surface); color: var(--muted); padding: 6px 8px; font-size: 10px; }
     .stage-reset:hover, .stage-reset:focus-visible { border-color: var(--red); color: var(--red); outline: none; }
+    .stage-continue { border: 0; border-radius: 7px; background: var(--blue); color: #fff; padding: 7px 10px; font-size: 10px; box-shadow: 0 4px 10px rgba(74,105,220,.16); }
+    .stage-continue:hover, .stage-continue:focus-visible { background: #5144d7; outline: none; }
+    @media (min-width: 981px) { .stage-continue { display: none; } }
+    @media (max-width: 980px) { .stage-continue { display: inline-flex; align-items: center; } }
     .stage-cards { display: grid; grid-template-columns: repeat(3,1fr); gap: 9px; margin-top: 13px; }
     .stage-card { min-width: 0; position: relative; text-align: left; padding: 12px; border: 1px solid var(--line); border-radius: 9px; background: #fbfcfd; color: var(--ink); }
     .stage-card.active { border-color: var(--blue); background: var(--blue-soft); box-shadow: inset 0 0 0 1px var(--blue); }
@@ -1871,27 +1875,13 @@
 
     <section class="workspace-surface" data-workspace="training" aria-label="专项训练工作区">
       <section class="stage-panel" data-learning-view="training" aria-label="阶段课程与考试模式">
-        <div class="stage-head"><div><h2>阶段课程</h2><p>完成当前阶段的答题、模拟操盘和风险检查，系统才会开放下一阶段。</p></div><div class="stage-actions"><div class="mode-toggle" role="tablist" aria-label="训练模式"><button type="button" class="active" id="teachModeBtn">教学模式</button><button type="button" id="examModeBtn">考题模式</button></div><button type="button" class="stage-reset" id="resetStageProgress">重置阶段</button></div></div>
+        <div class="stage-head"><div><h2>阶段课程</h2><p>完成当前阶段的答题、模拟操盘和风险检查，系统才会开放下一阶段。</p></div><div class="stage-actions"><div class="mode-toggle" role="tablist" aria-label="训练模式"><button type="button" class="active" id="teachModeBtn">教学模式</button><button type="button" id="examModeBtn">考题模式</button></div><button type="button" class="stage-continue" id="stageContinueRoute">继续当前路线 →</button><button type="button" class="stage-reset" id="resetStageProgress">重置阶段</button></div></div>
         <div class="stage-cards" id="stageCards"></div>
         <div class="stage-progress-row"><strong id="stageCurrentLabel">新手阶段</strong><span id="stageProgressText">0 / 3 题 · 0 / 1 笔模拟交易</span><div class="stage-progress-track"><div class="stage-progress-fill" id="stageProgressFill" style="width:0%"></div></div></div>
         <div class="stage-gate" id="stageGate">教学模式会显示教练提示；完成当前阶段要求后，下一阶段自动解锁。</div>
         <div class="graduation-note"><strong>能力达标线</strong><span>通过阶段只代表你完成了观察、证据、风险和复盘训练，不代表稳定盈利或未来行情可预测。</span><div class="graduation-pills"><em>结构表达</em><em>指标验证</em><em>风险预算</em><em>行为复盘</em></div></div>
         <div class="knowledge-panel" data-teach-only><div class="knowledge-head"><strong>本地规则教练 · 按顺序思考</strong><span id="knowledgeStage">新手阶段 · 知识链</span></div><div class="knowledge-chain" id="knowledgeChain"></div><div class="ai-coach-line"><strong>教练提示</strong><span id="aiCoachText">先描述价格结构，再决定要不要打开指标。指标用来验证假设，不用来替你猜方向。</span></div><small class="coach-disclaimer">当前为本地规则辅助，不调用外部模型；后续可接入 AI API。</small></div>
       </section>
-      <div class="workspace-hero" data-learning-view="training">
-        <div><h2>专项训练</h2><p>每天用少量高质量题目，练习从结构到执行的完整证据链。</p></div>
-        <div class="hero-actions"><button class="hero-btn primary" type="button" id="startTraining">开始今日训练</button><button class="hero-btn" type="button" id="resetTraining">重置进度</button></div>
-      </div>
-      <div class="workspace-grid" data-learning-view="training">
-        <article class="surface-card"><h3>今日路线</h3><p>推荐按顺序完成，避免只刷熟悉行情。</p><div class="curriculum-list" id="curriculumList">
-          <button type="button" class="curriculum-item active" data-training-step="0"><span class="curriculum-index">01</span><span><strong>结构识别</strong><span>HH/HL、LH/LL 与区间边界</span></span><em>进行中</em></button>
-          <button type="button" class="curriculum-item" data-training-step="1"><span class="curriculum-index">02</span><span><strong>动能验证</strong><span>EMA、成交量与 RSI 的分工</span></span><em>待开始</em></button>
-          <button type="button" class="curriculum-item" data-training-step="2"><span class="curriculum-index">03</span><span><strong>风险决策</strong><span>失效位、空间与仓位</span></span><em>待开始</em></button>
-          <button type="button" class="curriculum-item" data-training-step="3"><span class="curriculum-index">04</span><span><strong>混合盲测</strong><span>跨行情检查规则是否稳定</span></span><em>待开始</em></button>
-        </div></article>
-        <article class="surface-card"><h3>训练数据</h3><p>结果不等于能力，重点看证据是否完整。</p><div class="metric-grid"><div class="metric-tile"><small>今日题目</small><strong id="dailyQuestionMetric">0 / 3</strong></div><div class="metric-tile"><small>证据完整率</small><strong class="good" id="evidenceMetric">0%</strong></div><div class="metric-tile"><small>平均用时</small><strong id="timeMetric">—</strong></div><div class="metric-tile"><small>连续训练</small><strong class="warn">0 天</strong></div></div><div class="training-coach" data-teach-only><strong id="trainingCoachTitle">现在做第 1 步：只描述价格结构</strong><span id="trainingCoachText">先不要选答案。看高低点是否抬高、下移或重叠，然后再勾选证据。</span><ol class="flow-steps"><li class="current">描述 HH/HL、LH/LL 或区间</li><li>选择一个动作并勾选依据</li><li>提交后复述失效位</li></ol></div><div class="stage-gate" id="examNotice" hidden>考题模式：隐藏教练提示，提交后才公布答案和解析。</div></article>
-        <article class="surface-card"><h3>教练提醒</h3><p>根据你最近的答题行为，优先修正可重复的问题。</p><ul class="coach-list"><li>区间中部没有空间优势时，允许自己跳过。</li><li>RSI 超买只说明动能强弱，不自动等于反转。</li><li>方向正确但止损太远，仍然可能是差交易。</li><li>下一题提交前，请至少勾选两条独立证据。</li></ul></article>
-      </div>
     </section>
 
     <section class="indicator-learning-page" id="indicatorLearningPage" data-workspace="indicators" data-learning-view="indicators" aria-label="指标学习目录">
@@ -2332,7 +2322,34 @@
     let pendingReplaySampleIndex = null;
     const replayTraining = { id: '', mode: 'blind', decisions: [], saved: false };
     const trainingModeState = { mode: 'blind' };
-    const tradeJournal = (() => { try { const value = JSON.parse(localStorage.getItem('trend-lab-trades') || '[]'); return Array.isArray(value) ? value.slice(-500) : []; } catch (_) { return []; } })();
+    const tradeSessionBackupKey = 'trend-lab-trades-session-backup';
+    let tradeJournalRestoredFromSession = false;
+    const tradeJournal = (() => {
+      const read = (storage, key) => {
+        try {
+          const raw = storage.getItem(key);
+          if (!raw) return null;
+          const value = JSON.parse(raw);
+          return Array.isArray(value) ? value.slice(-500) : [];
+        } catch (_) { return null; }
+      };
+      const local = read(localStorage, 'trend-lab-trades');
+      let session = null;
+      if (typeof sessionStorage !== 'undefined') {
+        session = read(sessionStorage, tradeSessionBackupKey);
+      }
+      if (Array.isArray(session) && session.length) {
+        const localLast = Array.isArray(local) && local.length ? local[local.length - 1] : null;
+        const sessionLast = session[session.length - 1];
+        const localTime = localLast && Date.parse(localLast.createdAt || '');
+        const sessionTime = sessionLast && Date.parse(sessionLast.createdAt || '');
+        const sessionIsNewer = !Array.isArray(local) || session.length > local.length
+          || (session.length === local.length && Number.isFinite(sessionTime) && (!Number.isFinite(localTime) || sessionTime >= localTime));
+        if (sessionIsNewer) { tradeJournalRestoredFromSession = true; return session; }
+      }
+      if (Array.isArray(local)) return local;
+      return [];
+    })();
     let mistakeBook = [];
     const replayHistory = (() => { try { const value = JSON.parse(localStorage.getItem('trend-lab-replay-history') || '[]'); return Array.isArray(value) ? value.slice(0, 20) : []; } catch (_) { return []; } })();
     const trainingMeta = (() => { try { const value = JSON.parse(localStorage.getItem('trend-lab-training-meta') || 'null'); return value && typeof value === 'object' ? { lastDate: value.lastDate || '', streak: Math.max(0, Number(value.streak) || 0), completedSessions: Math.max(0, Number(value.completedSessions) || 0) } : { lastDate: '', streak: 0, completedSessions: 0 }; } catch (_) { return { lastDate: '', streak: 0, completedSessions: 0 }; } })();
@@ -2515,7 +2532,18 @@
       }
       return start;
     }
-    function renderStagePanel() { const cards = document.getElementById('stageCards'); if (!cards) return; stageState.progress.forEach(p => { p.correct = p.correct || 0; }); stageState.unlocked = [true, false, false]; stageState.progress.forEach((p, i) => { p.passed = stageIsComplete(i); if (p.passed && i < stageDefinitions.length - 1) stageState.unlocked[i + 1] = true; }); stageState.active = stageState.unlocked[stageState.active] ? stageState.active : stageState.unlocked.findIndex(Boolean); cards.innerHTML = stageDefinitions.map((def, i) => { const p = stageState.progress[i], locked = !stageState.unlocked[i], passed = p.passed; return `<button type="button" class="stage-card ${i === stageState.active ? 'active' : ''} ${locked ? 'locked' : ''} ${passed ? 'passed' : ''}" data-stage-select="${i}" ${locked ? 'disabled' : ''}><strong>${locked ? '🔒 ' : ''}${def.name}</strong><span>${def.subtitle}</span><em>${passed ? '已通关' : locked ? '未解锁' : `${p.questions}/${def.questions} 题 · 正确 ${p.correct}/${def.correct}`}</em></button>`; }).join(''); const def = stageDefinitions[stageState.active], p = stageState.progress[stageState.active], done = stageCompletionPercent(stageState.active) / 100; document.getElementById('stageCurrentLabel').textContent = `${def.name} · ${stageState.mode === 'teach' ? '教学模式' : '考题模式'}`; document.getElementById('stageProgressText').textContent = `${p.questions} / ${def.questions} 题 · 正确 ${p.correct} / ${def.correct} · ${p.trades} / ${def.trades} 笔模拟交易 · 风险检查 ${p.checks} / ${def.checks}${def.replay ? ` · 回放${p.replay ? '已完成' : '未完成'}` : ''}`; document.getElementById('stageProgressFill').style.width = `${Math.round(done * 100)}%`; document.getElementById('topProgressText').textContent = `${Math.min(def.questions, p.questions)} / ${def.questions}`; const gate = document.getElementById('stageGate'); gate.classList.toggle('success', p.passed); gate.textContent = p.passed ? (stageState.active < 2 ? `${def.name} 已通关，${stageDefinitions[stageState.active + 1].name} 已解锁。点击上方卡片进入下一阶段。` : 'Pro 阶段已通关，建议继续用混合行情复训并导出复盘报告。') : stageState.mode === 'teach' ? '教学模式会显示教练提示；完成当前阶段要求后，下一阶段自动解锁。' : '考题模式：隐藏教练提示，提交后才公布答案；阶段要求仍然必须完成。'; document.getElementById('teachModeBtn').classList.toggle('active', stageState.mode === 'teach'); document.getElementById('examModeBtn').classList.toggle('active', stageState.mode === 'exam'); const notice = document.getElementById('examNotice'); if (notice) notice.hidden = stageState.mode !== 'exam'; document.body.classList.toggle('exam-mode', stageState.mode === 'exam'); renderKnowledgeChain(); updateAiCoach(); saveStageState(); }
+    function currentTrainingRouteLabel() {
+      const current = getTrainingRoute().current;
+      return current ? current.label : stageState.active < stageDefinitions.length - 1 ? `进入${stageDefinitions[stageState.active + 1].name}` : '查看训练报告';
+    }
+    function syncTrainingRouteCtas() {
+      const next = currentTrainingRouteLabel();
+      const label = `${next} →`;
+      const home = document.getElementById('homeContinue'); if (home) home.textContent = label;
+      const stage = document.getElementById('stageContinueRoute'); if (stage) stage.textContent = label;
+      const top = document.getElementById('topStartTraining'); if (top?.firstChild) top.firstChild.textContent = `${next} `;
+    }
+    function renderStagePanel() { const cards = document.getElementById('stageCards'); if (!cards) return; stageState.progress.forEach(p => { p.correct = p.correct || 0; }); stageState.unlocked = [true, false, false]; stageState.progress.forEach((p, i) => { p.passed = stageIsComplete(i); if (p.passed && i < stageDefinitions.length - 1) stageState.unlocked[i + 1] = true; }); stageState.active = stageState.unlocked[stageState.active] ? stageState.active : stageState.unlocked.findIndex(Boolean); cards.innerHTML = stageDefinitions.map((def, i) => { const p = stageState.progress[i], locked = !stageState.unlocked[i], passed = p.passed; return `<button type="button" class="stage-card ${i === stageState.active ? 'active' : ''} ${locked ? 'locked' : ''} ${passed ? 'passed' : ''}" data-stage-select="${i}" ${locked ? 'disabled' : ''}><strong>${locked ? '🔒 ' : ''}${def.name}</strong><span>${def.subtitle}</span><em>${passed ? '已通关' : locked ? '未解锁' : `${p.questions}/${def.questions} 题 · 正确 ${p.correct}/${def.correct}`}</em></button>`; }).join(''); const def = stageDefinitions[stageState.active], p = stageState.progress[stageState.active], done = stageCompletionPercent(stageState.active) / 100; document.getElementById('stageCurrentLabel').textContent = `${def.name} · ${stageState.mode === 'teach' ? '教学模式' : '考题模式'}`; document.getElementById('stageProgressText').textContent = `${p.questions} / ${def.questions} 题 · 正确 ${p.correct} / ${def.correct} · ${p.trades} / ${def.trades} 笔模拟交易 · 风险检查 ${p.checks} / ${def.checks}${def.replay ? ` · 回放${p.replay ? '已完成' : '未完成'}` : ''}`; document.getElementById('stageProgressFill').style.width = `${Math.round(done * 100)}%`; document.getElementById('topProgressText').textContent = `${Math.min(def.questions, p.questions)} / ${def.questions}`; const gate = document.getElementById('stageGate'); gate.classList.toggle('success', p.passed); gate.textContent = p.passed ? (stageState.active < 2 ? `${def.name} 已通关，${stageDefinitions[stageState.active + 1].name} 已解锁。点击上方卡片进入下一阶段。` : 'Pro 阶段已通关，建议继续用混合行情复训并导出复盘报告。') : stageState.mode === 'teach' ? '教学模式会显示教练提示；完成当前阶段要求后，下一阶段自动解锁。' : '考题模式：隐藏教练提示，提交后才公布答案；阶段要求仍然必须完成。'; document.getElementById('teachModeBtn').classList.toggle('active', stageState.mode === 'teach'); document.getElementById('examModeBtn').classList.toggle('active', stageState.mode === 'exam'); const notice = document.getElementById('examNotice'); if (notice) notice.hidden = stageState.mode !== 'exam'; document.body.classList.toggle('exam-mode', stageState.mode === 'exam'); renderKnowledgeChain(); updateAiCoach(); saveStageState(); syncTrainingRouteCtas(); }
     const specialTrainings = [
       { title: '突破失败', group: '突破与量价', scenario: 'falseBreak', questionIndex: 2, objective: '识别价格刺穿上沿后收回的假突破', focus: '关注收盘是否回到区间内，不凭盘中影线追单。', takeaway: '一次上破不代表有效突破；先等收盘确认，并写明区间失效位。' },
       { title: '震荡区间', group: '结构与趋势', scenario: 'range', questionIndex: 1, objective: '识别区间边界和中部缺少空间的状态', focus: '先标出上下边界，再判断当前价格是否靠近边缘。', takeaway: '区间中部缺少清晰优势时，可以等待，不必为了参与而交易。' },
@@ -5128,6 +5156,8 @@
       document.getElementById('homePlanList').innerHTML = plan.map((item, index) => `<div class="home-plan-item ${item.done ? 'done' : item === current ? 'active' : ''}" data-route-step="${item.id}" ${item === current ? 'aria-current="step"' : ''}><span class="home-plan-index">${String(index + 1).padStart(2, '0')}</span><span><strong>${item.title}</strong><span>${item.detail}</span></span><em>${item.skipped ? '可补学' : item.done ? '已完成' : item === current ? '现在做' : '待开始'}</em></div>`).join('');
       const continueLabel = current ? current.label : stageState.active < stageDefinitions.length - 1 ? `进入${stageDefinitions[stageState.active + 1].name}` : '查看训练报告';
       document.getElementById('homeContinue').textContent = `${continueLabel} →`;
+      document.getElementById('stageContinueRoute').textContent = `${continueLabel} →`;
+      document.getElementById('topStartTraining').firstChild.textContent = `${continueLabel} `;
       document.getElementById('homeTaskTitle').textContent = current ? `现在做：${current.title}` : `${def.name}已完成`;
       document.getElementById('homeTaskGoal').textContent = current ? current.goal : '本阶段要求已达成。可以从复盘查看交易与判断记录，再继续下一阶段。';
       document.getElementById('homeTaskContext').textContent = current?.id === 'session' ? '阶段已达标 · 本场待复盘 · 保留场次、持仓与判断草稿' : current ? `${def.name} · 路线 ${plan.indexOf(current) + 1} / ${plan.length}${current.id === 'checks' && canResumeStageReplay() ? ' · 将保留当前场次、持仓与判断草稿' : ''}` : '学习进度已保存在本浏览器';
@@ -6251,10 +6281,20 @@
       const warning = document.getElementById('tradeStorageWarning');
       try {
         localStorage.setItem('trend-lab-trades', JSON.stringify(sim.trades.slice(-500)));
+        if (typeof sessionStorage !== 'undefined') { try { sessionStorage.removeItem(tradeSessionBackupKey); } catch (_) {} }
         if (warning) warning.hidden = true;
         return true;
       } catch (_) {
-        if (warning) warning.hidden = false;
+        let sessionBackup = false;
+        if (typeof sessionStorage !== 'undefined') {
+          try { sessionStorage.setItem(tradeSessionBackupKey, JSON.stringify(sim.trades.slice(-500))); sessionBackup = true; } catch (_) {}
+        }
+        if (warning) {
+          warning.textContent = sessionBackup
+            ? '本地保存失败，已保留在当前标签页并可在刷新后恢复；建议同时到训练复盘导出交易 CSV。'
+            : '交易已保留在当前页面，但本地保存失败。刷新前请到训练复盘导出交易 CSV。';
+          warning.hidden = false;
+        }
         return false;
       }
     }
@@ -6460,7 +6500,7 @@
     });
     document.getElementById('closePosition').addEventListener('click', () => { const row = visibleClose(); if (sim.position && row) settlePosition(row.close, '手动平仓'); });
     document.getElementById('tradeCsv').addEventListener('change', event => { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = () => { const parsed = parseTradeCsv(String(reader.result || '')); sim.importedTrades = parsed; updateStats(); const note = document.getElementById('recommendation'); const original = note.innerHTML; note.innerHTML = `<strong>已导入 ${parsed.length} 条交易记录</strong>${original.replace(/<strong>.*?<\/strong>/, '')}`; }; reader.readAsText(file); });
-    document.getElementById('clearStats').addEventListener('click', () => { sim.trades = []; sim.importedTrades = []; try { localStorage.removeItem('trend-lab-trades'); } catch (_) {} updateStats(); });
+    document.getElementById('clearStats').addEventListener('click', () => { sim.trades = []; sim.importedTrades = []; try { localStorage.removeItem('trend-lab-trades'); } catch (_) {} if (typeof sessionStorage !== 'undefined') { try { sessionStorage.removeItem(tradeSessionBackupKey); } catch (_) {} } updateStats(); });
     document.getElementById('stageCards').addEventListener('click', event => { const card = event.target.closest('[data-stage-select]'); if (!card || card.disabled) return; stageState.active = Number(card.dataset.stageSelect); saveStageState(); renderStagePanel(); renderTrainingHome(); continueTrainingRoute(); });
     function trainingLengthValue() {
       const value = Number(trainingSetupState.length);
@@ -6606,6 +6646,7 @@
     document.getElementById('homeOpenStages').addEventListener('click', () => { setWorkspace('training'); document.getElementById('stageCards')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); });
     document.getElementById('homeOpenReview').addEventListener('click', () => setWorkspace('review'));
     document.getElementById('topStartTraining').addEventListener('click', continueTrainingRoute);
+    document.getElementById('stageContinueRoute').addEventListener('click', continueTrainingRoute);
     document.getElementById('replayConfigure').addEventListener('click', openTrainingSetup);
     document.getElementById('workspaceStart').addEventListener('click', () => openTrainingSetup());
     document.getElementById('workspaceDecision').addEventListener('click', () => openWorkspaceRecords({ decision: true }));
@@ -6628,19 +6669,7 @@
     document.getElementById('teachModeBtn').addEventListener('click', () => { stageState.mode = 'teach'; saveStageState(); renderStagePanel(); updateTrainingCoach(0); });
     document.getElementById('examModeBtn').addEventListener('click', () => { stageState.mode = 'exam'; saveStageState(); renderStagePanel(); });
      document.getElementById('resetStageProgress').addEventListener('click', () => { if (!window.confirm('确定重置三个阶段的课程进度吗？交易记录和复盘统计不会被删除。')) return; stageState.active = 0; stageState.mode = 'teach'; stageState.unlocked = [true, false, false]; stageState.foundationStarted = false; stageState.foundationComplete = false; stageState.foundationStep = 0; stageState.progress = stageDefinitions.map(() => ({ questions: 0, correct: 0, trades: 0, checks: 0, replay: false, passed: false })); trainingState.index = 0; trainingState.answeredCount = 0; trainingState.score = 0; trainingState.flow = 'stage'; saveStageState(); renderStagePanel(); renderTrainingHome(); renderQuestion(0, { flow: 'stage' }); document.getElementById('trainingScore').textContent = '已答 0 · 得分 0'; });
-    document.querySelectorAll('[data-training-step]').forEach(btn => btn.addEventListener('click', () => {
-      const step = Number(btn.dataset.trainingStep);
-      if (step === 3) {
-         startSupplementalQuestion((trainingState.index + 3) % questions.length, 'practice');
-        return;
-      }
-      setLesson(step);
-      setWorkspace('market');
-      document.getElementById('chartStage')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }));
      document.getElementById('homeCoverageList').addEventListener('click', event => { const button = event.target.closest('[data-coverage-index]'); if (!button) return; startSupplementalQuestion(Number(button.dataset.coverageIndex), 'practice'); });
-    document.getElementById('startTraining').addEventListener('click', continueTrainingRoute);
-     document.getElementById('resetTraining').addEventListener('click', () => { trainingState.index = stageQuestionRange()[0]; trainingState.answeredCount = 0; trainingState.score = 0; trainingState.flow = 'stage'; document.getElementById('trainingScore').textContent = '已答 0 · 得分 0'; document.getElementById('dailyQuestionMetric').textContent = '0 / 3'; document.getElementById('evidenceMetric').textContent = '0%'; renderQuestion(stageQuestionRange()[0], { flow: 'stage' }); });
     document.getElementById('simDataBtn').addEventListener('click', () => setDataMode('sim'));
     document.getElementById('liveDataBtn').addEventListener('click', () => setDataMode('live'));
     document.getElementById('liveRefreshBtn').addEventListener('click', () => loadLiveMarket());
@@ -7453,6 +7482,10 @@
       }
       if (!restoreSessionDraft()) setDataMode('live');
       sessionPersistenceReady = true;
+      if (tradeJournalRestoredFromSession) {
+        const warning = document.getElementById('tradeStorageWarning');
+        if (warning) { warning.textContent = '本地交易记录写入失败，已从当前标签页备份恢复；恢复本地存储后会自动清除提示。'; warning.hidden = false; }
+      }
       document.getElementById('sessionStartupGuard').hidden = true;
     }
     initializeTrainingSession();

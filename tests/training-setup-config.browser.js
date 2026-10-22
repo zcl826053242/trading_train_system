@@ -79,5 +79,5 @@ async (page) => {
     await context.close();
   }
   if (failures.length) throw new Error(`${failures.join('\n')}\nResults: ${JSON.stringify(results)}`);
-  return { status: 'PASS', results, errors };
+  return { passed: failures.length === 0, status: 'PASS', results, errors, failures };
 }
