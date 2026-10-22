@@ -457,8 +457,17 @@
     .special-head h3 { margin: 0; font-size: 15px; font-weight: 600; }
     .special-head span { color: var(--muted); font-size: 11px; }
     .special-grid { display: flex; flex-wrap: wrap; gap: 7px; }
+    .special-btn { display: grid; gap: 3px; text-align: left; }
+    .special-btn small { color: var(--muted); font-size: 9px; }
+    .special-categories { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+    .special-category { min-height: 30px; padding: 5px 9px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--muted); font-size: 10px; }
+    .special-category[aria-selected="true"] { border-color: #b9cde6; background: var(--blue-soft); color: var(--blue); }
+    .special-guidance { display: grid; gap: 4px; margin-top: 8px; color: var(--muted); font-size: 10px; line-height: 1.5; }
+    .special-guidance strong { color: var(--ink); }
+    .question-route-context { display: block; margin-top: 7px; color: #526273; font-size: 10px; line-height: 1.45; }
+    .special-answer-feedback { margin: 8px 0 0; padding: 8px 10px; border-left: 3px solid #0c8b76; background: #eef8f5; color: #285d53; font-size: 11px; line-height: 1.55; }
     .special-btn { border: 1px solid var(--line); border-radius: 7px; background: var(--surface); color: var(--ink); padding: 7px 9px; font-size: 11px; }
-    .special-btn.active, .special-btn:hover, .special-btn:focus-visible { background: var(--blue-soft); border-color: #b9cde6; color: var(--blue); outline: none; }
+    .special-btn.active, .special-btn[aria-pressed="true"], .special-btn:hover, .special-btn:focus-visible { background: var(--blue-soft); border-color: #b9cde6; color: var(--blue); outline: none; }
     .special-detail { margin-top: 11px; padding: 10px 12px; border-radius: 8px; background: var(--surface-2); color: var(--muted); font-size: 11px; }
     .special-detail strong { color: var(--ink); margin-right: 6px; }
     .special-start-btn { display: block; min-height: 32px; margin-top: 8px; padding: 6px 10px; border: 1px solid #0c8b76; border-radius: 3px; background: #0c8b76; color: #fff; font-size: 10px; cursor: pointer; }
@@ -956,9 +965,10 @@
     .app-nav button i { width: 14px; height: 14px; }
     .app-nav button.active { background: #f0b90b; color: #202630; box-shadow: none; }
     .app-nav button:hover { transform: none; background: #f4f5f6; color: #202630; }
-    .learning-nav { display: flex; align-items: center; gap: 3px; width: fit-content; max-width: 100%; margin: -2px 0 10px; padding: 3px; border: 1px solid #e6e8eb; border-radius: 5px; background: #fff; }
+    .learning-nav { display: flex; align-items: center; gap: 3px; width: fit-content; min-width: 0; max-width: 100%; overflow-x: auto; overscroll-behavior-inline: contain; scrollbar-width: none; margin: -2px 0 10px; padding: 3px; border: 1px solid #e6e8eb; border-radius: 5px; background: #fff; }
+    .learning-nav::-webkit-scrollbar { display: none; }
     .learning-nav[hidden] { display: none; }
-    .learning-nav button { min-height: 30px; border: 0; border-radius: 3px; padding: 6px 12px; background: transparent; color: #68717d; font-size: 11px; white-space: nowrap; }
+    .learning-nav button { min-height: 30px; flex: 0 0 auto; border: 0; border-radius: 3px; padding: 6px 12px; background: transparent; color: #68717d; font-size: 11px; white-space: nowrap; }
     .learning-nav button.active { background: #f0b90b; color: #202630; }
     .indicator-learning-page { margin: 0 0 14px; padding: 2px 0 18px; }
     .indicator-library-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; padding: 3px 0 12px; border-bottom: 1px solid var(--line); }
@@ -1047,7 +1057,7 @@
     body.market-terminal .topbar { display: none; }
     body.market-terminal .layout { height: calc(100dvh - 81px); min-height: 0; grid-template-columns: minmax(0, 1fr) 320px; gap: 0; align-items: stretch; overflow: hidden; background: #1b1b1b; }
     body.market-terminal .footer-note { min-height: 28px; margin: 0; padding: 5px 12px; align-items: center; background: #202630; color: #848e9c; font-size: 10px; line-height: 18px; }
-    body.market-terminal .chart-card { display: grid; min-height: 0; grid-template-columns: max-content auto max-content auto auto minmax(0, 1fr); grid-template-rows: 42px 16px minmax(0, 1fr); column-gap: 8px; padding: 8px 12px 4px; border: 0; border-right: 1px solid #2b3139; border-radius: 0; background: #1b1b1b; color: #eaecef; }
+    body.market-terminal .chart-card { display: grid; min-height: 0; grid-template-columns: max-content auto max-content auto auto minmax(0, 1fr); grid-template-rows: 42px auto auto minmax(0, 1fr); column-gap: 8px; padding: 8px 12px 4px; border: 0; border-right: 1px solid #2b3139; border-radius: 0; background: #1b1b1b; color: #eaecef; }
     body.market-terminal .chart-head, body.market-terminal #chartToolbar { display: contents; }
     body.market-terminal .instrument { grid-column: 1; grid-row: 1; min-width: 0; min-height: 42px; gap: 7px; }
     body.market-terminal .instrument h2 { color: #eaecef; font-size: 15px; }
@@ -1096,11 +1106,12 @@
     body.market-terminal .data-source-label, body.market-terminal .data-source-copy span:last-child { color: #848e9c; }
     body.market-terminal .source-btn, body.market-terminal .source-refresh { border-color: #343a40; border-radius: 3px; background: #1b1f25; color: #b7bdc6; }
     body.market-terminal .source-btn.active { border-color: #3b7567; background: #183b34; color: #0ecb81; }
-    body.market-terminal .chart-coach { grid-column: 1 / -1; grid-row: 2; align-self: center; margin: 3px 0 4px; padding: 3px 8px; border-color: #36302a; border-radius: 2px; background: #26231d; color: #c7b575; font-size: 10px; line-height: 1.4; }
+    body.market-terminal .special-practice-prompt { grid-column: 1 / -1; grid-row: 2; margin: 0; }
+    body.market-terminal .chart-coach { grid-column: 1 / -1; grid-row: 3; align-self: center; margin: 3px 0 4px; padding: 3px 8px; border-color: #36302a; border-radius: 2px; background: #26231d; color: #c7b575; font-size: 10px; line-height: 1.4; }
     @media (min-width: 901px) {
       body.market-terminal .chart-coach { margin: 0; padding: 1px 8px; font-size: 10px; line-height: 14px; }
     }
-    body.market-terminal .chart-wrap { grid-column: 1 / -1; grid-row: 3; min-width: 0; min-height: 0; grid-template-columns: 40px minmax(0, 1fr); gap: 5px; margin: 0; }
+    body.market-terminal .chart-wrap { grid-column: 1 / -1; grid-row: 4; min-width: 0; min-height: 0; grid-template-columns: 40px minmax(0, 1fr); gap: 5px; margin: 0; }
     body.market-terminal .chart-wrap > .chart-tools { padding: 0; }
     body.market-terminal .chart-wrap > .chart-tools .tool-group { gap: 2px; }
     body.market-terminal .chart-wrap > .chart-tools .tool-btn { width: 36px; min-height: 36px; border: 0; border-radius: 3px; background: transparent; color: #b7bdc6; }
@@ -1242,13 +1253,14 @@
     body.market-terminal.foundation-onboarding .market-help .guide-next { color: #117c71; }
     body.market-terminal .learning-nav:not([hidden]) { display: flex; }
     @media (min-width: 901px) and (max-width: 1100px) {
-      body.market-terminal .chart-card { grid-template-columns: max-content auto minmax(0, 1fr) auto auto; grid-template-rows: 42px 38px auto minmax(0, 1fr); }
+      body.market-terminal .chart-card { grid-template-columns: max-content auto minmax(0, 1fr) auto auto; grid-template-rows: 42px 38px auto auto minmax(0, 1fr); }
       body.market-terminal .chart-period-control { grid-column: 1; grid-row: 2; }
       body.market-terminal #chartIndicatorsOpen { grid-column: 2; grid-row: 2; }
       body.market-terminal #chartToolbar > .chart-advanced { grid-column: 4; grid-row: 2; }
       body.market-terminal .chart-training-progress { grid-column: 5; grid-row: 2; }
-      body.market-terminal .chart-coach { grid-row: 3; }
-      body.market-terminal .chart-wrap { grid-row: 4; }
+      body.market-terminal .special-practice-prompt { grid-row: 3; }
+      body.market-terminal .chart-coach { grid-row: 4; }
+      body.market-terminal .chart-wrap { grid-row: 5; }
     }
     @media (max-width: 1100px) {
       body.market-terminal .app-nav { overflow-x: auto; padding-inline: 8px; }
@@ -1578,7 +1590,7 @@
       <div class="home-grid home-grid-lower">
         <article class="surface-card"><div class="home-card-head"><div><h3>最近训练</h3><p>只展示本浏览器保存的训练档案。</p></div><button class="text-btn" type="button" id="homeOpenReview">查看复盘</button></div><div class="home-session-list" id="homeSessionList"><div class="home-empty">完成一场历史盲测后，这里会出现你的过程摘要。</div></div></article>
         <article class="surface-card"><div class="home-card-head"><div><h3>当前薄弱点</h3><p>从你的记录中提取下一轮练习方向。</p></div><i data-lucide="radar" aria-hidden="true"></i></div><div class="home-weak-list" id="homeWeakList"><div class="home-empty">完成答题或历史回放后，系统会生成行为线索。</div></div></article>
-        <article class="surface-card home-coverage-card"><div class="home-card-head"><div><h3>行情覆盖地图</h3><p>题库覆盖常见结构，不把单一趋势当成全部市场。</p></div><span class="home-plan-time">12 类样本</span></div><div class="home-coverage-list" id="homeCoverageList"></div><div class="home-coverage-tip">点击一个场景，直接进入对应题目；完成后再去历史回放检验能否迁移。</div></article>
+        <article class="surface-card home-coverage-card"><div class="home-card-head"><div><h3>行情覆盖地图</h3><p>题库覆盖常见结构，不把单一趋势当成全部市场。</p></div><span class="home-plan-time">19 个练习样本</span></div><div class="home-coverage-list" id="homeCoverageList"></div><div class="home-coverage-tip">点击一个场景，直接进入对应题目；独立练习不改变阶段通关进度。</div></article>
         <article class="surface-card home-mistake-card"><div class="home-card-head"><div><h3>错题重练</h3><p>答错或证据不足的题目会保存在本地。</p></div><button class="text-btn" type="button" id="homeRetryMistakes" disabled>开始重练</button></div><div class="home-mistake-list" id="homeMistakeList"><div class="home-mistake-empty">目前没有待重练题目。</div></div></article>
       </div>
       </details>
@@ -1921,10 +1933,10 @@
     <section class="card training-card section-anchor" id="training" data-workspace="training" data-learning-view="practice" aria-label="历史行情训练">
       <div class="training-head">
         <div><h3>常见行情训练场</h3><p>用代表性行情练习结构、EMA、成交量、RSI 与风险决策。得分奖励证据链，不奖励猜中涨跌。</p></div>
-        <div class="training-meta"><span class="training-count" id="questionCount">样本 01 / 12</span><span class="training-score" id="trainingScore">已答 0 · 得分 0</span></div>
+        <div class="training-meta"><span class="training-count" id="questionCount">样本 01 / 19</span><span class="training-score" id="trainingScore">已答 0 · 得分 0</span></div>
       </div>
       <div class="learning-flow" aria-live="polite">
-        <div class="learning-flow-copy"><span id="learningStepLabel">第 1 步 / 3</span><strong id="learningStepTitle">先观察行情线索</strong><p id="learningStepPrompt">阅读题目描述，勾选你实际观察到的依据；先不急着选方向。</p></div>
+          <div class="learning-flow-copy"><span id="learningStepLabel">第 1 步 / 3</span><strong id="learningStepTitle">先观察行情线索</strong><p id="learningStepPrompt">阅读题目描述，勾选你实际观察到的依据；先不急着选方向。</p><small class="question-route-context" id="questionRouteContext" role="status"></small></div>
         <ol aria-label="练习进度"><li class="active" data-flow-indicator="observe">观察</li><li data-flow-indicator="decide">判断</li><li data-flow-indicator="review">复盘</li></ol>
       </div>
       <div class="training-grid guided-flow" id="guidedFlow" data-flow-step="observe">
@@ -1961,10 +1973,11 @@
         </div>
       </div>
     </section>
-    <details class="card special-card section-anchor" data-workspace="training" data-learning-view="practice" aria-label="专项训练目录">
+    <details class="card special-card section-anchor" id="specialTrainingDetails" data-workspace="training" data-learning-view="practice" aria-label="专项训练目录">
       <summary class="special-head"><h3>另选专项训练</h3><span>按弱项重复练</span></summary>
+      <div class="special-categories" id="specialCategories" role="tablist" aria-label="专项分类"></div>
       <div class="special-grid" id="specialGrid"></div>
-      <div class="special-detail" id="specialDetail"><strong>当前训练：</strong>选择一个专项后，系统会切换到对应行情、指标组合和复盘问题。</div>
+      <div class="special-detail" id="specialDetail"><strong>先选专项，再按步骤完成。</strong><div class="special-guidance"><span>流程：查看任务 → 进入模拟行情 → 完成对应判断题 → 阅读解释。</span><span>专项答题与错题重练会单独记录，不改变阶段通关进度。</span></div></div>
     </details>
 
     <dialog class="workspace-records" id="workspaceRecordsDialog" aria-labelledby="workspaceRecordsTitle">
@@ -2332,7 +2345,7 @@
     const replayTraining = { id: '', mode: 'blind', decisions: [], saved: false };
     const trainingModeState = { mode: 'blind' };
     const tradeJournal = (() => { try { const value = JSON.parse(localStorage.getItem('trend-lab-trades') || '[]'); return Array.isArray(value) ? value.slice(-500) : []; } catch (_) { return []; } })();
-    const mistakeBook = (() => { try { const value = JSON.parse(localStorage.getItem('trend-lab-mistakes') || '[]'); return Array.isArray(value) ? value.filter(index => Number.isInteger(index) && index >= 0 && index < 12).slice(0, 12) : []; } catch (_) { return []; } })();
+    let mistakeBook = [];
     const replayHistory = (() => { try { const value = JSON.parse(localStorage.getItem('trend-lab-replay-history') || '[]'); return Array.isArray(value) ? value.slice(0, 20) : []; } catch (_) { return []; } })();
     const trainingMeta = (() => { try { const value = JSON.parse(localStorage.getItem('trend-lab-training-meta') || 'null'); return value && typeof value === 'object' ? { lastDate: value.lastDate || '', streak: Math.max(0, Number(value.streak) || 0), completedSessions: Math.max(0, Number(value.completedSessions) || 0) } : { lastDate: '', streak: 0, completedSessions: 0 }; } catch (_) { return { lastDate: '', streak: 0, completedSessions: 0 }; } })();
     const liveMarket = { instrument: 'BTC-USDT-SWAP', source: 'Binance USDⓈ-M Futures 公开行情', endpoint: 'https://fapi.binance.com/fapi/v1/klines' };
@@ -2430,9 +2443,17 @@
       { tag: '样本 09 · 趋势衰竭', period: 'BTCUSDT 1H · Binance 现货 · 2026-10-05 01:00 UTC', timeframe: '1H', scenario: 'exhaustion', historicalCase: { timeframe: '1H', endIndex: 192, anchorOpenTime: 1791162000000, pattern: 'exhaustion' }, title: '加速冲顶后收回前高，适合追多吗？', body: '此前 20 根高点为 86,800；本根盘中上冲至 86,999.11，但收盘回到前高下方。成交量约为此前均量的 3.08 倍，价格高于 EMA20 约 1.06%，RSI(14) 约 85。放量不等于收盘确认。', good: 'skip', evidence: ['structure', 'ema', 'volume', 'rsi'], feedback: '强趋势可能继续，但高位乖离、RSI 偏热且冲高未收稳，会增加追价的回撤风险。等待整理、回踩或重新形成风险收益合理的结构。', chips: [['结构','盘中新高后收回','warn'], ['EMA','高于 EMA20 约 1.06%','warn'], ['成交量','约为前 20 根均量 3.08 倍','warn'], ['RSI(14)','85 · 高位','warn']] },
       { tag: '样本 10 · 波动率扩张', period: 'BTCUSDT 1H · Binance 现货 · 2026-09-30 14:00 UTC', timeframe: '1H', scenario: 'volatility', historicalCase: { timeframe: '1H', endIndex: 85, anchorOpenTime: 1790776800000, pattern: 'volatilityExpansion' }, title: '波动突然扩张、方向反转，应该频繁操作吗？', body: '近 3 根 1H K 线先急涨后连续回落，平均振幅约为此前 20 根均值的 3.26 倍；当前成交量约为此前均量的 2.73 倍。价格仍处于此前区间内，短线噪音增大。', good: 'skip', evidence: ['structure', 'volume'], feedback: '波动率上升时，固定仓位会承受更大价格风险，噪音也更容易触发止损。降低仓位或等待波动收敛，比提高操作频率更合理。', chips: [['结构','急涨后连续回落','bad'], ['EMA','信号可能滞后','warn'], ['成交量','约为前 20 根均量 2.73 倍','warn'], ['RSI(14)','51 · 中性','warn']] },
       { tag: '样本 11 · 低波动压缩', period: 'BTCUSDT 1H · Binance 现货 · 2026-10-03 11:00 UTC', timeframe: '1H', scenario: 'squeeze', historicalCase: { timeframe: '1H', endIndex: 154, anchorOpenTime: 1791025200000, pattern: 'squeeze' }, title: '波动压缩后，能提前猜突破方向吗？', body: '近 8 根平均振幅收窄至此前 20 根均值的约 0.39 倍，成交量约为此前均值的 0.38 倍，EMA20 与 EMA60 接近。收盘仍在此前区间内，暂时没有给出突破方向。', good: 'skip', evidence: ['structure', 'ema', 'volume'], feedback: '压缩常先提示波动可能扩张，不提供方向。等区间边界被有效突破并确认，再评估空间和失效位。', chips: [['结构','仍在此前区间','warn'], ['EMA','20 与 60 接近','warn'], ['成交量','约为前 20 根均值 0.38 倍','warn'], ['RSI(14)','46 · 中性','warn']] },
-      { tag: '样本 12 · 盈亏比过滤', period: 'SOL 4H · 模拟情景', timeframe: '4H', scenario: 'up', title: '方向看多，但目标空间小于风险距离，还做吗？', body: '结构与均线偏多；按当前入场，止损距离约 6%，合理目标空间约 8%，还未计手续费和滑点。', good: 'skip', evidence: ['structure', 'ema'], feedback: '先确认风险收益比是否值得承担，并把手续费、滑点和执行误差考虑进去。趋势判断正确，不代表这个位置值得参与。', chips: [['结构','HH + HL','good'], ['EMA','20 ＞ 60','good'], ['成交量','中性','warn'], ['RSI(14)','59 · 中性','good']] }
+      { tag: '样本 12 · 盈亏比过滤', period: 'SOL 4H · 模拟情景', timeframe: '4H', scenario: 'up', title: '方向看多，但目标空间小于风险距离，还做吗？', body: '结构与均线偏多；按当前入场，止损距离约 6%，合理目标空间约 8%，还未计手续费和滑点。', good: 'skip', evidence: ['structure', 'ema'], feedback: '先确认风险收益比是否值得承担，并把手续费、滑点和执行误差考虑进去。趋势判断正确，不代表这个位置值得参与。', chips: [['结构','HH + HL','good'], ['EMA','20 ＞ 60','good'], ['成交量','中性','warn'], ['RSI(14)','59 · 中性','good']] },
+      { tag: '专项样本 13 · 假跌破', period: '合成教学示意 · 非真实行情', timeframe: '1H', scenario: 'falseBreak', chartScenario: 'falseBreakDown', title: '价格刺破区间下沿后收回，现在就抄底吗？', body: '价格短暂跌到区间下沿下方，随后收盘回到区间内；但还没有形成更高低点或连续买盘确认。图中为合成教学示意，不是历史行情。', good: 'wait', evidence: ['structure', 'volume'], feedback: '下沿被刺破后收回，说明突破暂未确认，但一次收回也不等于反转。先等待结构改变或再次确认边界，再判断是否有合适的失效位。', chips: [['结构','收回区间 · 未破前高','warn'], ['成交量','反应尚未连续','warn'], ['执行','等待确认','good']] },
+      { tag: '专项样本 14 · 跳变风险', period: '合成教学示意 · 非真实行情', timeframe: '1H', scenario: 'volatility', chartScenario: 'gapShock', title: '价格突然跳变后，原来的止损和仓位假设还成立吗？', body: '图中用合成的价格跳变演示不连续波动；它不代表加密市场存在股票式固定开盘缺口。价格跳过原计划价位时，成交与止损可能偏离预设。', good: 'skip', evidence: ['structure', 'volume'], feedback: '先暂停新增方向单，重新核对可执行的失效位、滑点和最大亏损预算；不能把原止损价格当作一定成交价，也不能因波动变大就扩大风险额度。', chips: [['价格路径','出现跳变','bad'], ['风险预算','重新核算','warn'], ['动作','先暂停新增仓位','good']] },
+      { tag: '专项样本 15 · 长下影承接', period: '合成教学示意 · 非真实行情', timeframe: '1H', scenario: 'reversalUp', chartScenario: 'longLowerWick', title: '长下影线出现，能证明下方已经有支撑吗？', body: '一根 K 线下探后收回，形成明显长下影；尚无后续更高低点，也没有连续收盘站回关键位。该图为合成教学示意。', good: 'wait', evidence: ['structure', 'volume'], feedback: '下影线只说明这根 K 线内价格曾被买回，不足以证明持续承接。观察后续低点、收盘位置和量能，再定义判断失效位。', chips: [['K线','单根长下影','warn'], ['结构','后续低点待确认','warn'], ['成交量','单根反应不等于持续买盘','warn']] },
+      { tag: '专项样本 16 · V 形反转', period: '合成教学示意 · 非真实行情', timeframe: '1H', scenario: 'reversalUp', chartScenario: 'vReversal', title: '急跌后快速拉回，趋势已经反转了吗？', body: '价格呈 V 形反弹，但尚未收复前一个关键摆动高点。图表是合成教学路径，用于练习结构确认，不是历史行情或自动形态识别。', good: 'wait', evidence: ['structure', 'volume'], feedback: '反弹速度快不等于趋势已反转。先观察是否形成更高低点并收复关键高点；若结构仍未改变，把它当作反转候选而非已确认趋势。', chips: [['路径','急跌后快速反弹','warn'], ['结构','前高未收复','bad'], ['判断','等待结构确认','good']] },
+      { tag: '专项样本 17 · 双底确认', period: '合成教学示意 · 非真实行情', timeframe: '1H', scenario: 'reversalUp', chartScenario: 'doubleBottom', title: '两次测试相近低点，就能认定双底成立吗？', body: '两次低点相近，中间形成颈线反弹；当前仍未有效收盘突破颈线。该示意只用于练习确认和失效位，不是自动形态识别。', good: 'wait', evidence: ['structure', 'volume'], feedback: '两次相近低点只是候选结构。需要等待颈线突破和后续确认，同时把第二个低点附近作为观察失效区域；不能只凭形状预判方向。', chips: [['低点','两次测试相近','warn'], ['颈线','尚未有效突破','bad'], ['规则','形态需确认','good']] },
+      { tag: '专项样本 18 · 双顶确认', period: '合成教学示意 · 非真实行情', timeframe: '1H', scenario: 'exhaustion', chartScenario: 'doubleTop', title: '两次测试相近高点，何时才算顶部信号？', body: '两次高点相近，中间形成颈线回落；当前尚未收盘跌破颈线。图表为合成示意，不代表模型自动识别了双顶。', good: 'wait', evidence: ['structure', 'volume'], feedback: '两个相近高点不是确认信号。需观察颈线是否被有效跌破、反抽能否站回，并预先写出失效条件；形态名称不能代替风险计划。', chips: [['高点','两次测试相近','warn'], ['颈线','尚未有效跌破','bad'], ['规则','等待收盘确认','good']] },
+      { tag: '专项样本 19 · 长上影压力', period: '合成教学示意 · 非真实行情', timeframe: '1H', scenario: 'exhaustion', chartScenario: 'longUpperWick', title: '长上影线出现后，可以直接判断顶部吗？', body: '本根 K 线冲高后收回，形成长上影；目前没有后续收盘确认或结构转弱证据。该图为合成教学示意，不是历史行情。', good: 'wait', evidence: ['structure', 'volume'], feedback: '长上影表示盘中曾有更高成交，但不能单独确认顶部。需要结合前高、收盘位置、后续低点和风险空间，观察是否形成持续的卖方控制。', chips: [['K线','冲高后收回','warn'], ['结构','后续转弱待确认','warn'], ['规则','影线不等于反转','good']] }
     ];
-    const trainingState = { index: 0, selected: '', answered: false, answeredCount: 0, score: 0 };
+    mistakeBook = (() => { try { const value = JSON.parse(localStorage.getItem('trend-lab-mistakes') || '[]'); return Array.isArray(value) ? [...new Set(value.filter(index => Number.isInteger(index) && index >= 0 && index < questions.length))].slice(0, questions.length) : []; } catch (_) { return []; } })();
+    const trainingState = { index: 0, selected: '', answered: false, answeredCount: 0, score: 0, flow: 'stage', specialTrainingIndex: null };
     const stageDefinitions = [
       { name: '新手阶段', subtitle: '认识结构、指标和基本风控', questions: 3, correct: 2, trades: 1, checks: 1, replay: false },
       { name: '进阶阶段', subtitle: '在常见行情中完成证据链决策', questions: 6, correct: 4, trades: 3, checks: 3, replay: false },
@@ -2484,7 +2505,7 @@
     }
     function needsFoundationLesson() { return stageState.active === 0 && stageState.progress[0].questions === 0 && !stageState.foundationComplete; }
     function needsStageTrade() { const progress = stageState.progress[stageState.active], definition = stageDefinitions[stageState.active]; return !needsFoundationLesson() && progress.questions >= definition.questions && progress.correct >= definition.correct && progress.trades < definition.trades; }
-    function markStageActivity(kind, amount = 1) { const p = stageState.progress[stageState.active]; touchTrainingDay(); if (kind === 'replay') p.replay = true; else p[kind] = Math.min((p[kind] || 0) + amount, stageDefinitions[stageState.active][kind] || 999); if (stageIsComplete(stageState.active)) { p.passed = true; if (stageState.active < stageDefinitions.length - 1) stageState.unlocked[stageState.active + 1] = true; } saveStageState(); renderStagePanel(); renderTrainingHome(); }
+    function markStageActivity(kind, amount = 1) { if (typeof trainingState !== 'undefined' && trainingState.flow !== 'stage') return; const p = stageState.progress[stageState.active]; touchTrainingDay(); if (kind === 'replay') p.replay = true; else p[kind] = Math.min((p[kind] || 0) + amount, stageDefinitions[stageState.active][kind] || 999); if (stageIsComplete(stageState.active)) { p.passed = true; if (stageState.active < stageDefinitions.length - 1) stageState.unlocked[stageState.active + 1] = true; } saveStageState(); renderStagePanel(); renderTrainingHome(); }
     function renderKnowledgeChain(active = 0) { const chain = document.getElementById('knowledgeChain'); if (!chain) return; const nodes = knowledgeSequences[stageState.active] || knowledgeSequences[0]; chain.innerHTML = nodes.map(([title, sub], i) => `<div class="knowledge-node ${i === active ? 'active' : ''} ${i < active ? 'done' : ''}"><b>${i + 1}. ${title}</b><small>${sub}</small></div>`).join(''); document.getElementById('knowledgeStage').textContent = `${stageDefinitions[stageState.active].name} · 知识链`; }
     function updateAiCoach(active = 0, custom = '') { const text = document.getElementById('aiCoachText'); if (!text) return; if (custom) { text.textContent = custom; return; } const prompts = stageState.active === 0 ? ['先看结构：高点和低点是在抬高、下移，还是重叠？先用一句话描述，不要急着看 RSI。', '结构有方向后，再看 EMA20/EMA60 是否同向；均线只做方向过滤，不负责预测拐点。', '最后看成交量：突破是否放量、回踩是否缩量？量能是确认，不是单独的买卖信号。', 'RSI 只描述动能温度：超买可以继续涨，超卖也可以继续跌，必须放回结构里解释。', '把失效位写出来：如果价格走到哪里，说明刚才的判断不成立？'] : ['先写大级别假设，再用小级别找执行位置。', '位置决定风险收益，先标出支撑、阻力和失效距离。', '量价是否支持你的剧本？冲高无量和下跌缩量要区别处理。', '触发条件必须具体到收盘、回踩或结构突破，避免凭感觉点单。', '退出是计划的一部分：目标、止损和手动平仓条件都要提前写。']; text.textContent = prompts[Math.max(0, Math.min(prompts.length - 1, active))]; }
     function stageQuestionRange() {
@@ -2508,10 +2529,55 @@
     }
     function renderStagePanel() { const cards = document.getElementById('stageCards'); if (!cards) return; stageState.progress.forEach(p => { p.correct = p.correct || 0; }); stageState.unlocked = [true, false, false]; stageState.progress.forEach((p, i) => { p.passed = stageIsComplete(i); if (p.passed && i < stageDefinitions.length - 1) stageState.unlocked[i + 1] = true; }); stageState.active = stageState.unlocked[stageState.active] ? stageState.active : stageState.unlocked.findIndex(Boolean); cards.innerHTML = stageDefinitions.map((def, i) => { const p = stageState.progress[i], locked = !stageState.unlocked[i], passed = p.passed; return `<button type="button" class="stage-card ${i === stageState.active ? 'active' : ''} ${locked ? 'locked' : ''} ${passed ? 'passed' : ''}" data-stage-select="${i}" ${locked ? 'disabled' : ''}><strong>${locked ? '🔒 ' : ''}${def.name}</strong><span>${def.subtitle}</span><em>${passed ? '已通关' : locked ? '未解锁' : `${p.questions}/${def.questions} 题 · 正确 ${p.correct}/${def.correct}`}</em></button>`; }).join(''); const def = stageDefinitions[stageState.active], p = stageState.progress[stageState.active], done = stageCompletionPercent(stageState.active) / 100; document.getElementById('stageCurrentLabel').textContent = `${def.name} · ${stageState.mode === 'teach' ? '教学模式' : '考题模式'}`; document.getElementById('stageProgressText').textContent = `${p.questions} / ${def.questions} 题 · 正确 ${p.correct} / ${def.correct} · ${p.trades} / ${def.trades} 笔模拟交易 · 风险检查 ${p.checks} / ${def.checks}${def.replay ? ` · 回放${p.replay ? '已完成' : '未完成'}` : ''}`; document.getElementById('stageProgressFill').style.width = `${Math.round(done * 100)}%`; document.getElementById('topProgressText').textContent = `${Math.min(def.questions, p.questions)} / ${def.questions}`; const gate = document.getElementById('stageGate'); gate.classList.toggle('success', p.passed); gate.textContent = p.passed ? (stageState.active < 2 ? `${def.name} 已通关，${stageDefinitions[stageState.active + 1].name} 已解锁。点击上方卡片进入下一阶段。` : 'Pro 阶段已通关，建议继续用混合行情复训并导出复盘报告。') : stageState.mode === 'teach' ? '教学模式会显示教练提示；完成当前阶段要求后，下一阶段自动解锁。' : '考题模式：隐藏教练提示，提交后才公布答案；阶段要求仍然必须完成。'; document.getElementById('teachModeBtn').classList.toggle('active', stageState.mode === 'teach'); document.getElementById('examModeBtn').classList.toggle('active', stageState.mode === 'exam'); const notice = document.getElementById('examNotice'); if (notice) notice.hidden = stageState.mode !== 'exam'; document.body.classList.toggle('exam-mode', stageState.mode === 'exam'); renderKnowledgeChain(); updateAiCoach(); saveStageState(); }
     const specialTrainings = [
-      ['突破失败训练', 'falseBreak', '识别刺穿后收回，练习等待收盘确认'], ['震荡区间训练', 'range', '识别区间边界，避免在中部频繁交易'], ['单边上行训练', 'up', '练习 HH/HL、均线多头和回踩'], ['单边下行训练', 'down', '练习 LH/LL、反弹承压和下破'], ['放量冲高回落训练', 'falseBreak', '识别量增价滞与冲高回落'], ['趋势回踩训练', 'pullback', '区分健康回踩和结构破坏'], ['深回撤弹簧训练', 'reversalUp', '练习反转候选的确认顺序'], ['高位整理训练', 'exhaustion', '识别高位横盘与追涨风险'], ['低位筑底训练', 'reversalUp', '用结构改变而不是超卖猜底'], ['均线缠绕训练', 'range', '理解均线在震荡中会反复打脸'], ['假跌破训练', 'falseBreak', '识别下破后快速收回'], ['加速上涨训练', 'exhaustion', '识别乖离扩大与衰竭'], ['加速下跌训练', 'breakdown', '识别追空位置和风险收益'], ['跳空冲击训练', 'volatility', '处理高波动与缺口冲击'], ['长上影压力训练', 'exhaustion', '观察上方抛压和量能背离'], ['长下影承接训练', 'reversalUp', '区分承接与单次反抽'], ['缩量反变盘训练', 'squeeze', '等待压缩后的有效方向'], ['台阶趋势训练', 'pullback', '练习趋势段落与回踩位置'], ['V形反转训练', 'reversalUp', '知道 V 反也需要后续确认'], ['双顶双底训练', 'falseBreak', '练习形态确认与失效位']
+      { title: '突破失败', group: '突破与量价', scenario: 'falseBreak', questionIndex: 2, objective: '识别价格刺穿上沿后收回的假突破', focus: '关注收盘是否回到区间内，不凭盘中影线追单。', takeaway: '一次上破不代表有效突破；先等收盘确认，并写明区间失效位。' },
+      { title: '震荡区间', group: '结构与趋势', scenario: 'range', questionIndex: 1, objective: '识别区间边界和中部缺少空间的状态', focus: '先标出上下边界，再判断当前价格是否靠近边缘。', takeaway: '区间中部缺少清晰优势时，可以等待，不必为了参与而交易。' },
+      { title: '单边上行', group: '结构与趋势', scenario: 'up', questionIndex: 0, objective: '用 HH/HL 和回踩确认观察上行结构', focus: '结构先于指标；检查回踩是否守住前高或最近 HL。', takeaway: '趋势方向不等于立即入场，仍需确认回踩、触发和失效位。' },
+      { title: '单边下行', group: '结构与趋势', scenario: 'down', questionIndex: 6, objective: '识别 LH/LL 与下降趋势中的反弹', focus: '检查反弹高点是否仍受压，不因 RSI 偏低就直接抄底。', takeaway: '超卖描述动能，不代表下跌结束；等结构改变再谈反转。' },
+      { title: '放量冲高回落', group: '突破与量价', scenario: 'falseBreak', questionIndex: 2, objective: '区分放量刺穿与收盘站稳', focus: '对照影线、收盘位置和量能，不只看成交量突然放大。', takeaway: '高成交量不能单独确认方向，收盘位置和后续承接更重要。' },
+      { title: '趋势回踩', group: '结构与趋势', scenario: 'pullback', questionIndex: 4, objective: '区分健康回踩与结构破坏', focus: '观察 EMA 只能辅助；优先确认结构低点和回踩后的反应。', takeaway: '缩量回踩是线索，不是保证；跌破关键 HL 要重新评估。' },
+      { title: '深回撤候选', group: '反转与形态', scenario: 'reversalUp', questionIndex: 5, objective: '把深回撤后的反弹视作反转候选而非结论', focus: '比较反弹高点、均线斜率和量能，等待结构证据。', takeaway: '单次放量反弹不足以确认反转，需要更高低点和关键高点突破。' },
+      { title: '高位整理', group: '反转与形态', scenario: 'exhaustion', questionIndex: 8, objective: '识别高位加速后追价的回撤风险', focus: '检查是否冲高收回、乖离过大或远离可定义的失效位。', takeaway: '强势仍可能延续，但高位追价的风险收益要重新核算。' },
+      { title: '低位筑底候选', group: '反转与形态', scenario: 'reversalUp', questionIndex: 16, objective: '观察两次低位测试与颈线是否被确认突破', focus: '图形相似不代表底部成立；检查颈线、收盘和失效区域。', takeaway: '双底只是候选形态，等待颈线确认，不能凭形状猜底。' },
+      { title: '均线缠绕', group: '结构与趋势', scenario: 'range', questionIndex: 1, objective: '识别均线在区间行情中的滞后和反复交叉', focus: '先判断高低点是否重叠，再评估均线是否提供了额外信息。', takeaway: '均线缠绕时容易来回打脸，区间结构与空间优先。' },
+      { title: '假跌破', group: '突破与量价', scenario: 'falseBreak', questionIndex: 12, objective: '识别下破区间下沿后收回的假跌破', focus: '当前图表是合成示意，判断题针对下沿收回，不套用上破案例。', takeaway: '下沿收回不等于反转；等待后续结构确认和明确失效位。' },
+      { title: '加速上涨', group: '突破与量价', scenario: 'exhaustion', questionIndex: 8, objective: '识别上涨加速后收回前高的追价风险', focus: '检查冲高是否收盘站稳、价格与均线乖离及剩余空间。', takeaway: '高位动能强不代表风险可忽略；先核算追价位置和计划空间。' },
+      { title: '加速下跌', group: '突破与量价', scenario: 'breakdown', questionIndex: 7, objective: '确认下破方向证据后避免在延伸段追空', focus: '即使收盘跌破，也先检查价格离失效位、支撑和目标空间有多远。', takeaway: '方向判断正确也可能是差位置；剩余空间不足时可以跳过。' },
+      { title: '价格跳变风险', group: '波动与风险', scenario: 'volatility', questionIndex: 13, objective: '演练价格突然跳变时如何重核仓位与止损假设', focus: '这是合成不连续波动示意，不代表加密市场有股票式固定开盘缺口。', takeaway: '止损可能偏离预设成交价；暂停新增仓位并按最大亏损预算重新评估。' },
+      { title: '长上影压力', group: '反转与形态', scenario: 'exhaustion', questionIndex: 18, objective: '观察冲高回落、前高位置和追涨风险', focus: '一根上影线不是反转信号；还要看收盘、前高和后续结构。', takeaway: '影线描述单根价格反应，需等待后续确认，不能单独推出趋势反转。' },
+      { title: '长下影承接', group: '反转与形态', scenario: 'reversalUp', questionIndex: 14, objective: '判断单根长下影能否证明持续承接', focus: '留意它只显示当前 K 线内的回收，后续低点和收盘仍待验证。', takeaway: '单根下影不等于已形成支撑；用后续结构、收盘和量能验证。' },
+      { title: '低波动压缩', group: '波动与风险', scenario: 'squeeze', questionIndex: 10, objective: '识别波动和量能收缩但方向尚未给出的状态', focus: '观察区间仍否有效；没有突破前，不提前猜方向。', takeaway: '压缩提示波动可能变化，不提供突破方向。' },
+      { title: '台阶趋势', group: '结构与趋势', scenario: 'pullback', questionIndex: 0, objective: '观察推进、整理和回踩组成的趋势节奏', focus: '先判断 HH/HL 是否延续，再检查回踩有没有破坏结构。', takeaway: '趋势由连续摆动结构描述，单根 K 线或均线交叉都不足以定论。' },
+      { title: 'V 形反转候选', group: '反转与形态', scenario: 'reversalUp', questionIndex: 15, objective: '检查 V 形反弹是否已经收复关键结构高点', focus: '当前是合成路径；把“反弹很快”与“结构已经反转”分开。', takeaway: '反弹速度不是确认条件；更高低点和关键高点收复更重要。' },
+      { title: '双顶确认', group: '反转与形态', scenario: 'exhaustion', questionIndex: 17, objective: '观察双顶候选与颈线确认条件', focus: '图形为合成示意，不是自动识别结果；等待颈线收盘确认。', takeaway: '相近高点只是候选，需观察颈线跌破和反抽失效，形态名称不能替代计划。' }
     ];
     let selectedSpecialTrainingIndex = null;
     let activeSpecialTrainingIndex = null;
+    let selectedSpecialGroup = '结构与趋势';
+    const supplementalProgress = (() => {
+      try {
+        const storageKey = 'trend-lab-supplemental-progress';
+        const raw = localStorage.getItem(storageKey) || '{}';
+        const saved = JSON.parse(raw);
+        if (!saved || typeof saved !== 'object' || Array.isArray(saved)) return {};
+        const normalized = Object.fromEntries(Object.entries(saved).filter(([key, value]) => {
+          const id = Number(key);
+          return String(id) === key && Number.isInteger(id) && (id >= 0 ? id < questions.length : -id <= specialTrainings.length) && value && typeof value === 'object';
+        }).map(([key, value]) => [Number(key), {
+            attempts: Math.max(0, Number(value.attempts) || 0), correct: Math.max(0, Number(value.correct) || 0),
+            lastAt: typeof value.lastAt === 'string' ? value.lastAt : ''
+          }]));
+        if (JSON.stringify(saved) !== JSON.stringify(normalized)) {
+          try { localStorage.setItem(storageKey, JSON.stringify(normalized)); } catch (_) {}
+        }
+        return normalized;
+      } catch (_) { return {}; }
+    })();
+    function saveSupplementalProgress() { try { localStorage.setItem('trend-lab-supplemental-progress', JSON.stringify(supplementalProgress)); } catch (_) {} }
+    function recordSupplementalAttempt(questionIndex, correct, entryKey = questionIndex) {
+      const record = supplementalProgress[entryKey] || { attempts: 0, correct: 0, lastAt: '' };
+      record.attempts += 1; if (correct) record.correct += 1; record.lastAt = new Date().toISOString();
+      supplementalProgress[entryKey] = record; saveSupplementalProgress();
+    }
 
     function seeded(seed) { const x = Math.sin(seed * 12.9898) * 43758.5453; return x - Math.floor(x); }
     function parseHistorical(raw, config) {
@@ -2746,13 +2812,24 @@
       if (state.dataMode === 'live' && !state.replayMode) return [];
       const count = ({ '1m': 60, '3m': 56, '5m': 54, '15m': 48, '30m': 46, '1H': 42, '2H': 40, '4H': 36, '6H': 34, '8H': 32, '12H': 32, '1D': 30, '3D': 28, '1W': 28, '1M': 24 })[timeframe] || 42;
       const step = ({ '1m': 0.28, '3m': 0.36, '5m': 0.46, '15m': 0.72, '30m': 0.86, '1H': 1, '2H': 1.18, '4H': 1.36, '6H': 1.52, '8H': 1.66, '12H': 1.82, '1D': 2.15, '3D': 2.75, '1W': 3.25, '1M': 4 })[timeframe] || 1;
-      const downMode = ['down', 'breakdown'].includes(scenario);
-      const upMode = ['up', 'breakout', 'pullback', 'reversalUp', 'exhaustion'].includes(scenario);
-      const rangeMode = ['range', 'falseBreak', 'squeeze', 'volatility'].includes(scenario);
+      const downMode = ['down', 'breakdown', 'doubleTop'].includes(scenario);
+      const upMode = ['up', 'breakout', 'pullback', 'reversalUp', 'exhaustion', 'doubleBottom', 'vReversal'].includes(scenario);
+      const rangeMode = ['range', 'falseBreak', 'falseBreakDown', 'squeeze', 'volatility', 'gapShock', 'longLowerWick', 'longUpperWick'].includes(scenario);
+      const practicePaths = {
+        vReversal: [[0, 0], [.42, -1500], [.66, -200], [1, 250]],
+        doubleBottom: [[0, 0], [.2, -1050], [.43, 500], [.66, -920], [.84, 150], [1, 250]],
+        doubleTop: [[0, 0], [.2, 1000], [.43, -500], [.66, 920], [.84, -150], [1, -250]]
+      };
+      const pathOffset = (points, at) => {
+        const upper = points.findIndex(point => point[0] >= at);
+        if (upper <= 0) return points[0][1];
+        const [fromX, fromY] = points[upper - 1], [toX, toY] = points[upper];
+        return fromY + (toY - fromY) * ((at - fromX) / (toX - fromX));
+      };
       let value = downMode ? 69040 : rangeMode ? 68460 : 67880;
       const rows = [];
       for (let i = 0; i < count; i++) {
-        const noiseScale = scenario === 'volatility' ? 230 : scenario === 'squeeze' ? 48 : 160;
+        const noiseScale = scenario === 'volatility' || scenario === 'gapShock' ? 230 : scenario === 'squeeze' ? 48 : 160;
         const noise = (seeded(i + (downMode ? 33 : rangeMode ? 70 : 11)) - .5) * noiseScale;
         const progress = i / Math.max(1, count - 1);
         let drift = upMode ? 82 * step : downMode ? -78 * step : Math.sin(i * .72) * 32;
@@ -2760,19 +2837,25 @@
         if (scenario === 'breakout' && progress > .68) drift += 105 * step;
         if (scenario === 'breakdown' && progress > .68) drift -= 95 * step;
         if (scenario === 'falseBreak' && progress >= .84) drift -= 125 * step;
+        if (scenario === 'falseBreakDown' && progress > .72 && progress < .84) drift -= 110 * step;
+        if (scenario === 'falseBreakDown' && progress >= .84) drift += 125 * step;
         if (scenario === 'pullback' && progress > .62 && progress < .82) drift -= 115 * step;
         if (scenario === 'reversalUp' && progress < .55) drift = -68 * step;
         if (scenario === 'reversalUp' && progress >= .55) drift = 105 * step;
+        const path = practicePaths[scenario];
+        if (path) drift = pathOffset(path, progress) - pathOffset(path, i ? (i - 1) / Math.max(1, count - 1) : 0);
         if (scenario === 'exhaustion' && progress > .72) drift *= .35;
         if (scenario === 'squeeze') drift *= .35;
         if (scenario === 'volatility') drift += (seeded(i + 903) > .5 ? 150 : -150) * step;
         if (scenario === 'falseBreak' && progress > .72 && progress < .84) drift += 110 * step;
         if (i === Math.floor(count * .62) && !rangeMode) drift *= .35;
-        const open = value;
-        const close = value + drift + noise;
-        const high = Math.max(open, close) + 35 + seeded(i + 91) * 80;
-        const low = Math.min(open, close) - 35 - seeded(i + 131) * 80;
-        const volume = 40 + Math.abs(close - open) * 0.45 + seeded(i + 200) * 28 + ((i > count * .56 && i < count * .67) ? 42 : 0) + ((['breakout', 'breakdown', 'falseBreak', 'reversalUp'].includes(scenario) && progress > .68) ? 75 : 0);
+        const gapOpen = scenario === 'gapShock' && i === Math.floor(count * .68) ? value + 820 : value;
+        const open = gapOpen;
+        let close = gapOpen + drift + noise;
+        if (scenario === 'longUpperWick' && i === count - 4) close = open - 100;
+        const high = Math.max(open, close) + 35 + seeded(i + 91) * 80 + (scenario === 'longUpperWick' && i === count - 4 ? 850 : 0);
+        const low = Math.min(open, close) - 35 - seeded(i + 131) * 80 - (scenario === 'longLowerWick' && i === count - 4 ? 850 : 0);
+        const volume = 40 + Math.abs(close - open) * 0.45 + seeded(i + 200) * 28 + ((i > count * .56 && i < count * .67) ? 42 : 0) + ((['breakout', 'breakdown', 'falseBreak', 'falseBreakDown', 'reversalUp', 'gapShock', 'longLowerWick', 'longUpperWick'].includes(scenario) && progress > .68) ? 75 : 0);
         rows.push({ i, open, close, high, low, volume });
         value = close;
       }
@@ -5067,6 +5150,7 @@
       if (coverage) coverage.innerHTML = questions.map((question, index) => { const label = question.tag.split('·').slice(1).join('·').trim() || `样本 ${index + 1}`; return `<button type="button" class="home-coverage-tag" data-coverage-index="${index}"><strong>${String(index + 1).padStart(2, '0')}</strong> ${label}</button>`; }).join('');
     }
     function continueTrainingRoute() {
+      if (typeof trainingState !== 'undefined') { trainingState.flow = 'stage'; trainingState.specialTrainingIndex = null; }
       const index = stageState.active;
       const current = getTrainingRoute().current;
       if (current?.id === 'session' || (current?.id === 'checks' && canResumeStageReplay())) {
@@ -5082,7 +5166,7 @@
           renderStagePanel();
           renderTrainingHome();
           setWorkspace('practice');
-          renderQuestion(stageQuestionRange()[0]);
+           renderQuestion(stageQuestionRange()[0], { flow: 'stage' });
         } else setWorkspace('review');
         return;
       }
@@ -5101,7 +5185,7 @@
       }
       if (current?.id === 'questions') {
         setWorkspace('practice');
-        renderQuestion(nextStageQuestionIndex());
+         renderQuestion(nextStageQuestionIndex(), { flow: 'stage' });
         document.getElementById('questionTitle').scrollIntoView({ behavior: 'smooth', block: 'center' });
         return;
       }
@@ -5119,7 +5203,7 @@
         return;
       }
       setWorkspace('practice');
-      renderQuestion(stageQuestionRange()[0]);
+       renderQuestion(stageQuestionRange()[0], { flow: 'stage' });
     }
     function updateTrainingCoach(stage) {
       const title = document.getElementById('trainingCoachTitle'), text = document.getElementById('trainingCoachText'), steps = document.querySelectorAll('.flow-steps li');
@@ -5357,6 +5441,12 @@
       const count = 72, base = 100, scenario = question.chartScenario || question.scenario;
       const interval = ({ '1m': 60, '5m': 300, '1H': 3600, '4H': 14400, '1D': 86400 })[question.timeframe] || 14400;
       const start = Date.UTC(2025, 0, 1) / 1000;
+      const interpolatePath = (points, value) => {
+        const upper = points.findIndex(point => point[0] >= value);
+        if (upper <= 0) return points[0][1];
+        const [fromX, fromY] = points[upper - 1], [toX, toY] = points[upper];
+        return fromY + (toY - fromY) * ((value - fromX) / (toX - fromX));
+      };
       let previous = base;
       return Array.from({ length: count }, (_, index) => {
         const progress = index / (count - 1), wave = Math.sin(index * .71) * 1.15 + Math.sin(index * .23) * .65;
@@ -5364,6 +5454,12 @@
         if (scenario === 'up') center = base + progress * 23 + wave;
         else if (scenario === 'range') center = base + Math.sin(progress * Math.PI * 8) * 4 + wave * .45;
         else if (scenario === 'falseBreak') center = base + Math.sin(progress * Math.PI * 8) * 3.7 + wave * .35;
+        else if (scenario === 'falseBreakDown') center = base + Math.sin(progress * Math.PI * 8) * 3.7 + wave * .25;
+        else if (scenario === 'gapShock') { const offset = index >= Math.floor(count * .68) ? 12 : 0; center = base + offset + Math.sin(progress * Math.PI * 4) * 1.5 + wave * .2; }
+        else if (scenario === 'longLowerWick') center = base + Math.sin(progress * Math.PI * 6) * 2 + wave * .25;
+        else if (scenario === 'vReversal') center = base + interpolatePath([[0, 15], [.42, -14], [.66, -2], [1, 4]], progress) + wave * .2;
+        else if (scenario === 'doubleBottom') center = base + interpolatePath([[0, 15], [.2, -11], [.43, 5], [.66, -10], [.84, 2], [1, 4]], progress) + wave * .18;
+        else if (scenario === 'doubleTop') center = base + interpolatePath([[0, -14], [.22, 10], [.43, -2], [.65, 9], [.84, 0], [1, -1]], progress) + wave * .18;
         else if (scenario === 'breakout') center = base + (progress < .68 ? Math.sin(progress * Math.PI * 7) * 3 : 3 + (progress - .68) * 78) + wave * .4;
         else if (scenario === 'breakRetest') center = base + Math.min(progress / .68, 1) * 17 - Math.max(0, (progress - .76) / .24) * 5 + wave * .38;
         else if (scenario === 'pullback') center = base + Math.min(progress / .72, 1) * 22 - Math.max(0, (progress - .7) / .3) * 11 + wave * .45;
@@ -5375,15 +5471,20 @@
         else if (scenario === 'squeeze') center = base + Math.sin(progress * Math.PI * 10) * (9 - progress * 7) + wave * (1 - progress * .8);
         else center = base + progress * 20 + wave;
         const close = center + Math.sin(index * 1.37) * (scenario === 'volatility' ? 1.7 : .75);
-        const open = previous;
+        const gapOffset = scenario === 'gapShock' && index >= Math.floor(count * .68) ? 12 : 0;
+        const priorGapOffset = scenario === 'gapShock' && index - 1 >= Math.floor(count * .68) ? 12 : 0;
+        const open = previous + gapOffset - priorGapOffset;
         const wick = scenario === 'volatility' ? 3.4 + Math.abs(Math.sin(index * .87)) * 2.2 : .8 + Math.abs(Math.sin(index * .61)) * .9;
         let high = Math.max(open, close) + wick, low = Math.min(open, close) - wick * .82;
         if (scenario === 'falseBreak' && index === count - 5) high += 10;
+        if (scenario === 'falseBreakDown' && index === count - 5) low -= 10;
+        if (scenario === 'longLowerWick' && index === count - 5) low -= 12;
         if (scenario === 'breakout' && index >= count * .68) high += 1.4;
         if (scenario === 'breakdown' && index >= count * .68) low -= 1.4;
         let volume = 650 + Math.abs(Math.sin(index * .31)) * 310 + Math.abs(close - open) * 35;
         if (['breakout', 'breakdown', 'reversalUp'].includes(scenario) && index >= count * .68 && index <= count * .76) volume *= 2.6;
         if (scenario === 'falseBreak' && index === count - 5) volume *= 3;
+        if (['falseBreakDown', 'longLowerWick'].includes(scenario) && index === count - 5) volume *= 2.5;
         if (scenario === 'exhaustion') volume *= 1.15 - progress * .48;
         if (scenario === 'squeeze') volume *= 1 - progress * .58;
         if (scenario === 'volatility') volume *= 2.2;
@@ -5529,8 +5630,18 @@
       practiceChart.chart.timeScale().fitContent();
       requestAnimationFrame(resizePracticeChart);
     }
-    function renderQuestion(index) {
+    function startSupplementalQuestion(index, flow = 'practice', specialIndex = null) {
+      if (!Number.isInteger(index) || !questions[index]) return;
+      clearSpecialPracticePrompt();
+      setWorkspace('practice');
+      renderQuestion(index, { flow, specialIndex });
+      document.getElementById('questionTitle')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    function renderQuestion(index, { flow = 'practice', specialIndex = null } = {}) {
       const q = questions[index];
+      if (!q) return;
+      trainingState.flow = ['stage', 'practice', 'mistake', 'special', 'indicator'].includes(flow) ? flow : 'practice';
+      trainingState.specialTrainingIndex = trainingState.flow === 'special' && Number.isInteger(specialIndex) ? specialIndex : null;
       trainingState.index = index; trainingState.selected = ''; trainingState.answered = false;
       document.getElementById('questionCount').textContent = `样本 ${String(index + 1).padStart(2, '0')} / ${questions.length}`;
       document.getElementById('sampleTag').textContent = q.tag;
@@ -5539,6 +5650,15 @@
       document.getElementById('questionTitle').textContent = q.title;
       document.getElementById('questionBody').textContent = q.body;
       document.getElementById('answerHint').textContent = stageState.mode === 'exam' ? '考题模式：独立完成，提交后公布解析' : '请选择一个动作，再提交你的理由';
+      const routeContext = document.getElementById('questionRouteContext');
+      if (routeContext) {
+        const special = typeof specialTrainings !== 'undefined' ? specialTrainings[trainingState.specialTrainingIndex] : null;
+        routeContext.textContent = trainingState.flow === 'stage' ? `${stageDefinitions[stageState.active].name} · 本题计入阶段门槛`
+          : trainingState.flow === 'special' ? `专项路径：${special?.title || '专项练习'} · 完成题目与证据后记录在独立练习中，不计入阶段门槛`
+          : trainingState.flow === 'mistake' ? '错题重练 · 本次答对且证据完整后会从待练列表移除，不计入阶段门槛'
+          : trainingState.flow === 'indicator' ? '指标课程 · 本题帮助验证读数和误用边界，独立练习不改变阶段门槛'
+          : '题库练习 · 独立记录，不计入阶段门槛';
+      }
       const feedback = document.getElementById('feedback'); feedback.className = 'feedback'; feedback.textContent = '';
       const submit = document.getElementById('submitAnswer'); submit.disabled = true; submit.hidden = false;
       document.getElementById('nextQuestion').hidden = true;
@@ -5575,15 +5695,18 @@
       const actionRight = trainingState.selected === q.good;
       const enoughEvidence = evidenceHits >= Math.min(3, q.evidence.length);
       if (trainingState.answered) return;
-      if (!(actionRight && enoughEvidence) && !mistakeBook.includes(trainingState.index)) {
-        mistakeBook.unshift(trainingState.index); mistakeBook.splice(12);
+       if (!(actionRight && enoughEvidence) && !mistakeBook.includes(trainingState.index)) {
+         mistakeBook.unshift(trainingState.index); mistakeBook.splice(questions.length);
       } else if (actionRight && enoughEvidence && mistakeBook.includes(trainingState.index)) {
         mistakeBook.splice(mistakeBook.indexOf(trainingState.index), 1);
       }
       try { localStorage.setItem('trend-lab-mistakes', JSON.stringify(mistakeBook)); } catch (_) {}
       renderTrainingHome();
-      trainingState.answered = true; trainingState.answeredCount += 1; markStageActivity('questions');
-      if (actionRight && enoughEvidence) { trainingState.score += 1; markStageActivity('correct'); }
+       trainingState.answered = true; trainingState.answeredCount += 1;
+       if (trainingState.flow === 'stage') markStageActivity('questions');
+       else recordSupplementalAttempt(trainingState.index, actionRight && enoughEvidence,
+         trainingState.flow === 'special' ? -(trainingState.specialTrainingIndex + 1) : trainingState.index);
+       if (actionRight && enoughEvidence) { trainingState.score += 1; if (trainingState.flow === 'stage') markStageActivity('correct'); }
       document.querySelectorAll('.answer-btn').forEach(btn => {
         btn.disabled = true;
         if (btn.dataset.answer === q.good) btn.classList.add('correct');
@@ -5591,18 +5714,40 @@
       });
       document.querySelectorAll('.evidence-check input').forEach(input => { input.disabled = true; });
       const feedback = document.getElementById('feedback'); feedback.className = `feedback show ${actionRight ? 'good' : 'neutral'}`;
-      const lead = actionRight ? (enoughEvidence ? '判断和证据都到位。' : '动作方向可以，但证据还不够完整。') : `更合适的动作是“${q.good === 'wait' ? '等待确认' : '暂不交易'}”。`;
-      feedback.innerHTML = `<strong>${lead}</strong>${q.feedback}`;
+       const lead = actionRight ? (enoughEvidence ? '判断和证据都到位。' : '动作方向可以，但证据还不够完整。') : `更合适的动作是“${q.good === 'wait' ? '等待确认' : q.good === 'skip' ? '暂不交易' : q.good === 'chase' ? '顺势执行' : '反向执行'}”。`;
+       const specialFeedback = trainingState.flow === 'special' ? `<br><strong>专项规则：</strong>${specialTrainings[trainingState.specialTrainingIndex]?.takeaway || ''}` : '';
+       feedback.innerHTML = `<strong>${lead}</strong>${q.feedback}${specialFeedback}`;
       document.getElementById('trainingScore').textContent = `已答 ${trainingState.answeredCount} · 得分 ${trainingState.score}`;
       setPracticeStep('review');
       updateTrainingCoach(3);
       renderKnowledgeChain(4); updateAiCoach(4);
       const dailyMetric = document.getElementById('dailyQuestionMetric'); if (dailyMetric) dailyMetric.textContent = `${Math.min(3, trainingState.answeredCount)} / 3`;
       const evidenceMetric = document.getElementById('evidenceMetric'); if (evidenceMetric) evidenceMetric.textContent = `${Math.round(evidenceHits / Math.max(1, q.evidence.length) * 100)}%`;
-      const stageProgress = stageState.progress[stageState.active], stageDefinition = stageDefinitions[stageState.active];
-      document.getElementById('nextQuestion').textContent = stageProgress.questions >= stageDefinition.questions && stageProgress.correct >= stageDefinition.correct ? '查看下一步训练 →' : '下一题 →';
+       const stageProgress = stageState.progress[stageState.active], stageDefinition = stageDefinitions[stageState.active];
+       document.getElementById('nextQuestion').textContent = trainingState.flow === 'special' ? '完成专项 · 返回目录 →'
+         : trainingState.flow === 'mistake' ? (mistakeBook.some(index => index !== trainingState.index) ? '练下一道错题 →' : mistakeBook.includes(trainingState.index) ? '返回错题列表 →' : '完成重练 · 返回列表 →')
+           : trainingState.flow === 'indicator' ? '完成本题 · 返回指标课程 →'
+             : trainingState.flow !== 'stage' ? '下一题 →'
+             : stageProgress.questions >= stageDefinition.questions && stageProgress.correct >= stageDefinition.correct ? '查看下一步训练 →' : '下一题 →';
     });
     document.getElementById('nextQuestion').addEventListener('click', () => {
+      if (trainingState.flow === 'special') {
+        const index = trainingState.specialTrainingIndex;
+        setWorkspace('training'); document.getElementById('specialTrainingDetails').open = true;
+        renderSpecialTrainingCatalog(); renderSpecialTrainingDetail(index);
+        document.getElementById('specialTrainingDetails').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+      if (trainingState.flow === 'mistake') {
+        const next = mistakeBook.find(index => index !== trainingState.index);
+        if (next != null) { startSupplementalQuestion(next, 'mistake'); return; }
+        const support = document.querySelector('.home-more-learning'); if (support) support.open = true;
+        setWorkspace('home'); document.getElementById('homeMistakeList')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); return;
+      }
+      if (trainingState.flow === 'indicator') { setWorkspace('indicators'); return; }
+      if (trainingState.flow !== 'stage') {
+        startSupplementalQuestion((trainingState.index + 1) % questions.length, trainingState.flow); return;
+      }
       const progress = stageState.progress[stageState.active], definition = stageDefinitions[stageState.active];
       if (progress.questions >= definition.questions && progress.correct >= definition.correct) {
         setWorkspace('home');
@@ -5610,10 +5755,10 @@
         return;
       }
       const [start, end] = stageQuestionRange();
-      renderQuestion(trainingState.index + 1 >= end ? start : trainingState.index + 1);
+      renderQuestion(trainingState.index + 1 >= end ? start : trainingState.index + 1, { flow: 'stage' });
     });
-    document.getElementById('homeMistakeList').addEventListener('click', event => { const button = event.target.closest('[data-retry-index]'); if (!button) return; setWorkspace('practice'); renderQuestion(Number(button.dataset.retryIndex)); document.getElementById('questionTitle')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); });
-    document.getElementById('homeRetryMistakes').addEventListener('click', () => { if (!mistakeBook.length) return; setWorkspace('practice'); renderQuestion(mistakeBook[0]); document.getElementById('questionTitle')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); });
+    document.getElementById('homeMistakeList').addEventListener('click', event => { const button = event.target.closest('[data-retry-index]'); if (!button) return; startSupplementalQuestion(Number(button.dataset.retryIndex), 'mistake'); });
+    document.getElementById('homeRetryMistakes').addEventListener('click', () => { if (!mistakeBook.length) return; startSupplementalQuestion(mistakeBook[0], 'mistake'); });
     const coachText = { cursor: '教练提示：先用指针观察高低点。下一步建议打开 EMA20 / EMA60，再判断趋势方向。', hline: '教练提示：点击图上的关键高点、低点或区间边界，画一条水平线。', trendline: '教练提示：在两个摆动低点（上涨）或两个摆动高点（下跌）上各点一次，画出趋势线。', fib: '教练提示：先点波段起点，再点波段终点；观察 38.2% / 50% / 61.8% 是否出现承接或压力。', measure: '教练提示：在主图中依次点击测量起点和终点，读取价格变化、百分比和跨越K线数。', rectangle: '教练提示：在主图中点击价格区间的两个对角点，标出支撑/阻力区域。', triangle: '教练提示：在主图中依次点击三个顶点，圈出收敛或楔形结构。', parallelogram: '教练提示：先点击通道底边两端，再点击通道对侧一点，标出平行价格通道。', horizontalRay: '教练提示：点击主图价位，创建向右延伸的水平射线；选中对象后可拖动起点。', horizontalSegment: '教练提示：在主图依次点击起点和终点时间，创建等价位的水平线段。', verticalLine: '教练提示：点击主图时间位置，创建贯穿图表的垂直线；选中后可拖动时间锚点。', verticalRay: '教练提示：点击主图中的时间和价位，创建从锚点向下延伸的垂直射线。', verticalSegment: '教练提示：在同一时间位置依次点击两个价位，创建垂直线段。', straightLine: '教练提示：在主图依次点击直线上的两个点，创建向两端无限延伸的直线。', straightRay: '教练提示：依次点击射线起点和方向点，创建从起点单向延伸的射线。', straightSegment: '教练提示：依次点击线段的两个端点，创建有限长度的直线段。', trendAngle: '教练提示：依次点击两个锚点，测量当前图表缩放下的屏幕夹角；缩放或调整价格轴后角度会随显示比例变化。', circle: '教练提示：在主图中依次点击圆心和圆周上一点，圈出关键高低点或形态。', arrow: '教练提示：依次点击箭头起点和尖端，标注价格方向或目标路径。', anyWaves: '教练提示：依次点击任意数量的转折点绘制自由折线；至少 2 点，完成后点击图表上的“完成自由折线”。', threeWaves: '教练提示：依次点击 4 个转折点绘制三浪折线。编号只代表绘制顺序，不自动判断 Elliott 浪型。', fiveWaves: '教练提示：依次点击 6 个转折点绘制五浪折线。编号只代表绘制顺序，不自动判断 Elliott 浪型。', eightWaves: '教练提示：依次点击 9 个转折点绘制八浪折线。编号只代表绘制顺序，不自动判断 Elliott 浪型。' };
     document.getElementById('moreDrawingTools').addEventListener('click', event => {
       const menu = document.getElementById('advancedDrawingTools');
@@ -5731,17 +5876,45 @@
     document.getElementById('chartIndicatorsClose').addEventListener('click', () => chartIndicatorsDialog.close());
     chartIndicatorsDialog.addEventListener('click', event => { if (event.target === chartIndicatorsDialog) chartIndicatorsDialog.close(); });
     chartIndicatorsDialog.addEventListener('close', () => document.getElementById('chartIndicatorsOpen').focus());
-    const specialGrid = document.getElementById('specialGrid');
-    specialTrainings.forEach((item, index) => { const button = document.createElement('button'); button.type = 'button'; button.className = 'special-btn'; button.dataset.special = index; button.textContent = item[0]; specialGrid.appendChild(button); });
-    function renderSpecialTrainingDetail(index) {
-      selectedSpecialTrainingIndex = index;
-      const item = specialTrainings[index], detail = document.getElementById('specialDetail');
-      detail.replaceChildren();
-      const title = document.createElement('strong'); title.textContent = `当前训练：${item[0]}`;
-      const description = document.createElement('span'); description.textContent = `${item[2]}。先看结构，再选择指标，最后写失效位。`;
-      const start = document.createElement('button'); start.type = 'button'; start.className = 'special-start-btn'; start.dataset.startSpecial = String(index); start.textContent = '进入图表练习';
-      detail.append(title, description, start);
-    }
+     const specialGrid = document.getElementById('specialGrid');
+     const specialGroups = [...new Set(specialTrainings.map(item => item.group))];
+     function renderSpecialTrainingCatalog() {
+       const tabs = document.getElementById('specialCategories');
+       tabs.innerHTML = specialGroups.map(group => `<button type="button" class="special-category" role="tab" data-special-group="${group}" aria-selected="${selectedSpecialGroup === group}">${group} <span>· ${specialTrainings.filter(item => item.group === group).length}</span></button>`).join('');
+       specialGrid.replaceChildren();
+       specialTrainings.forEach((item, index) => {
+         if (item.group !== selectedSpecialGroup) return;
+         const button = document.createElement('button'); button.type = 'button'; button.className = 'special-btn'; button.dataset.special = String(index);
+         button.setAttribute('aria-pressed', String(selectedSpecialTrainingIndex === index));
+         const title = document.createElement('span'); title.textContent = item.title;
+         const progress = supplementalProgress[-(index + 1)];
+         const status = document.createElement('small'); status.textContent = progress ? `已练 ${progress.attempts} 次 · 完整 ${progress.correct} 次` : '待练';
+         button.append(title, status); specialGrid.appendChild(button);
+       });
+     }
+     function renderSpecialTrainingDetail(index) {
+       selectedSpecialTrainingIndex = Number.isInteger(index) ? index : null;
+       const detail = document.getElementById('specialDetail'); detail.replaceChildren();
+       const item = selectedSpecialTrainingIndex == null ? null : specialTrainings[selectedSpecialTrainingIndex];
+       if (!item) {
+         const title = document.createElement('strong'); title.textContent = '先选一个专项';
+         const guidance = document.createElement('div'); guidance.className = 'special-guidance';
+         const steps = document.createElement('span'); steps.textContent = '流程：查看目标 → 在模拟图表观察 → 完成匹配判断题 → 阅读解释。';
+         const boundary = document.createElement('span'); boundary.textContent = '专项和错题练习单独记录，不会改变阶段通关进度。';
+         guidance.append(steps, boundary); detail.append(title, guidance); return;
+       }
+       const question = questions[item.questionIndex], progress = supplementalProgress[-(selectedSpecialTrainingIndex + 1)];
+       const title = document.createElement('strong'); title.textContent = `专项 · ${item.title}`;
+       const guidance = document.createElement('div'); guidance.className = 'special-guidance';
+       const objective = document.createElement('span'); objective.textContent = `本次目标：${item.objective}。`;
+       const focus = document.createElement('span'); focus.textContent = `观察重点：${item.focus}`;
+       const mappedQuestion = document.createElement('span'); mappedQuestion.textContent = `对应判断题：${question.title}（${question.historicalCase ? 'Binance 历史样本' : '合成教学示意'}）`;
+       const status = document.createElement('span'); status.textContent = progress ? `独立练习记录：${progress.attempts} 次尝试，${progress.correct} 次动作与证据均完整；不计入阶段门槛。` : '尚无独立练习记录；完成判断后会保存在本浏览器，不计入阶段门槛。';
+       guidance.append(objective, focus, mappedQuestion, status);
+       const start = document.createElement('button'); start.type = 'button'; start.className = 'special-start-btn'; start.dataset.startSpecial = String(selectedSpecialTrainingIndex); start.textContent = '第 1 步：进入模拟行情';
+       detail.append(title, guidance, start);
+       renderSpecialTrainingCatalog();
+     }
     function clearSpecialPracticePrompt() {
       activeSpecialTrainingIndex = null;
       const prompt = document.getElementById('specialPracticePrompt');
@@ -5752,40 +5925,48 @@
       activeSpecialTrainingIndex = index;
       const item = specialTrainings[index], prompt = document.getElementById('specialPracticePrompt');
       prompt.replaceChildren();
-      const title = document.createElement('strong'); title.textContent = `专项练习 · ${item[0]}`;
-      const description = document.createElement('p'); description.textContent = '先在当前行情图中找出结构证据，再进入对应判断题检查能否把观察迁移到决策。';
-      const next = document.createElement('button'); next.type = 'button'; next.dataset.specialPracticeNext = 'true'; next.textContent = '去对应判断题';
+       const question = questions[item.questionIndex];
+       const title = document.createElement('strong'); title.textContent = `专项练习 · ${item.title}：${item.objective}`;
+       const description = document.createElement('p'); description.textContent = `先观察当前练习行情：${item.focus} 下一步会练习“${question.title}”，提交后查看对应解释。`;
+       const next = document.createElement('button'); next.type = 'button'; next.dataset.specialPracticeNext = 'true'; next.textContent = '第 2 步：进入对应判断题';
       prompt.append(title, description, next);
       prompt.hidden = false;
     }
-    document.querySelectorAll('[data-special]').forEach(btn => btn.addEventListener('click', () => {
-      const index = Number(btn.dataset.special);
-      document.querySelectorAll('[data-special]').forEach(item => item.classList.toggle('active', item === btn));
-      renderSpecialTrainingDetail(index);
-    }));
+     document.getElementById('specialCategories').addEventListener('click', event => {
+       const button = event.target.closest('[data-special-group]'); if (!button) return;
+       selectedSpecialGroup = button.dataset.specialGroup; renderSpecialTrainingCatalog(); renderSpecialTrainingDetail(null);
+     });
+     specialGrid.addEventListener('click', event => {
+       const button = event.target.closest('[data-special]'); if (!button) return;
+       const index = Number(button.dataset.special);
+       specialGrid.querySelectorAll('[data-special]').forEach(item => item.setAttribute('aria-pressed', String(item === button)));
+       renderSpecialTrainingDetail(index);
+     });
+     renderSpecialTrainingCatalog();
     document.getElementById('specialDetail').addEventListener('click', event => {
       const button = event.target.closest('[data-start-special]');
       if (!button) return;
       const item = specialTrainings[Number(button.dataset.startSpecial)];
       if (!item) return;
-      if (!setScenario(item[1], state.timeframe)) return;
+       if (!setScenario(item.scenario, state.timeframe)) return;
       clearSpecialPracticePrompt();
       state.tool = 'cursor'; state.pendingDraw = []; proChart.selectedDrawingId = null; proChart.measurePoint = null; proChart.shapePoints = []; proChart.measurePreview = null; proChart.fibPoint = null; proChart.trendPoint = null;
       syncAnyWavesFinishControl();
       syncDrawingToolButtons();
       renderDrawingManager(); renderDrawingOverlay();
       setWorkspace('market');
-      document.getElementById('chartCoach').textContent = `专项训练 · ${item[0]}：${item[2]}。先在图上写出结构证据，再选最少的指标验证，最后指出判断失效的位置。`;
+       document.getElementById('chartCoach').textContent = `专项训练 · ${item.title}：${item.objective}。${item.focus}`;
       renderSpecialPracticePrompt(Number(button.dataset.startSpecial));
+       document.getElementById('specialPracticePrompt').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     });
     document.getElementById('specialPracticePrompt').addEventListener('click', event => {
       if (!event.target.closest('[data-special-practice-next]')) return;
       const index = activeSpecialTrainingIndex;
-      const questionIndex = questions.findIndex(question => question.scenario === specialTrainings[index]?.[1]);
-      if (questionIndex < 0) return;
+       const item = specialTrainings[index], questionIndex = item?.questionIndex;
+       if (!Number.isInteger(questionIndex) || !questions[questionIndex]) return;
       clearSpecialPracticePrompt();
       setWorkspace('practice');
-      renderQuestion(questionIndex);
+       renderQuestion(questionIndex, { flow: 'special', specialIndex: index });
       document.getElementById('questionTitle').scrollIntoView({ behavior: 'smooth', block: 'center' });
     });
     function initialReplayReveal(length) {
@@ -6414,22 +6595,20 @@
     document.getElementById('confirmTrainingStart').addEventListener('click', beginHistoricalTraining);
     document.getElementById('teachModeBtn').addEventListener('click', () => { stageState.mode = 'teach'; saveStageState(); renderStagePanel(); updateTrainingCoach(0); });
     document.getElementById('examModeBtn').addEventListener('click', () => { stageState.mode = 'exam'; saveStageState(); renderStagePanel(); });
-    document.getElementById('resetStageProgress').addEventListener('click', () => { if (!window.confirm('确定重置三个阶段的课程进度吗？交易记录和复盘统计不会被删除。')) return; stageState.active = 0; stageState.mode = 'teach'; stageState.unlocked = [true, false, false]; stageState.foundationStarted = false; stageState.foundationComplete = false; stageState.foundationStep = 0; stageState.progress = stageDefinitions.map(() => ({ questions: 0, correct: 0, trades: 0, checks: 0, replay: false, passed: false })); trainingState.index = 0; trainingState.answeredCount = 0; trainingState.score = 0; saveStageState(); renderStagePanel(); renderTrainingHome(); renderQuestion(0); document.getElementById('trainingScore').textContent = '已答 0 · 得分 0'; });
+     document.getElementById('resetStageProgress').addEventListener('click', () => { if (!window.confirm('确定重置三个阶段的课程进度吗？交易记录和复盘统计不会被删除。')) return; stageState.active = 0; stageState.mode = 'teach'; stageState.unlocked = [true, false, false]; stageState.foundationStarted = false; stageState.foundationComplete = false; stageState.foundationStep = 0; stageState.progress = stageDefinitions.map(() => ({ questions: 0, correct: 0, trades: 0, checks: 0, replay: false, passed: false })); trainingState.index = 0; trainingState.answeredCount = 0; trainingState.score = 0; trainingState.flow = 'stage'; saveStageState(); renderStagePanel(); renderTrainingHome(); renderQuestion(0, { flow: 'stage' }); document.getElementById('trainingScore').textContent = '已答 0 · 得分 0'; });
     document.querySelectorAll('[data-training-step]').forEach(btn => btn.addEventListener('click', () => {
       const step = Number(btn.dataset.trainingStep);
       if (step === 3) {
-        setWorkspace('practice');
-        renderQuestion((trainingState.index + 3) % questions.length);
-        document.getElementById('questionTitle')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+         startSupplementalQuestion((trainingState.index + 3) % questions.length, 'practice');
         return;
       }
       setLesson(step);
       setWorkspace('market');
       document.getElementById('chartStage')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }));
-    document.getElementById('homeCoverageList').addEventListener('click', event => { const button = event.target.closest('[data-coverage-index]'); if (!button) return; const index = Number(button.dataset.coverageIndex); setWorkspace('practice'); renderQuestion(index); document.getElementById('questionTitle')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); });
+     document.getElementById('homeCoverageList').addEventListener('click', event => { const button = event.target.closest('[data-coverage-index]'); if (!button) return; startSupplementalQuestion(Number(button.dataset.coverageIndex), 'practice'); });
     document.getElementById('startTraining').addEventListener('click', continueTrainingRoute);
-    document.getElementById('resetTraining').addEventListener('click', () => { trainingState.index = stageQuestionRange()[0]; trainingState.answeredCount = 0; trainingState.score = 0; document.getElementById('trainingScore').textContent = '已答 0 · 得分 0'; document.getElementById('dailyQuestionMetric').textContent = '0 / 3'; document.getElementById('evidenceMetric').textContent = '0%'; renderQuestion(stageQuestionRange()[0]); });
+     document.getElementById('resetTraining').addEventListener('click', () => { trainingState.index = stageQuestionRange()[0]; trainingState.answeredCount = 0; trainingState.score = 0; trainingState.flow = 'stage'; document.getElementById('trainingScore').textContent = '已答 0 · 得分 0'; document.getElementById('dailyQuestionMetric').textContent = '0 / 3'; document.getElementById('evidenceMetric').textContent = '0%'; renderQuestion(stageQuestionRange()[0], { flow: 'stage' }); });
     document.getElementById('simDataBtn').addEventListener('click', () => setDataMode('sim'));
     document.getElementById('liveDataBtn').addEventListener('click', () => setDataMode('live'));
     document.getElementById('liveRefreshBtn').addEventListener('click', () => loadLiveMarket());
@@ -6839,13 +7018,20 @@
       if (drawer) { drawer.hidden = !event.matches; drawer.open = event.matches && needsStageTrade(); }
     });
       document.querySelectorAll('[data-nav-target]').forEach(button => button.addEventListener('click', () => { const setup = document.getElementById('trainingSetup'); if (setup?.open) setup.close(); setWorkspace(button.dataset.navTarget); }));
-    document.querySelectorAll('[data-subworkspace]').forEach(button => button.addEventListener('click', () => setWorkspace(button.dataset.subworkspace)));
+    document.querySelectorAll('[data-subworkspace]').forEach(button => button.addEventListener('click', () => {
+      if (button.dataset.subworkspace === 'practice') {
+        startSupplementalQuestion(trainingState.index, 'practice');
+        return;
+      }
+      setWorkspace(button.dataset.subworkspace);
+    }));
     document.querySelectorAll('[data-home-action]').forEach(button => button.addEventListener('click', () => {
       const target = button.dataset.homeAction;
       if (target === 'replay') {
         if (state.replayMode && replayTraining.id && !replayTraining.saved) { setWorkspace('replay'); return; }
         setWorkspace('market'); openTrainingSetup(); return;
       }
+      if (target === 'practice') { startSupplementalQuestion(0, 'practice'); return; }
       setWorkspace(target);
       const anchors = { training: 'stageCards', practice: 'questionTitle', indicators: 'indicatorLearningPage', risk: 'risk', review: 'review' };
       const anchor = document.getElementById(anchors[target]);
@@ -6896,8 +7082,7 @@
        if (questionButton) {
          const index = Number(questionButton.dataset.indicatorQuestion);
          if (!Number.isInteger(index) || !questions[index]) return;
-         clearSpecialPracticePrompt(); clearIndicatorPractice(); setWorkspace('practice'); renderQuestion(index);
-         document.getElementById('questionTitle')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          clearIndicatorPractice(); startSupplementalQuestion(index, 'indicator');
          return;
        }
        const button = event.target.closest('[data-open-indicator-chart]'); if (button) applyIndicatorLesson(button.dataset.openIndicatorChart);
@@ -7143,7 +7328,7 @@
       document.body.classList.remove('foundation-onboarding');
       renderTrainingHome();
       setWorkspace('practice');
-      renderQuestion(nextStageQuestionIndex());
+       renderQuestion(nextStageQuestionIndex(), { flow: 'stage' });
       document.getElementById('questionTitle')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
     document.querySelectorAll('[data-lesson]').forEach(btn => btn.addEventListener('click', () => setLesson(Number(btn.dataset.lesson))));
@@ -7224,7 +7409,7 @@
       if (event.key === sessionDraftKey && event.newValue !== sessionLastSavedValue) showSessionSaveProblem('另一页面已更新训练草稿。请重新加载后继续，避免覆盖较新的记录。', true);
     });
     async function initializeTrainingSession() {
-      updateDataSourceUI(); setLesson(0, false); updateRisk(); updateRiskSurface(); renderQuestion(0); updateStats(); renderStagePanel(); renderTrainingHome(); renderReplayHistory(); renderReplaySurface(); setWorkspace('home');
+       updateDataSourceUI(); setLesson(0, false); updateRisk(); updateRiskSurface(); renderQuestion(0, { flow: 'stage' }); updateStats(); renderStagePanel(); renderTrainingHome(); renderReplayHistory(); renderReplaySurface(); setWorkspace('home');
       if (needsFoundationLesson() && stageState.foundationStarted) { document.body.classList.add('foundation-onboarding'); const help = document.querySelector('.market-help'); if (help) help.open = true; setLesson(stageState.foundationStep); }
       if (window.lucide) lucide.createIcons({ attrs: { width: 15, height: 15, 'stroke-width': 1.8 } });
       await loadHistorical();
