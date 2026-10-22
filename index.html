@@ -2141,6 +2141,7 @@
       <div class="setup-field"><strong>训练长度</strong><div class="setup-options" role="group" aria-label="训练长度"><button type="button" class="setup-option" data-setup-length="60" aria-pressed="true">60 根</button><button type="button" class="setup-option" data-setup-length="120" aria-pressed="false">120 根</button><button type="button" class="setup-option" data-setup-length="300" aria-pressed="false">300 根</button><label class="setup-custom-length"><span>自定义</span><input id="setupLengthCustom" type="number" min="10" max="475" step="1" inputmode="numeric" aria-label="自定义训练长度" placeholder="10–475"><span>根</span></label></div><div class="setup-info"><span id="setupLengthHint">当前可选 10–475 根；额外保留 24 根历史用于指标预热。短场次保留最后 2 根未来 K 线。</span></div></div>
       <div class="setup-field"><strong>训练模式</strong><div class="setup-options" role="group" aria-label="训练模式"><button type="button" class="setup-option" data-setup-mode="blind" aria-pressed="true">双盲判断</button><button type="button" class="setup-option" data-setup-mode="free" aria-pressed="false">逐根自由操盘</button></div><div class="setup-info"><span id="setupModeHint">未来 K 线隐藏；每次揭示前先记录判断。</span></div></div>
       <div class="setup-info"><span>训练规则</span><span>品种与日期匿名。所有交易均为模拟，不会连接交易所账户。</span></div>
+      <div class="setup-info" id="setupPreferenceHint" role="status" aria-live="polite"></div>
     </div>
     <p class="setup-pinned-sample" id="setupPinnedSample" role="status" hidden>已选择课程中的历史位置；本场固定为 60 根双盲，回放期间不显示日期或后续走势。</p>
     <div class="setup-data-status" id="setupDataStatus" role="status" aria-live="polite">历史行情加载中…</div>
@@ -2318,10 +2319,35 @@
     let activeIndicatorPractice = null;
     const TRAINING_LENGTH_MIN = 10;
     const TRAINING_WARMUP = 24;
-    const trainingSetupState = { market: 'swap', timeframe: '1H', length: 60, lengthMode: 'preset' };
+    const trainingSetupPreferenceKey = 'trend-lab-training-setup';
+    function loadTrainingSetupPreference() {
+      const defaults = { market: 'swap', timeframe: '1H', length: 60, lengthMode: 'preset', mode: 'blind' };
+      try {
+        const saved = JSON.parse(localStorage.getItem(trainingSetupPreferenceKey) || 'null');
+        if (!saved || typeof saved !== 'object') return { ...defaults, restored: false };
+        const length = Number(saved.length);
+        return {
+          market: saved.market === 'spot' ? 'spot' : 'swap',
+          timeframe: ['1m', '5m', '1H'].includes(saved.timeframe) ? saved.timeframe : defaults.timeframe,
+          length: Number.isInteger(length) ? length : defaults.length,
+          lengthMode: saved.lengthMode === 'custom' ? 'custom' : 'preset',
+          mode: saved.mode === 'free' ? 'free' : 'blind',
+          restored: true
+        };
+      } catch (_) { return { ...defaults, restored: false }; }
+    }
+    const trainingSetupState = loadTrainingSetupPreference();
+    let trainingSetupPreferenceRestored = Boolean(trainingSetupState.restored);
+    const savedTrainingMode = trainingSetupState.mode;
+    delete trainingSetupState.restored;
+    function saveTrainingSetupPreference() {
+      if (pendingReplaySampleIndex != null) return;
+      try { localStorage.setItem(trainingSetupPreferenceKey, JSON.stringify({ ...trainingSetupState, mode: trainingModeState.mode })); } catch (_) {}
+    }
     let pendingReplaySampleIndex = null;
+    let pinnedSetupPreferenceSnapshot = null;
     const replayTraining = { id: '', mode: 'blind', decisions: [], saved: false };
-    const trainingModeState = { mode: 'blind' };
+    const trainingModeState = { mode: savedTrainingMode === 'free' ? 'free' : 'blind' };
     const tradeSessionBackupKey = 'trend-lab-trades-session-backup';
     let tradeJournalRestoredFromSession = false;
     const tradeJournal = (() => {
@@ -6182,11 +6208,13 @@
         liveMarket.instrument = c.instrument;
         setActiveHistoricalMarket(replayMarket);
         historicalRows = historicalRowsFor(replayMarket, c.timeframe) || historicalRowsFor(replayMarket, '1H');
-        trainingSetupState.market = replayMarket; trainingSetupState.timeframe = historicalRowsFor(replayMarket, c.timeframe).length ? c.timeframe : '1H'; trainingSetupState.length = c.sessionLength;
-        trainingSetupState.lengthMode = [60, 120, 300].includes(c.sessionLength) ? 'preset' : 'custom';
-        const restoredLengthInput = document.getElementById('setupLengthCustom');
-        if (restoredLengthInput) restoredLengthInput.value = String(c.sessionLength);
-        setTrainingMode(draft.replay.mode);
+        if (c.replayMode) {
+          trainingSetupState.market = replayMarket; trainingSetupState.timeframe = historicalRowsFor(replayMarket, c.timeframe).length ? c.timeframe : '1H'; trainingSetupState.length = c.sessionLength;
+          trainingSetupState.lengthMode = [60, 120, 300].includes(c.sessionLength) ? 'preset' : 'custom';
+          const restoredLengthInput = document.getElementById('setupLengthCustom');
+          if (restoredLengthInput) restoredLengthInput.value = String(c.sessionLength);
+          setTrainingMode(draft.replay.mode);
+        }
         Object.entries(draft.fields).forEach(([id, value]) => { document.getElementById(id).value = value; });
         document.querySelectorAll('[name="decisionEvidence"]').forEach(input => { input.checked = draft.evidence.includes(input.value); });
         document.querySelectorAll('[data-side]').forEach(button => button.classList.toggle('active', button.dataset.side === sim.side));
@@ -6542,6 +6570,7 @@
       const input = document.getElementById('setupLengthCustom');
       if (input && Number.isInteger(value)) input.value = String(value);
       syncTrainingLengthButtons();
+      if (pendingReplaySampleIndex == null) saveTrainingSetupPreference();
       updateTrainingSetupAvailability();
     }
     function updateCustomTrainingLength() {
@@ -6552,6 +6581,7 @@
       trainingSetupState.lengthMode = 'custom';
       trainingSetupState.length = Number.isInteger(value) ? value : NaN;
       syncTrainingLengthButtons();
+      saveTrainingSetupPreference();
       updateTrainingSetupAvailability();
     }
     function updateTrainingSetupAvailability() {
@@ -6608,17 +6638,47 @@
           : canStart
             ? pinned ? '指定历史位置已就绪 · Binance BTCUSDT 现货 · 后续走势仍隐藏' : `${profileForHistoricalMarket(market).label} · ${trainingSetupState.timeframe} 已就绪 · ${rows.length} 根闭合 K 线 · 可随机抽取训练片段`
             : length == null ? `请输入 ${TRAINING_LENGTH_MIN}–${maxLength} 之间的整数训练长度。` : `${trainingSetupState.timeframe} 当前支持 ${TRAINING_LENGTH_MIN}–${maxLength} 根训练（需保留 ${TRAINING_WARMUP} 根预热空间），请调整长度。`;
+      const preferenceHint = document.getElementById('setupPreferenceHint');
+      if (preferenceHint) preferenceHint.textContent = trainingSetupPreferenceRestored && !pinned ? '已恢复上次训练设置；你仍可在开始前调整。' : '';
     }
-    function setTrainingMode(mode) { trainingModeState.mode = mode === 'free' ? 'free' : 'blind'; document.querySelectorAll('[data-setup-mode]').forEach(item => item.setAttribute('aria-pressed', String(item.dataset.setupMode === trainingModeState.mode))); document.getElementById('setupModeHint').textContent = trainingModeState.mode === 'free' ? '逐根推进 K 线；可直接使用模拟开多、开空和平仓。' : '未来 K 线隐藏；每次揭示前先记录判断。'; }
+    function syncTrainingModeControls() {
+      document.querySelectorAll('[data-setup-mode]').forEach(item => item.setAttribute('aria-pressed', String(item.dataset.setupMode === trainingModeState.mode)));
+      const hint = document.getElementById('setupModeHint');
+      if (hint) hint.textContent = trainingModeState.mode === 'free' ? '逐根推进 K 线；可直接使用模拟开多、开空和平仓。' : '未来 K 线隐藏；每次揭示前先记录判断。';
+    }
+    function setTrainingMode(mode) { trainingModeState.mode = mode === 'free' ? 'free' : 'blind'; saveTrainingSetupPreference(); syncTrainingModeControls(); }
+    function restorePinnedSetupPreference() {
+      if (!pinnedSetupPreferenceSnapshot) return;
+      const snapshot = pinnedSetupPreferenceSnapshot;
+      pinnedSetupPreferenceSnapshot = null;
+      Object.assign(trainingSetupState, snapshot.setup);
+      setTrainingMode(snapshot.mode);
+      const input = document.getElementById('setupLengthCustom');
+      if (input && Number.isInteger(trainingSetupState.length)) input.value = String(trainingSetupState.length);
+      document.querySelectorAll('[data-setup-market]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.setupMarket === trainingSetupState.market)));
+      document.querySelectorAll('[data-setup-time]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.setupTime === trainingSetupState.timeframe)));
+      syncTrainingLengthButtons();
+    }
     function openTrainingSetup({ mode, sampleIndex, timeframe, indicator } = {}) {
+      const dialog = document.getElementById('trainingSetup');
+      // A native dialog's close event is queued. If another setup opens before that event,
+      // restore the canceled course override synchronously rather than letting the stale
+      // close event erase the new dialog's selection.
+      if (!dialog.open && pendingReplaySampleIndex != null) {
+        pendingReplaySampleIndex = null;
+        restorePinnedSetupPreference();
+        document.getElementById('setupPinnedSample').hidden = true;
+      }
       if (sampleIndex != null && Number.isInteger(Number(sampleIndex))) {
+        pinnedSetupPreferenceSnapshot = { setup: { market: trainingSetupState.market, timeframe: trainingSetupState.timeframe, length: trainingSetupState.length, lengthMode: trainingSetupState.lengthMode }, mode: trainingModeState.mode };
         pendingReplaySampleIndex = Number(sampleIndex); trainingSetupState.market = 'spot'; trainingSetupState.timeframe = '1H'; trainingSetupState.length = 60; trainingSetupState.lengthMode = 'preset';
         document.getElementById('setupLengthCustom').value = '60'; setTrainingMode('blind');
       } else {
         pendingReplaySampleIndex = null;
         if (mode) setTrainingMode(mode);
-        const requested = timeframe || state.timeframe;
-        trainingSetupState.market = state.replayMode ? state.replayMarket : 'swap';
+        const requested = timeframe || (state.replayMode ? state.timeframe : trainingSetupState.timeframe);
+        if (state.replayMode) trainingSetupState.market = state.replayMarket;
+        else if (!trainingSetupPreferenceRestored) trainingSetupState.market = 'swap';
         trainingSetupState.timeframe = Object.hasOwn(historicalDatasetConfigs[trainingSetupState.market], requested) ? requested : '1H';
       }
       const pinnedNotice = document.getElementById('setupPinnedSample');
@@ -6629,14 +6689,23 @@
       }
       document.querySelectorAll('[data-setup-time]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.setupTime === trainingSetupState.timeframe)));
       if (Number.isInteger(trainingSetupState.length)) document.getElementById('setupLengthCustom').value = String(trainingSetupState.length);
+      syncTrainingModeControls();
+      saveTrainingSetupPreference();
       syncTrainingLengthButtons();
       updateTrainingSetupAvailability();
-      const dialog = document.getElementById('trainingSetup');
       if (!dialog.open) dialog.showModal();
     }
-    document.getElementById('trainingSetup').addEventListener('close', () => { if (pendingReplaySampleIndex != null) { pendingReplaySampleIndex = null; document.getElementById('setupPinnedSample').hidden = true; updateTrainingSetupAvailability(); } });
+    document.getElementById('trainingSetup').addEventListener('close', () => {
+      const dialog = document.getElementById('trainingSetup');
+      if (dialog.open || pendingReplaySampleIndex == null) return;
+      pendingReplaySampleIndex = null;
+      restorePinnedSetupPreference();
+      document.getElementById('setupPinnedSample').hidden = true;
+      updateTrainingSetupAvailability();
+    });
     function beginHistoricalTraining() {
       const dialog = document.getElementById('trainingSetup'), pinnedIndex = pendingReplaySampleIndex;
+      const selectedTrainingMode = trainingModeState.mode;
       const market = pinnedIndex == null ? (trainingSetupState.market === 'spot' ? 'spot' : 'swap') : 'spot';
       const rows = historicalRowsFor(market, trainingSetupState.timeframe);
       const length = trainingLengthValue(), maxLength = Math.max(0, rows.length - TRAINING_WARMUP);
@@ -6645,8 +6714,9 @@
       state.timeframe = trainingSetupState.timeframe; state.sessionLength = length; historicalRows = rows; state.replayMode = true; setActiveHistoricalMarket(market);
       const maxStart = Math.max(0, historicalRows.length - state.sessionLength - TRAINING_WARMUP);
       state.sessionStart = pinnedIndex == null ? Math.floor(Math.random() * (maxStart + 1)) : Math.max(0, Math.min(maxStart, pinnedIndex - 23));
+      if (pinnedIndex != null) restorePinnedSetupPreference();
       pendingReplaySampleIndex = null; document.getElementById('setupPinnedSample').hidden = true;
-      state.revealCount = initialReplayReveal(state.sessionLength); state.replayPaused = false; replayTraining.id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`; replayTraining.mode = trainingModeState.mode;
+      state.revealCount = initialReplayReveal(state.sessionLength); state.replayPaused = false; replayTraining.id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`; replayTraining.mode = selectedTrainingMode;
       const source = sourceProfileForMode('replay', state.timeframe);
       Object.assign(replayTraining, { market, sourceId: source.id, sourceLabel: source.label, venue: source.venue, marketType: source.marketType, symbol: source.symbol, sourceNote: source.note, intervalMs: source.intervalMs, dataFirstOpenTime: source.firstOpenTime, dataLastClosedTime: source.lastClosedTime });
       sim.balance = 10000; sim.realized = 0; sim.position = null; sim.log = []; state.dataMode = 'sim'; stopLiveMarket(); replayTraining.decisions = []; replayTraining.saved = false; delete replayTraining.completedAt;
@@ -6681,9 +6751,10 @@
       if (button.disabled || pendingReplaySampleIndex != null) return;
       trainingSetupState.market = button.dataset.setupMarket === 'spot' ? 'spot' : 'swap';
       document.querySelectorAll('[data-setup-market]').forEach(item => item.setAttribute('aria-pressed', String(item === button)));
+      saveTrainingSetupPreference();
       updateTrainingSetupAvailability();
     }));
-    document.querySelectorAll('[data-setup-time]').forEach(button => button.addEventListener('click', () => { if (button.disabled) return; trainingSetupState.timeframe = button.dataset.setupTime; document.querySelectorAll('[data-setup-time]').forEach(item => item.setAttribute('aria-pressed', String(item === button))); updateTrainingSetupAvailability(); }));
+    document.querySelectorAll('[data-setup-time]').forEach(button => button.addEventListener('click', () => { if (button.disabled) return; trainingSetupState.timeframe = button.dataset.setupTime; document.querySelectorAll('[data-setup-time]').forEach(item => item.setAttribute('aria-pressed', String(item === button))); saveTrainingSetupPreference(); updateTrainingSetupAvailability(); }));
     document.querySelectorAll('[data-setup-length]').forEach(button => button.addEventListener('click', () => { if (button.disabled) return; setTrainingLength(Number(button.dataset.setupLength), 'preset'); }));
     document.getElementById('setupLengthCustom').addEventListener('input', updateCustomTrainingLength);
     document.getElementById('setupLengthCustom').addEventListener('change', updateCustomTrainingLength);
