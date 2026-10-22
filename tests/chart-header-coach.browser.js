@@ -13,6 +13,7 @@ async (page) => {
         });
         await route.fulfill({ json: rows });
       });
+      await context.route('**/unpkg.com/**', route => route.abort());
       const target = await context.newPage();
       target.on('pageerror', error => errors.push(error.message));
       await target.goto('http://127.0.0.1:4188/', { waitUntil: 'domcontentloaded' });
@@ -25,11 +26,16 @@ async (page) => {
           return { x: r.x, y: r.y, right: r.right, bottom: r.bottom, width: r.width, height: r.height, display: getComputedStyle(node).display };
         };
         const symbol = rect('#chartInstrument'), coach = rect('#chartCoach'), chart = rect('#chart'), stage = rect('#chartStage');
+        const iconNodes = [...document.querySelectorAll('[data-lucide]')];
+        const renderedIcons = iconNodes.filter(node => node.tagName.toLowerCase() === 'svg');
         return {
           viewport: [innerWidth, innerHeight],
           terminal: document.body.classList.contains('market-terminal'),
           symbol, price: rect('#lastPrice'), period: rect('.chart-period-control'), indicators: rect('#chartIndicatorsOpen'), coach,
           chart, stage, instrumentHintDisplay: getComputedStyle(document.querySelector('#instrumentHint')).display,
+          iconCount: iconNodes.length,
+          renderedIconCount: renderedIcons.length,
+          chartToolIconCount: [...document.querySelectorAll('.chart-tools [data-lucide]')].filter(node => node.tagName.toLowerCase() === 'svg').length,
           meta: document.querySelector('#dataSourceMeta').textContent,
           overflow: document.documentElement.scrollWidth - innerWidth
         };
@@ -37,6 +43,8 @@ async (page) => {
       const overlap = (a, b) => a.x < b.right && a.right > b.x && a.y < b.bottom && a.bottom > b.y;
       if (!layout.terminal) failures.push(`${name}: chart workspace did not use terminal layout`);
       if (layout.instrumentHintDisplay !== 'none') failures.push(`${name}: long source hint still occupies the compact symbol header`);
+      if (layout.iconCount < 12 || layout.renderedIconCount !== layout.iconCount) failures.push(`${name}: local icon asset did not render all declared icons (${layout.renderedIconCount}/${layout.iconCount})`);
+      if (layout.chartToolIconCount < 6) failures.push(`${name}: chart drawing toolbar icons are missing (${layout.chartToolIconCount})`);
       if (overlap(layout.symbol, layout.coach)) failures.push(`${name}: symbol/header text overlaps the coaching strip`);
       if (viewport.width <= 390 && layout.coach.height > 28) failures.push(`${name}: coaching strip wraps into an oversized block (${layout.coach.height}px)`);
       if (layout.overflow > 0) failures.push(`${name}: page has ${layout.overflow}px horizontal overflow`);

@@ -11,6 +11,7 @@
 | 指标设置 | 指标入口打开独立弹层，常用指标和参数可开关；多副图按 pane 展示，设置不挤压主图。 | “清爽观察 / 趋势对照 / 动能观察”三套轻量预设；SMA、EMA、RSI、MACD、KDJ、BOLL、SAR 和成交量均线可分别设置，偏好本地保存。 | **部分通过**：`tests/chart-indicator-presets.browser.js`、`tests/chart-pane-sizing.browser.js`；参考目录的全部项目和真实数据型指标不承诺覆盖。 |
 | 绘图编辑 | 左侧工具栏提供常用线型，进阶工具分组展开；对象可选中、移动、隐藏、锁定、删除。 | 常用工具留在首层，22 类进阶对象收进菜单；对象管理器支持显隐/锁定/解锁/删除，磁吸可选，周期或来源切换只清理未完成草稿。 | **本地入口与对象管理通过，语义/真机待验**：`tests/chart-tool-matrix.browser.js`、`tests/chart-drawing-object-controls.browser.js`、`tests/chart-professional-drawing-edit.browser.js`。 |
 | 全屏与副图 | 全屏扩大绘图区，时间轴、工具栏和副图仍可操作；面板可按分隔线调整。 | `chart-wrap` 支持全屏、Escape 退出、主图/成交量/RSI/MACD/KDJ 单 pane 临时放大和分隔线拖动；焦点状态不写入偏好。专业图默认主/量约 2.005:1，备用图默认约 1.94:1，和 Binance 参考主/量约 1.94:1 对齐；两条路径均按各自默认比例重置。 | **本地通过，短屏真机待验**：`tests/chart-fullscreen-tool-matrix.browser.js`、`tests/chart-pane-focus.browser.js`、`tests/chart-pane-sizing.browser.js`、`tests/chart-responsive.browser.js`。 |
+| 工具图标与离线可识别性 | 参考站/币安的周期、指标、绘图和全屏入口始终有图标或文字，不因 CDN 暂时不可用变成空白控件。 | Lucide 资源改为仓库内 `vendor/lucide.min.js`，59 个声明图标和许可证随版本提交；拦截 `unpkg.com` 后，图表绘图工具仍显示 SVG 图标。 | **本地通过，参考像素/真机待验**：`tests/chart-assets.cjs`、`tests/chart-header-coach.browser.js`；54/54 图标渲染，五种视口无横向溢出。 |
 | 双盲训练 | KTrainer 从周期/长度设置进入隐藏未来的逐根训练，完成后进入成绩、复盘和错题/专项再练。 | 首页主线固定为“选择周期与长度 → 逐根推演并记录 → 复盘弱项再训练”；设置、阶段课程、题库专项、指标课程和复盘集中在学习总览，独立练习不污染阶段门槛。 | **本地闭环通过，参考课程深度待补**：`tests/learning-loop.browser.js`、`tests/training-route.browser.js`、`tests/learning-supplemental.browser.js`。 |
 
 ## 明确不照搬的部分
