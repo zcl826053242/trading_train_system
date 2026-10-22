@@ -1,7 +1,7 @@
 // 真实 UI 验证止损/止盈净值预览与短屏交易抽屉；本地服务端口 4188。
 async (page) => {
   const failures = [], results = [];
-  for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 667 }]) {
+  for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 667 }, { width: 320, height: 667 }]) {
     const context = await page.context().browser().newContext({ viewport });
     const errors = [];
     try {
@@ -83,7 +83,7 @@ async (page) => {
           const inside = rect => rect.top >= box.top && rect.bottom <= box.bottom;
           return { open: drawer.open, targetReachable: inside(input), actionsReachable: inside(open) && inside(close), openDisabled: document.getElementById('openPosition').disabled };
         });
-        if (!drawerState.open || !drawerState.targetReachable || !drawerState.actionsReachable || drawerState.openDisabled) failures.push(`390/mobile drawer controls not reachable: ${JSON.stringify(drawerState)}`);
+        if (!drawerState.open || !drawerState.targetReachable || !drawerState.actionsReachable || drawerState.openDisabled) failures.push(`${viewport.width}/mobile drawer controls not reachable: ${JSON.stringify(drawerState)}`);
       }
       await target.locator('#openPosition').click();
       await target.waitForFunction(() => Boolean(sim.position));
