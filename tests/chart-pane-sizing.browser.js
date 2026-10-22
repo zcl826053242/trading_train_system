@@ -16,7 +16,13 @@ async (page) => {
       await target.waitForFunction(() => historicalReady && sessionPersistenceReady);
       await target.locator('[data-nav-target="market"]').click();
       await target.evaluate(() => { state.dataMode = 'sim'; state.liveRows = []; state.liveLoading = false; state.liveError = ''; renderChart(); });
-      const snapshot = async () => { await target.waitForTimeout(100); return target.evaluate(() => chartPaneSnapshot()); };
+      const snapshot = async () => { await target.waitForTimeout(100); return target.evaluate(() => {
+        const snapshot = chartPaneSnapshot();
+        if (!snapshot?.fallback) return snapshot;
+        const chart = document.getElementById('chart');
+        const layout = fallbackChartLayout(chart.clientWidth, chart.clientHeight, snapshot.names.length - 2);
+        return { ...snapshot, plotRatio: layout.plot.h / layout.plot.volH };
+      }); };
       const invariant = () => target.evaluate(() => JSON.stringify({ reveal: state.revealCount, timeframe: state.timeframe, session: state.sessionStart, balance: sim.balance, position: sim.position, decisions: replayTraining.decisions, drawings: proChart.drawings.map(item => item.edit), zoom: state.chartZoom, offset: state.chartOffset, range: proChart.chart?.timeScale().getVisibleLogicalRange() }));
       await target.locator('#chartZoomIn').click();
       const initial = await snapshot();
@@ -118,7 +124,8 @@ async (page) => {
       check(await invariant() === replayBefore, 'pane resize changed active replay/position');
       await handle.dblclick();
       const reset = await snapshot();
-      check(Math.abs(reset.heights[0] / reset.heights[1] - 2) < .04, 'double click failed to reset default 2:1 proportions');
+      const defaultMainVolumeRatio = reset.fallback ? 1.94 : 2;
+      check(Math.abs((reset.fallback ? reset.plotRatio : reset.heights[0] / reset.heights[1]) - defaultMainVolumeRatio) < .04, `double click failed to reset default ${defaultMainVolumeRatio}:1 proportions`);
       check(await target.evaluate(() => Object.keys(chartPaneSizing.layouts).length === 0), 'reset retained stale pane layouts');
       const layout = await target.evaluate(() => ({ overflow: document.documentElement.scrollWidth - innerWidth, handles: [...document.querySelectorAll('[data-pane-boundary]')].map(node => { const r = node.getBoundingClientRect(), c = document.getElementById('chart').getBoundingClientRect(); return { top: r.top - c.top, bottom: r.bottom - c.top, height: c.height }; }) }));
       check(layout.overflow <= 0 && layout.handles.every(h => h.top >= 0 && h.bottom <= h.height), 'separator escaped chart or caused overflow');
@@ -131,7 +138,8 @@ async (page) => {
       await target.locator('#resetChartPaneLayout').click();
       await target.locator('summary[aria-label="图表设置"]').click();
       const uiReset = await snapshot();
-      check(Math.abs(uiReset.heights[0] / uiReset.heights[1] - 2) < .04, 'settings reset failed');
+      const uiDefaultMainVolumeRatio = uiReset.fallback ? 1.94 : 2;
+      check(Math.abs((uiReset.fallback ? uiReset.plotRatio : uiReset.heights[0] / uiReset.heights[1]) - uiDefaultMainVolumeRatio) < .04, 'settings reset failed');
       check(await invariant() === resetInvariant, 'settings reset changed account, replay, range or drawings');
       check((await target.locator('#chartPaneResizeStatus').textContent()).includes('重置仅本次有效'), 'failed reset falsely reported persistence');
       await target.evaluate(() => { Storage.prototype.setItem = window.originalPaneSetItem; delete window.originalPaneSetItem; });

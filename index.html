@@ -350,6 +350,7 @@
     .sim-metric small { display: block; color: var(--muted); font-size: 9px; }
     .sim-metric b { display: block; margin-top: 2px; font-size: 11px; font-weight: 600; }
     .sim-log { max-height: 72px; overflow: auto; margin-top: 8px; color: var(--muted); font-size: 9px; line-height: 1.5; }
+    .trade-storage-warning { margin: 6px 0 0; color: #d97706; font-size: 11px; line-height: 1.4; }
     .review-card { margin-top: 18px; padding: 19px 20px; }
     .review-card-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 13px; }
     .review-card-head h3 { margin: 0; font-size: 15px; font-weight: 600; }
@@ -1992,7 +1993,7 @@
             <div class="sim-metric"><small>已实现盈亏</small><b id="simRealized">0.00</b></div>
             <div class="sim-metric"><small>手续费 / 滑点</small><b>0.04% / 0.02%</b></div>
           </div>
-          <div class="sim-log" id="simLog" aria-live="polite">训练记录会显示在这里。</div></details>
+          <div class="sim-log" id="simLog" aria-live="polite">训练记录会显示在这里。</div><p class="trade-storage-warning" id="tradeStorageWarning" role="status" aria-live="polite" hidden>交易已保留在当前页面，但本地保存失败。刷新前请到训练复盘导出交易 CSV。</p></details>
         </div></div>
         <h3 id="replayStateTitle">回放状态</h3>
         <div class="replay-kpis"><div class="replay-kpi"><small>已揭示</small><strong id="replayBarsKpi">24 / 60</strong></div><div class="replay-kpi"><small>模拟净值</small><strong id="replayEquityKpi">10,000</strong></div><div class="replay-kpi"><small>当前持仓</small><strong id="replayPositionKpi">空仓</strong></div><div class="replay-kpi"><small>已实现</small><strong id="replayRealizedKpi">0.00</strong></div></div>
@@ -4587,7 +4588,9 @@
       const minimumPane = paneCount ? Math.max(0, Math.min(72, (available - 198) / paneCount)) : 0;
       const paneStep = paneCount ? Math.max(unit * 2.1, minimumPane) : 0;
       const paneStart = available - paneCount * paneStep;
-      const heights = focusIndex >= 0 ? Array.from({ length: paneCount + 2 }, (_, i) => i === focusIndex ? available : 0) : customHeights || [paneStart * 2 / 3, paneStart / 3, ...Array(paneCount).fill(paneStep)];
+      const defaultVolumeHeight = paneStart >= 250 ? (paneStart + 29.72) / 2.94 : paneStart / 3;
+      const defaultHeights = [paneStart - defaultVolumeHeight, defaultVolumeHeight, ...Array(paneCount).fill(paneStep)];
+      const heights = focusIndex >= 0 ? Array.from({ length: paneCount + 2 }, (_, i) => i === focusIndex ? available : 0) : customHeights || defaultHeights;
       const [mainHeight, volumeHeight] = heights;
       return {
         plot: { x: 8, y: 36, w: Math.max(40, width - axisWidth - 8), h: Math.max(1, mainHeight - 44),
@@ -4699,10 +4702,19 @@
         const yy = plot.volY + fraction * plot.volH;
         volumeGroup.append(el('line', { x1: plot.x, x2: plot.x + plot.w, y1: yy, y2: yy, stroke: colors.grid }), el('text', { x: plot.x + plot.w + 7, y: yy + 4, fill: colors.muted }, (maxVol * (1 - fraction)).toFixed(0)));
       }
-      for (let n = 0; n <= 4; n++) {
-        const yy = plot.y + plot.h * n / 4; const val = hi - (hi - lo) * n / 4;
+      const priceTickIntervals = Math.max(2, Math.floor(plot.h / 34));
+      for (let n = 0; n <= priceTickIntervals; n++) {
+        const fraction = n / priceTickIntervals;
+        const yy = plot.y + plot.h * fraction, val = hi - (hi - lo) * fraction;
         mainGroup.appendChild(el('line', { x1: plot.x, x2: plot.x + plot.w, y1: yy, y2: yy, stroke: colors.grid, 'stroke-width': 1 }));
-        mainGroup.appendChild(el('text', { x: plot.x + plot.w + 7, y: yy + 4, fill: colors.muted }, formatChartPrice(val)));
+        mainGroup.appendChild(el('text', { x: plot.x + plot.w + 7, y: yy + 4, fill: colors.muted, 'data-price-axis-tick': '', 'data-axis-value': val }, formatChartPrice(val)));
+      }
+      if (plot.volH >= 60 && chartPaneSizing.focused !== 'volume') {
+        for (const fraction of [.66, .33]) {
+          const yy = plot.volY + plot.volH * (1 - fraction);
+          volumeGroup.appendChild(el('line', { x1: plot.x, x2: plot.x + plot.w, y1: yy, y2: yy, stroke: colors.grid }));
+          svg.appendChild(el('text', { x: plot.x + plot.w + 7, y: yy, 'dominant-baseline': 'middle', fill: colors.muted, 'data-volume-axis-tick': '', 'data-axis-value': maxVol * fraction }, formatVolume(maxVol * fraction)));
+        }
       }
       for (let n = 0; n < 5; n++) {
         const idx = Math.floor((data.length - 1) * n / 4), xx = x(idx);
@@ -6207,11 +6219,22 @@
       sim.balance += netAfterEntryFee; sim.realized += net;
       const tradeSource = state.replayMode ? sourceProfileForSession(replayTraining) : sourceProfileForMode(state.dataMode === 'live' ? 'live' : 'sim');
       sim.trades.push({ side: p.side > 0 ? 'long' : 'short', entry: p.entry, exit, qty: p.qty, margin: p.margin, pnl: net, r: p.margin ? net / p.margin : 0, reason, stop: reason.includes('止损'), sessionId: replayTraining.id, timeframe: state.timeframe, sourceId: tradeSource.id, sourceLabel: tradeSource.label, venue: tradeSource.venue, marketType: tradeSource.marketType, symbol: tradeSource.symbol, createdAt: new Date().toISOString() });
-      try { localStorage.setItem('trend-lab-trades', JSON.stringify(sim.trades.slice(-500))); } catch (_) {}
+      persistTradeRecords();
       markStageActivity('trades');
       addSimLog(`${p.side > 0 ? '多单' : '空单'} ${reason} ${net >= 0 ? '+' : ''}${net.toFixed(2)} USDT`);
       updateStats();
       sim.position = null; updateSimDisplay(); renderChart();
+    }
+    function persistTradeRecords() {
+      const warning = document.getElementById('tradeStorageWarning');
+      try {
+        localStorage.setItem('trend-lab-trades', JSON.stringify(sim.trades.slice(-500)));
+        if (warning) warning.hidden = true;
+        return true;
+      } catch (_) {
+        if (warning) warning.hidden = false;
+        return false;
+      }
     }
     function allTradeRecords() { return sim.trades.concat(sim.importedTrades); }
     function updateStats() {

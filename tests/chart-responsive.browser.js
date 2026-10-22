@@ -31,6 +31,11 @@ async (page) => {
             const paneHeights = proChart.chart?.panes().map(pane => pane.getHeight());
             const svgLayout = svg && fallbackChartLayout(node.clientWidth, node.clientHeight,
               ['rsi', 'macd', 'kdj'].filter(name => state.indicator[name]).length);
+            const mainHeight = svgLayout ? svgLayout.plot.h : paneHeights?.[0];
+            const volumeHeight = svgLayout ? svgLayout.plot.volH : paneHeights?.[1];
+            const priceAxisTickYs = svg ? [...svg.querySelectorAll('[data-price-axis-tick]')].map(tick => {
+              const r = tick.getBoundingClientRect(); return r.top - chart.top + r.height / 2;
+            }) : [];
             const legends = [...document.querySelectorAll('[data-pane-legend]')].filter(node => !node.hidden).map(node => {
               const r = node.getBoundingClientRect();
               return { name: node.dataset.paneLegend, top: r.top - chart.top, bottom: r.bottom - chart.top, left: r.left - chart.left, right: r.right - chart.left };
@@ -46,6 +51,8 @@ async (page) => {
             return {
               mode: svg ? 'fallback' : 'professional', width: chart.width, height: chart.height,
               overflow: document.documentElement.scrollWidth - innerWidth, legends, paneHeights, paneCurves,
+              mainVolumeRatio: mainHeight / volumeHeight,
+              priceAxisTickYs, volumeAxisTickCount: svg?.querySelectorAll('[data-volume-axis-tick]').length || 0,
               curveHeight: svgLayout ? svgLayout.paneStep - 37 : null,
               fallbackMainHeight: svgLayout?.plot.h, fallbackVolumeHeight: svgLayout?.plot.volH,
               paneAxes: svg ? [...svg.querySelectorAll('[data-pane-axis]')].map(node => {
@@ -72,6 +79,22 @@ async (page) => {
             checks.push([metrics.height >= 490, 'tablet controls compressed chart below 490px']);
             checks.push([fallback ? metrics.curveHeight >= 20 : metrics.paneHeights.slice(2).every(h => h >= 56), 'tablet oscillator drawing height too small']);
           }
+          if (width === 1440 && height === 900 && paneCount === 0) {
+            // Binance reference at the same viewport measures about 1.94:1 (main:volume).
+            checks.push([metrics.mainVolumeRatio >= 1.85 && metrics.mainVolumeRatio <= 2.10,
+              `desktop main/volume ratio ${metrics.mainVolumeRatio.toFixed(3)} moved away from the Binance reference`]);
+            if (fallback) {
+              const gaps = metrics.priceAxisTickYs.slice(1).map((value, i) => value - metrics.priceAxisTickYs[i]);
+              checks.push([metrics.priceAxisTickYs.length >= 8 && metrics.priceAxisTickYs.length <= 12 && gaps.every(gap => gap >= 28),
+                `fallback price-axis tick density is not readable or Binance-like: ${metrics.priceAxisTickYs.length} ticks, gaps ${gaps.join(',')}`]);
+              checks.push([metrics.volumeAxisTickCount === 2, 'fallback volume axis is missing its two compact scale labels']);
+            }
+          }
+          if (fallback && metrics.fallbackMainHeight >= 70) {
+            const gaps = metrics.priceAxisTickYs.slice(1).map((value, i) => value - metrics.priceAxisTickYs[i]);
+            checks.push([metrics.priceAxisTickYs.length >= 3 && gaps.every(gap => gap >= 16), 'fallback price-axis labels overlap in a short pane']);
+          }
+          if (fallback && metrics.fallbackVolumeHeight >= 60) checks.push([metrics.volumeAxisTickCount === 2, 'fallback volume axis ticks missing despite available height']);
           if (paneCount && fallback) {
             checks.push([metrics.curveHeight >= 35, 'oscillator curves compressed below 35px']);
             checks.push([metrics.fallbackMainHeight >= 88 && metrics.fallbackVolumeHeight >= 28, 'oscillators squeezed main/volume too far']);
