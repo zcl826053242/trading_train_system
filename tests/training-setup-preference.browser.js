@@ -47,8 +47,22 @@ async (page) => {
       await target.locator('#cancelTrainingSetup').click();
       const afterPinnedCancel = await target.evaluate(() => JSON.parse(localStorage.getItem('trend-lab-training-setup') || 'null'));
       if (afterPinnedCancel?.market !== 'spot' || afterPinnedCancel?.timeframe !== '5m' || afterPinnedCancel?.length !== 120 || afterPinnedCancel?.mode !== 'free') failures.push(`${viewport.width}: pinned course dialog overwrote learner preference: ${JSON.stringify(afterPinnedCancel)}`);
+      await target.evaluate(() => openTrainingSetup({ sampleIndex: 100, indicator: 'rsi' }));
+      await target.waitForFunction(() => !document.querySelector('#confirmTrainingStart').disabled);
+      await target.locator('#confirmTrainingStart').click();
+      await target.waitForFunction(() => state.replayMode && Boolean(replayTraining.id));
+      const startedPinned = await target.evaluate(() => ({
+        market: state.replayMarket,
+        timeframe: state.timeframe,
+        length: state.sessionLength,
+        mode: replayTraining.mode,
+        label: document.querySelector('#replaySessionLabel').textContent,
+        stored: JSON.parse(localStorage.getItem('trend-lab-training-setup') || 'null')
+      }));
+      if (startedPinned.market !== 'spot' || startedPinned.timeframe !== '1H' || startedPinned.length !== 60 || startedPinned.mode !== 'blind' || !startedPinned.label.includes('双盲判断')) failures.push(`${viewport.width}: pinned course did not start as a 60-bar blind replay: ${JSON.stringify(startedPinned)}`);
+      if (startedPinned.stored?.market !== 'spot' || startedPinned.stored?.timeframe !== '5m' || startedPinned.stored?.length !== 120 || startedPinned.stored?.mode !== 'free') failures.push(`${viewport.width}: starting pinned course overwrote learner preference: ${JSON.stringify(startedPinned.stored)}`);
       if (errors.length) failures.push(`${viewport.width}: page errors: ${errors.join('; ')}`);
-      results.push({ viewport: `${viewport.width}x${viewport.height}`, selected, restored, pinned, afterPinnedCancel, errors });
+      results.push({ viewport: `${viewport.width}x${viewport.height}`, selected, restored, pinned, afterPinnedCancel, startedPinned, errors });
     } catch (error) {
       failures.push(`${viewport.width}: ${error.message}`);
     } finally {
