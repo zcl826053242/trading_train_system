@@ -136,6 +136,13 @@
     .chart-indicators-close { display: grid; width: 28px; height: 28px; place-items: center; border: 0; border-radius: 3px; background: transparent; color: #848e9c; }
     .chart-indicators-close:hover, .chart-indicators-close:focus-visible { background: #2b3139; color: #eaecef; outline: none; }
     .chart-indicator-groups { display: grid; gap: 8px; padding: 12px; }
+    .chart-indicator-presets { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; padding: 12px 12px 0; }
+    .chart-indicator-presets button { min-height: 42px; padding: 6px 8px; border: 1px solid #343a40; border-radius: 4px; background: #202328; color: #b7bdc6; font: inherit; font-size: 11px; cursor: pointer; }
+    .chart-indicator-presets button span { display: block; margin-top: 3px; color: #848e9c; font-size: 9px; }
+    .chart-indicator-presets button:hover, .chart-indicator-presets button:focus-visible { border-color: #665211; color: #f0b90b; outline: none; }
+    .chart-indicator-presets button[aria-pressed="true"] { border-color: #8a7117; background: #302b1b; color: #f0b90b; }
+    .chart-indicator-presets button[aria-pressed="true"] span { color: #c7b575; }
+    .chart-indicator-help { margin: 7px 12px 0; color: #848e9c; font-size: 10px; line-height: 1.5; }
     .chart-indicator-group { min-width: 0; margin: 0; padding: 10px; border: 1px solid #2b3139; border-radius: 3px; }
     .chart-indicator-group legend { padding: 0 5px; color: #848e9c; font-size: 10px; }
     .chart-indicator-options { display: flex; flex-wrap: wrap; align-items: center; gap: 7px 12px; }
@@ -770,6 +777,23 @@
     .home-stat-card small { margin-top: 3px; color: var(--muted); font-size: 10px; line-height: 1.4; }
     .home-grid { display: grid; grid-template-columns: 1.15fr .85fr; gap: 14px; }
     .home-grid-primary { grid-template-columns: minmax(0, 1fr); }
+    .home-stack { padding: 18px; border: 1px solid #dce4ef; border-radius: 16px; background: linear-gradient(135deg,#f8fbff,#f4f8fb); }
+    .home-section-kicker { display: block; color: var(--blue); font-size: 9px; font-weight: 700; letter-spacing: .12em; }
+    .home-stack h3, .home-topics h3 { margin: 4px 0 0; font-size: 18px; letter-spacing: -.02em; }
+    .home-stack > p, .home-topics > p { margin: 5px 0 0; color: var(--muted); font-size: 11px; line-height: 1.6; }
+    .home-stack-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; margin-top: 14px; }
+    .home-stack-card { display: flex; min-width: 0; min-height: 132px; flex-direction: column; align-items: flex-start; padding: 13px; border: 1px solid #dce4ef; border-radius: 12px; background: #fff; }
+    .home-stack-card .home-stack-index { color: var(--blue); font-size: 10px; font-weight: 700; }
+    .home-stack-card h4 { margin: 8px 0 4px; font-size: 12px; }
+    .home-stack-card p { flex: 1; margin: 0; color: var(--muted); font-size: 10px; line-height: 1.55; }
+    .home-stack-card button, .home-topic-card button { min-height: 28px; margin-top: 10px; padding: 4px 8px; border: 1px solid #cfd9e8; border-radius: 5px; background: #f8fbff; color: var(--blue); font-size: 10px; cursor: pointer; }
+    .home-stack-card button:hover, .home-stack-card button:focus-visible, .home-topic-card button:hover, .home-topic-card button:focus-visible { border-color: var(--blue); background: var(--blue-soft); outline: none; }
+    .home-topics { padding: 18px; border: 1px solid #e4e9f1; border-radius: 16px; background: var(--surface); }
+    .home-topic-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; margin-top: 14px; }
+    .home-topic-card { display: flex; min-width: 0; flex-direction: column; padding: 12px; border: 1px solid var(--line); border-radius: 11px; background: #fbfcfe; }
+    .home-topic-card h4 { margin: 0; font-size: 11px; }
+    .home-topic-card p { min-height: 42px; margin: 5px 0 0; color: var(--muted); font-size: 10px; line-height: 1.55; }
+    .home-topic-card button { align-self: flex-start; margin-top: 8px; }
     .home-loop-card { border-color: #d8dff0; background: linear-gradient(135deg,#fbfcff,#f6f8ff); }
     .home-loop-card .home-card-head p { max-width: 720px; margin: 5px 0 0; color: var(--muted); font-size: 10px; line-height: 1.5; }
     .home-loop-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 14px 0 0; padding: 0; list-style: none; }
@@ -833,7 +857,7 @@
     .home-disclaimer { display: flex; align-items: flex-start; gap: 7px; padding: 9px 11px; border: 1px solid #e6eaf1; border-radius: 11px; background: rgba(255,255,255,.65); color: var(--muted); font-size: 10px; }
     .home-disclaimer i { width: 14px; height: 14px; flex: 0 0 auto; color: var(--blue); }
     .training-home-active .top-cta { display: none; }
-    @media (max-width: 1100px) { .workspace-grid { grid-template-columns: 1fr 1fr; } .workspace-grid .surface-card:last-child { grid-column: 1 / -1; } .replay-layout { grid-template-columns: 1fr; } }
+    @media (max-width: 1100px) { .workspace-grid { grid-template-columns: 1fr 1fr; } .workspace-grid .surface-card:last-child { grid-column: 1 / -1; } .replay-layout { grid-template-columns: 1fr; } .home-stack-grid, .home-topic-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
     @media (max-width: 980px) {
       .layout { grid-template-columns: 1fr; }
       .side { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -886,6 +910,7 @@
       .workspace-grid, .risk-layout, .review-layout { grid-template-columns: 1fr; }
       .workspace-grid .surface-card:last-child { grid-column: auto; }
       .workspace-hero { flex-direction: column; }
+      .home-stack-grid, .home-topic-grid { grid-template-columns: 1fr; }
       .hero-actions { justify-content: flex-start; }
       .scenario-cards { grid-template-columns: 1fr; }
       .stage-head { flex-direction: column; }
@@ -1507,6 +1532,28 @@
           </ol>
         </article>
       </div>
+      <section class="home-stack" aria-labelledby="homeStackTitle">
+        <span class="home-section-kicker">TRAINING STACK</span>
+        <h3 id="homeStackTitle">从看图到复盘，四个入口就够了</h3>
+        <p>按当前任务选择下一步，不需要同时打开课程、指标、题库和交易面板。</p>
+        <div class="home-stack-grid">
+          <article class="home-stack-card"><span class="home-stack-index">01</span><h4>双盲历史训练</h4><p>隐藏未来走势，逐根写判断，再用下一根 K 线验证。</p><button type="button" data-home-action="replay">开始训练</button></article>
+          <article class="home-stack-card"><span class="home-stack-index">02</span><h4>阶段课程</h4><p>先学结构、动能和风险，再进入有门槛的专项练习。</p><button type="button" data-home-action="training">进入课程</button></article>
+          <article class="home-stack-card"><span class="home-stack-index">03</span><h4>指标验证</h4><p>每个指标都配观察、确认和误用边界，不把指标当信号。</p><button type="button" data-home-action="indicators">查看指标</button></article>
+          <article class="home-stack-card"><span class="home-stack-index">04</span><h4>训练复盘</h4><p>看证据覆盖、风险计划和错因，再决定下一轮练什么。</p><button type="button" data-home-action="review">查看报告</button></article>
+        </div>
+      </section>
+      <section class="home-topics" aria-labelledby="homeTopicsTitle">
+        <span class="home-section-kicker">LEARNING LOOP</span>
+        <h3 id="homeTopicsTitle">把一次训练变成下一次目标</h3>
+        <p>训练结束只做一件事：选出一个具体行为，回到对应内容重练。</p>
+        <div class="home-topic-grid">
+          <article class="home-topic-card"><h4>结构优先</h4><p>先记录 HH / HL、LH / LL 或区间，再决定是否需要指标。</p><button type="button" data-home-action="practice">练结构题</button></article>
+          <article class="home-topic-card"><h4>风险预算</h4><p>先定单笔亏损上限，再反推仓位和保证金。</p><button type="button" data-home-action="risk">做风险实验</button></article>
+          <article class="home-topic-card"><h4>复盘弱项</h4><p>理由缺失、空间不足或方向失配，都能变成下一轮练习。</p><button type="button" data-home-action="review">回看复盘</button></article>
+          <article class="home-topic-card"><h4>逐步加难</h4><p>从 1H、60 根开始，完成后再增加周期和场次长度。</p><button type="button" data-home-action="replay">选择场次</button></article>
+        </div>
+      </section>
       <details class="home-support">
         <summary>训练数据与更多练习</summary>
       <div class="home-overview home-overview-stats">
@@ -1616,16 +1663,22 @@
         </div>
         <dialog class="chart-indicators-dialog" id="chartIndicatorsDialog" aria-labelledby="chartIndicatorsTitle">
           <div class="chart-indicators-head"><h2 id="chartIndicatorsTitle">图表指标</h2><button type="button" class="chart-indicators-close" id="chartIndicatorsClose" aria-label="关闭指标设置" title="关闭"><i data-lucide="x" aria-hidden="true"></i></button></div>
+          <div class="chart-indicator-presets" role="group" aria-label="快速指标组合">
+            <button type="button" data-indicator-preset="basic" aria-pressed="false">清爽观察<span>K线 + 成交量</span></button>
+            <button type="button" data-indicator-preset="trend" aria-pressed="false">趋势对照<span>EMA20 / EMA60</span></button>
+            <button type="button" data-indicator-preset="momentum" aria-pressed="false">动能观察<span>RSI(14)</span></button>
+          </div>
+          <p class="chart-indicator-help">先选一套轻量组合；需要更多信息时，再在下方逐项添加。指标仅用于验证观察，不是交易信号。</p>
           <div class="chart-indicator-groups">
             <fieldset class="chart-indicator-group"><legend>主图叠加</legend>
-              <div class="chart-indicator-options"><span class="chart-overlay-label">SMA</span><label class="chart-indicator-option"><input type="checkbox" data-ma="5" checked /> MA5</label><label class="chart-indicator-option"><input type="checkbox" data-ma="10" checked /> MA10</label><label class="chart-indicator-option"><input type="checkbox" data-ma="20" checked /> MA20</label><label class="chart-indicator-option"><input type="checkbox" data-ma="60" /> MA60</label><label class="chart-indicator-option"><input type="checkbox" data-ma="120" /> MA120</label></div>
+              <div class="chart-indicator-options"><span class="chart-overlay-label">SMA</span><label class="chart-indicator-option"><input type="checkbox" data-ma="5" /> MA5</label><label class="chart-indicator-option"><input type="checkbox" data-ma="10" /> MA10</label><label class="chart-indicator-option"><input type="checkbox" data-ma="20" /> MA20</label><label class="chart-indicator-option"><input type="checkbox" data-ma="60" /> MA60</label><label class="chart-indicator-option"><input type="checkbox" data-ma="120" /> MA120</label></div>
               <div class="chart-indicator-options"><span class="chart-overlay-label">EMA</span><label class="chart-indicator-option"><input type="checkbox" id="ema20" /> EMA20</label><label class="chart-indicator-option"><input type="checkbox" id="ema60" /> EMA60</label></div>
               <div class="chart-indicator-options"><label class="chart-indicator-option"><input type="checkbox" data-indicator="bb" /> 布林带</label><label class="chart-indicator-option"><input type="checkbox" data-indicator="psar" /> SAR 抛物线</label><label class="chart-indicator-option"><input type="checkbox" id="structure" /> 结构点</label></div>
               <div class="chart-indicator-params"><label class="chart-param-control">BOLL 周期<input type="number" min="2" max="200" step="1" data-indicator-param="bb.period" value="20" /></label><label class="chart-param-control">标准差<input type="number" min="0.1" max="10" step="0.1" data-indicator-param="bb.multiplier" value="2" /></label></div>
               <div class="chart-indicator-params"><label class="chart-param-control">SAR 加速因子<input type="number" min="0.01" max="0.2" step="0.01" data-indicator-param="psar.step" value="0.02" /></label><label class="chart-param-control">SAR 上限<input type="number" min="0.02" max="0.5" step="0.01" data-indicator-param="psar.max" value="0.2" /></label></div>
               <p class="chart-param-note">SAR 按 K 线高低价计算，分时图中仍保留点位；至少需要两根 K 线。</p>
             </fieldset>
-            <fieldset class="chart-indicator-group"><legend>成交量</legend><div class="chart-indicator-options"><span class="chart-overlay-label">VOL MA</span><label class="chart-indicator-option"><input type="checkbox" data-vol-ma="5" checked /> MA5</label><label class="chart-indicator-option"><input type="checkbox" data-vol-ma="10" checked /> MA10</label><label class="chart-indicator-option"><input type="checkbox" data-vol-ma="20" checked /> MA20</label></div></fieldset>
+            <fieldset class="chart-indicator-group"><legend>成交量</legend><div class="chart-indicator-options"><span class="chart-overlay-label">VOL MA</span><label class="chart-indicator-option"><input type="checkbox" data-vol-ma="5" /> MA5</label><label class="chart-indicator-option"><input type="checkbox" data-vol-ma="10" /> MA10</label><label class="chart-indicator-option"><input type="checkbox" data-vol-ma="20" /> MA20</label></div></fieldset>
             <fieldset class="chart-indicator-group"><legend>副图</legend>
               <div class="chart-indicator-options"><label class="chart-indicator-option"><input type="checkbox" data-indicator="rsi" /> RSI</label><label class="chart-indicator-option"><input type="checkbox" data-indicator="macd" /> MACD</label><label class="chart-indicator-option"><input type="checkbox" data-indicator="kdj" /> KDJ</label></div>
               <div class="chart-indicator-params"><label class="chart-param-control">RSI 周期<input type="number" min="2" max="100" step="1" data-indicator-param="rsi.period" value="14" /></label></div>
@@ -2150,8 +2203,8 @@
       const flag = (value, fallback) => typeof value === 'boolean' ? value : fallback;
       return {
         show20: flag(saved.show20, false), show60: flag(saved.show60, false), showStructure: flag(saved.showStructure, false),
-        sma: Object.fromEntries([5, 10, 20, 60, 120].map(period => [period, flag(saved.sma?.[period], period <= 20)])),
-        volumeSma: Object.fromEntries([5, 10, 20].map(period => [period, flag(saved.volumeSma?.[period], true)]))
+        sma: Object.fromEntries([5, 10, 20, 60, 120].map(period => [period, flag(saved.sma?.[period], false)])),
+        volumeSma: Object.fromEntries([5, 10, 20].map(period => [period, flag(saved.volumeSma?.[period], false)]))
       };
     }
     function saveChartOverlayPreferences() {
@@ -2164,6 +2217,40 @@
       document.getElementById('structure').checked = state.showStructure;
       document.querySelectorAll('[data-ma]').forEach(input => { input.checked = state.sma[Number(input.dataset.ma)]; });
       document.querySelectorAll('[data-vol-ma]').forEach(input => { input.checked = state.volumeSma[Number(input.dataset.volMa)]; });
+      syncChartIndicatorPresetButtons();
+    }
+    const chartIndicatorPresets = {
+      basic: { show20: false, show60: false, showStructure: false, sma: {}, volumeSma: {}, indicator: { rsi: false, macd: false, bb: false, kdj: false, psar: false } },
+      trend: { show20: true, show60: true, showStructure: false, sma: {}, volumeSma: { 20: true }, indicator: { rsi: false, macd: false, bb: false, kdj: false, psar: false } },
+      momentum: { show20: false, show60: false, showStructure: false, sma: {}, volumeSma: {}, indicator: { rsi: true, macd: false, bb: false, kdj: false, psar: false } }
+    };
+    function currentChartIndicatorPreset() {
+      for (const [name, preset] of Object.entries(chartIndicatorPresets)) {
+        const overlaysMatch = state.show20 === preset.show20 && state.show60 === preset.show60 && state.showStructure === preset.showStructure
+          && [5, 10, 20, 60, 120].every(period => Boolean(state.sma[period]) === Boolean(preset.sma[period]))
+          && [5, 10, 20].every(period => Boolean(state.volumeSma[period]) === Boolean(preset.volumeSma[period]));
+        const indicatorsMatch = ['rsi', 'macd', 'bb', 'kdj', 'psar'].every(key => Boolean(state.indicator[key]) === Boolean(preset.indicator[key]));
+        if (overlaysMatch && indicatorsMatch) return name;
+      }
+      return '';
+    }
+    function syncChartIndicatorPresetButtons() {
+      const active = currentChartIndicatorPreset();
+      document.querySelectorAll('[data-indicator-preset]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.indicatorPreset === active)));
+    }
+    function applyChartIndicatorPreset(name) {
+      const preset = chartIndicatorPresets[name];
+      if (!preset) return false;
+      state.show20 = preset.show20; state.show60 = preset.show60; state.showStructure = preset.showStructure;
+      state.sma = Object.fromEntries([5, 10, 20, 60, 120].map(period => [period, Boolean(preset.sma[period])]));
+      state.volumeSma = Object.fromEntries([5, 10, 20].map(period => [period, Boolean(preset.volumeSma[period])]));
+      state.indicator = { ...preset.indicator };
+      saveChartOverlayPreferences(); saveIndicatorPreferences(); syncChartOverlayControls();
+      const labels = { basic: '清爽观察已启用：保留 K 线和成交量，可先描述高低点与收盘位置。', trend: '趋势对照已启用：比较 EMA20 与 EMA60 的位置和斜率，再回到价格结构验证。', momentum: '动能观察已启用：RSI 已打开；超买超卖不代表价格必然反转。' };
+      const coach = document.getElementById('chartCoach');
+      if (coach) coach.textContent = labels[name];
+      renderChart();
+      return true;
     }
     const state = { scenario: 'up', timeframe: '1H', dataMode: 'live', replayMarket: 'swap', chartType: loadChartTypePreference(), chartZoom: 1, chartOffset: 0, chartDragging: false, chartDragX: 0, chartTouchPoints: {}, chartTouchPinch: null, fallbackPriceScale: { auto: true, zoom: 1, offset: 0, baseMin: null, baseMax: null }, fallbackPriceDrag: null, ...loadChartOverlayPreferences(), chartDisplay: loadChartDisplayPreferences(), indicatorParams: loadIndicatorParams(), lesson: 0, tool: 'cursor', drawingMagnet: loadChartDrawingMagnetPreference(), indicator: loadIndicatorPreferences(), drawings: [], pendingDraw: [], replayMode: false, replayPaused: false, revealCount: 24, sessionLength: 60, sessionStart: 0, liveRows: [], liveUpdatedAt: 0, liveLoading: false, liveError: '' };
     const indicatorLibraryEntries = [
@@ -5279,6 +5366,7 @@
       input.addEventListener('change', () => {
         state.indicator[key] = input.checked;
         saveIndicatorPreferences();
+        syncChartIndicatorPresetButtons();
         document.getElementById('chartCoach').textContent = state.indicator[key] ? `教练提示：${key === 'psar' ? 'SAR' : key.toUpperCase()} 已打开。先说出它支持或反驳结构判断的证据，再决定是否需要它。` : coachText[state.tool];
         renderChart();
       });
@@ -6348,6 +6436,7 @@
         syncAnyWavesFinishControl();
       }
       document.querySelectorAll('[data-indicator]').forEach(input => { input.checked = Boolean(state.indicator[input.dataset.indicator]); });
+      syncChartIndicatorPresetButtons();
       syncChartTypeButtons(); syncChartModeBadge();
       syncDrawingToolButtons();
       setWorkspace('market');
@@ -6424,6 +6513,17 @@
     });
       document.querySelectorAll('[data-nav-target]').forEach(button => button.addEventListener('click', () => { const setup = document.getElementById('trainingSetup'); if (setup?.open) setup.close(); setWorkspace(button.dataset.navTarget); }));
     document.querySelectorAll('[data-subworkspace]').forEach(button => button.addEventListener('click', () => setWorkspace(button.dataset.subworkspace)));
+    document.querySelectorAll('[data-home-action]').forEach(button => button.addEventListener('click', () => {
+      const target = button.dataset.homeAction;
+      if (target === 'replay') {
+        if (state.replayMode && replayTraining.id && !replayTraining.saved) { setWorkspace('replay'); return; }
+        setWorkspace('market'); openTrainingSetup(); return;
+      }
+      setWorkspace(target);
+      const anchors = { training: 'stageCards', practice: 'questionTitle', indicators: 'indicatorLearningPage', risk: 'risk', review: 'review' };
+      const anchor = document.getElementById(anchors[target]);
+      anchor?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }));
     document.getElementById('indicatorResults').addEventListener('click', event => {
       const button = event.target.closest('[data-indicator-entry]');
       if (!button) return;
@@ -6461,6 +6561,7 @@
             saveIndicatorParams(); syncIndicatorParamControls();
           }
            document.querySelectorAll('[data-indicator]').forEach(input => { input.checked = Boolean(state.indicator[input.dataset.indicator]); });
+           syncChartIndicatorPresetButtons();
          }
          openTrainingSetup({ mode: 'blind', sampleIndex: Number(sampleButton.dataset.pinReplaySample), indicator }); return;
        }
@@ -6542,11 +6643,12 @@
       state.liveRows = [];
       updateSimDisplay(); loadLiveMarket();
     });
-    document.getElementById('ema20').addEventListener('change', e => { state.show20 = e.target.checked; saveChartOverlayPreferences(); renderChart(); });
-    document.getElementById('ema60').addEventListener('change', e => { state.show60 = e.target.checked; saveChartOverlayPreferences(); renderChart(); });
-    document.getElementById('structure').addEventListener('change', e => { state.showStructure = e.target.checked; saveChartOverlayPreferences(); renderChart(); });
-    document.querySelectorAll('[data-ma]').forEach(input => input.addEventListener('change', () => { state.sma[Number(input.dataset.ma)] = input.checked; saveChartOverlayPreferences(); renderChart(); }));
-    document.querySelectorAll('[data-vol-ma]').forEach(input => input.addEventListener('change', () => { state.volumeSma[Number(input.dataset.volMa)] = input.checked; saveChartOverlayPreferences(); renderChart(); }));
+    document.getElementById('ema20').addEventListener('change', e => { state.show20 = e.target.checked; saveChartOverlayPreferences(); syncChartIndicatorPresetButtons(); renderChart(); });
+    document.getElementById('ema60').addEventListener('change', e => { state.show60 = e.target.checked; saveChartOverlayPreferences(); syncChartIndicatorPresetButtons(); renderChart(); });
+    document.getElementById('structure').addEventListener('change', e => { state.showStructure = e.target.checked; saveChartOverlayPreferences(); syncChartIndicatorPresetButtons(); renderChart(); });
+    document.querySelectorAll('[data-ma]').forEach(input => input.addEventListener('change', () => { state.sma[Number(input.dataset.ma)] = input.checked; saveChartOverlayPreferences(); syncChartIndicatorPresetButtons(); renderChart(); }));
+    document.querySelectorAll('[data-vol-ma]').forEach(input => input.addEventListener('change', () => { state.volumeSma[Number(input.dataset.volMa)] = input.checked; saveChartOverlayPreferences(); syncChartIndicatorPresetButtons(); renderChart(); }));
+    document.querySelectorAll('[data-indicator-preset]').forEach(button => button.addEventListener('click', () => applyChartIndicatorPreset(button.dataset.indicatorPreset)));
     function syncChartDisplayControls() {
       document.querySelectorAll('[data-chart-display]').forEach(input => { input.checked = Boolean(state.chartDisplay[input.dataset.chartDisplay]); });
       document.getElementById('chartPriceScaleMode').value = state.chartDisplay.priceScaleMode;

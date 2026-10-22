@@ -63,7 +63,8 @@ async (page) => {
             [metrics.mode === (fallback ? 'fallback' : 'professional'), 'wrong chart path'],
             [metrics.overflow <= 0, 'horizontal overflow'],
             [metrics.svgSizeError < 1, 'SVG pixel scale differs from container'],
-            [metrics.legends.length === paneCount + 2, 'missing pane legends'],
+            // 默认清爽预设不显示 SMA/EMA，主图没有指标读数图例；成交量始终保留。
+            [metrics.legends.length === paneCount + 1, 'missing pane legends'],
             [metrics.legends.every(p => p.top >= -1 && p.bottom <= metrics.height + 1 && p.left >= -1 && p.right <= metrics.width + 1), 'legend outside chart'],
             [metrics.accountTop >= metrics.stageBottom - 1, 'account overlaps chart']
           ];

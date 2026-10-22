@@ -8,26 +8,29 @@ let stored = null, writeBlocked = false;
 const controls = { ema20: {}, ema60: {}, structure: {} };
 const ma = [5, 10, 20, 60, 120].map(period => ({ dataset: { ma: String(period) } }));
 const volume = [5, 10, 20].map(period => ({ dataset: { volMa: String(period) } }));
-const state = {};
+const state = { indicator: { rsi: false, macd: false, bb: false, kdj: false, psar: false } };
 const context = vm.createContext({
   state,
   localStorage: {
     getItem(key) { assert.equal(key, 'trend-lab-chart-overlays'); return stored; },
     setItem(key, value) { assert.equal(key, 'trend-lab-chart-overlays'); if (writeBlocked) throw Error('quota'); stored = value; }
   },
-  document: { getElementById: id => controls[id], querySelectorAll: selector => selector === '[data-ma]' ? ma : volume }
+  document: { getElementById: id => controls[id], querySelectorAll: selector => selector === '[data-ma]' ? ma : selector === '[data-vol-ma]' ? volume : [] }
 });
-for (const name of ['loadChartOverlayPreferences', 'saveChartOverlayPreferences', 'syncChartOverlayControls']) {
+for (const name of ['loadChartOverlayPreferences', 'saveChartOverlayPreferences', 'syncChartOverlayControls', 'currentChartIndicatorPreset', 'syncChartIndicatorPresetButtons']) {
   const start = html.indexOf(`    function ${name}(`);
   assert.ok(start > 0, name);
   const end = html.indexOf('\n    }', start) + '\n    }'.length;
   vm.runInContext(html.slice(start, end), context);
 }
+const presetStart = html.indexOf('    const chartIndicatorPresets = {');
+const presetEnd = html.indexOf('\n    };', presetStart) + '\n    };'.length;
+vm.runInContext(html.slice(presetStart, presetEnd), context);
 const plain = value => JSON.parse(JSON.stringify(value));
 const defaults = {
   show20: false, show60: false, showStructure: false,
-  sma: { 5: true, 10: true, 20: true, 60: false, 120: false },
-  volumeSma: { 5: true, 10: true, 20: true }
+  sma: { 5: false, 10: false, 20: false, 60: false, 120: false },
+  volumeSma: { 5: false, 10: false, 20: false }
 };
 for (const raw of [null, '{bad', 'null', '[]', '42', '"bad"']) {
   stored = raw;
