@@ -790,19 +790,13 @@
     .home-section-kicker { display: block; color: var(--blue); font-size: 9px; font-weight: 700; letter-spacing: .12em; }
     .home-stack h3, .home-topics h3 { margin: 4px 0 0; font-size: 18px; letter-spacing: -.02em; }
     .home-stack > p, .home-topics > p { margin: 5px 0 0; color: var(--muted); font-size: 11px; line-height: 1.6; }
-    .home-stack-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; margin-top: 14px; }
-    .home-stack-card { display: flex; min-width: 0; min-height: 132px; flex-direction: column; align-items: flex-start; padding: 13px; border: 1px solid #dce4ef; border-radius: 12px; background: #fff; }
+    .home-stack-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; margin-top: 14px; }
+    .home-stack-card { display: flex; min-width: 0; min-height: 112px; flex-direction: column; align-items: flex-start; padding: 12px; border: 1px solid #dce4ef; border-radius: 12px; background: #fff; }
     .home-stack-card .home-stack-index { color: var(--blue); font-size: 10px; font-weight: 700; }
-    .home-stack-card h4 { margin: 8px 0 4px; font-size: 12px; }
+    .home-stack-card h4 { margin: 6px 0 4px; font-size: 12px; }
     .home-stack-card p { flex: 1; margin: 0; color: var(--muted); font-size: 10px; line-height: 1.55; }
-    .home-stack-card button, .home-topic-card button { min-height: 28px; margin-top: 10px; padding: 4px 8px; border: 1px solid #cfd9e8; border-radius: 5px; background: #f8fbff; color: var(--blue); font-size: 10px; cursor: pointer; }
-    .home-stack-card button:hover, .home-stack-card button:focus-visible, .home-topic-card button:hover, .home-topic-card button:focus-visible { border-color: var(--blue); background: var(--blue-soft); outline: none; }
-    .home-topics { padding: 18px; border: 1px solid #e4e9f1; border-radius: 16px; background: var(--surface); }
-    .home-topic-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; margin-top: 14px; }
-    .home-topic-card { display: flex; min-width: 0; flex-direction: column; padding: 12px; border: 1px solid var(--line); border-radius: 11px; background: #fbfcfe; }
-    .home-topic-card h4 { margin: 0; font-size: 11px; }
-    .home-topic-card p { min-height: 42px; margin: 5px 0 0; color: var(--muted); font-size: 10px; line-height: 1.55; }
-    .home-topic-card button { align-self: flex-start; margin-top: 8px; }
+    .home-stack-card button { min-height: 28px; margin-top: 8px; padding: 4px 8px; border: 1px solid #cfd9e8; border-radius: 5px; background: #f8fbff; color: var(--blue); font-size: 10px; cursor: pointer; }
+    .home-stack-card button:hover, .home-stack-card button:focus-visible { border-color: var(--blue); background: var(--blue-soft); outline: none; }
     .home-loop-card { border-color: #d8dff0; background: linear-gradient(135deg,#fbfcff,#f6f8ff); }
     .home-loop-card .home-card-head p { max-width: 720px; margin: 5px 0 0; color: var(--muted); font-size: 10px; line-height: 1.5; }
     .home-loop-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 14px 0 0; padding: 0; list-style: none; }
@@ -870,7 +864,7 @@
     .home-disclaimer { display: flex; align-items: flex-start; gap: 7px; padding: 9px 11px; border: 1px solid #e6eaf1; border-radius: 11px; background: rgba(255,255,255,.65); color: var(--muted); font-size: 10px; }
     .home-disclaimer i { width: 14px; height: 14px; flex: 0 0 auto; color: var(--blue); }
     .training-home-active .top-cta { display: none; }
-    @media (max-width: 1100px) { .workspace-grid { grid-template-columns: 1fr 1fr; } .workspace-grid .surface-card:last-child { grid-column: 1 / -1; } .replay-layout { grid-template-columns: 1fr; } .home-stack-grid, .home-topic-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 1100px) { .workspace-grid { grid-template-columns: 1fr 1fr; } .workspace-grid .surface-card:last-child { grid-column: 1 / -1; } .replay-layout { grid-template-columns: 1fr; } .home-stack-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
     @media (max-width: 980px) {
       .layout { grid-template-columns: 1fr; }
       .side { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -923,7 +917,7 @@
       .workspace-grid, .risk-layout, .review-layout { grid-template-columns: 1fr; }
       .workspace-grid .surface-card:last-child { grid-column: auto; }
       .workspace-hero { flex-direction: column; }
-      .home-stack-grid, .home-topic-grid { grid-template-columns: 1fr; }
+      .home-stack-grid { grid-template-columns: 1fr; }
       .hero-actions { justify-content: flex-start; }
       .scenario-cards { grid-template-columns: 1fr; }
       .stage-head { flex-direction: column; }
@@ -1563,23 +1557,16 @@
         </article>
       </div>
       <section class="home-stack" aria-labelledby="homeStackTitle">
-        <h3 id="homeStackTitle">其他训练入口</h3>
-        <p>需要专项补练时，再从这里进入课程、指标或复盘。</p>
+        <span class="home-section-kicker">LEARNING MODULES</span>
+        <h3 id="homeStackTitle">按目标选择训练模块</h3>
+        <p>主路线以外的入口集中在这里；每个入口直接进入对应的练习，不重复铺两套导航。</p>
         <div class="home-stack-grid">
-          <article class="home-stack-card"><span class="home-stack-index">01</span><h4>双盲历史训练</h4><p>隐藏未来走势，逐根写判断，再用下一根 K 线验证。</p><button type="button" data-home-action="replay">开始训练</button></article>
-          <article class="home-stack-card"><span class="home-stack-index">02</span><h4>阶段课程</h4><p>先学结构、动能和风险，再进入有门槛的专项练习。</p><button type="button" data-home-action="training">进入课程</button></article>
-          <article class="home-stack-card"><span class="home-stack-index">03</span><h4>指标验证</h4><p>每个指标都配观察、确认和误用边界，不把指标当信号。</p><button type="button" data-home-action="indicators">查看指标</button></article>
-          <article class="home-stack-card"><span class="home-stack-index">04</span><h4>训练复盘</h4><p>看证据覆盖、风险计划和错因，再决定下一轮练什么。</p><button type="button" data-home-action="review">查看报告</button></article>
-        </div>
-      </section>
-      <section class="home-topics" aria-labelledby="homeTopicsTitle">
-        <h3 id="homeTopicsTitle">按主题补练</h3>
-        <p>选一个当前薄弱点练习，训练结束后再回到上方的学习路线。</p>
-        <div class="home-topic-grid">
-          <article class="home-topic-card"><h4>结构优先</h4><p>先记录 HH / HL、LH / LL 或区间，再决定是否需要指标。</p><button type="button" data-home-action="practice">练结构题</button></article>
-          <article class="home-topic-card"><h4>风险预算</h4><p>先定单笔亏损上限，再反推仓位和保证金。</p><button type="button" data-home-action="risk">做风险实验</button></article>
-          <article class="home-topic-card"><h4>复盘弱项</h4><p>理由缺失、空间不足或方向失配，都能变成下一轮练习。</p><button type="button" data-home-action="review">回看复盘</button></article>
-          <article class="home-topic-card"><h4>逐步加难</h4><p>从 1H、60 根开始，完成后再增加周期和场次长度。</p><button type="button" data-home-action="replay">选择场次</button></article>
+          <article class="home-stack-card"><span class="home-stack-index">01 · 基础主线</span><h4>阶段课程</h4><p>沿着结构、动能、风险的顺序练习；阶段进度只由课程任务推进。</p><button type="button" data-home-action="training">进入阶段课程</button></article>
+          <article class="home-stack-card"><span class="home-stack-index">02 · 行情练习</span><h4>题库与专项</h4><p>用 19 个代表样本和 20 个专项，集中补练常见行情判断。</p><button type="button" data-home-action="practice">进入题库与专项</button></article>
+          <article class="home-stack-card"><span class="home-stack-index">03 · 指标学习</span><h4>指标课程</h4><p>逐项查看适用条件、实盘案例和指标容易造成的误读。</p><button type="button" data-home-action="indicators">进入指标课程</button></article>
+          <article class="home-stack-card"><span class="home-stack-index">04 · 风险管理</span><h4>风险实验</h4><p>调整风险预算、止损距离和杠杆，检查仓位变化。</p><button type="button" data-home-action="risk">进入风险实验</button></article>
+          <article class="home-stack-card"><span class="home-stack-index">05 · 自主训练</span><h4>历史双盲训练</h4><p>选择有数据支持的市场和周期，隐藏未来走势逐根推演。</p><button type="button" data-home-action="replay">设置训练场次</button></article>
+          <article class="home-stack-card"><span class="home-stack-index">06 · 训练总结</span><h4>行为复盘</h4><p>查看已保存的判断、交易、风险计划和下一轮建议。</p><button type="button" data-home-action="review">进入训练复盘</button></article>
         </div>
       </section>
       <div class="home-overview home-overview-stats">
