@@ -116,10 +116,15 @@
     .binance-chart-meta select { max-width: 150px; border: 0; background: transparent; color: #eaecef; font: inherit; font-weight: 600; }
     .binance-chart-meta option { background: #0b0e11; color: #eaecef; }
     .binance-chart-meta span { color: #848e9c; }
-    .chart-ohlc { color: #848e9c; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .chart-candle-readout { display: flex; flex: 1 1 320px; align-items: center; gap: 9px; min-width: 0; max-width: min(56vw, 680px); overflow-x: auto; overflow-y: hidden; white-space: nowrap; scrollbar-width: thin; scrollbar-color: #474d57 #181a20; }
+    .chart-candle-readout:focus-visible { outline: 1px solid #f0b90b; outline-offset: -1px; }
+    .chart-ohlc { flex: 0 0 auto; color: #848e9c; white-space: nowrap; overflow: visible; text-overflow: clip; }
+    .chart-candle-stats { flex: 0 0 auto; color: #848e9c; font-variant-numeric: tabular-nums; white-space: nowrap; }
     .chart-indicator-values { max-width: min(42vw, 430px); overflow: hidden; color: #848e9c; text-overflow: ellipsis; white-space: nowrap; }
     .chart-ohlc.up { color: #0ecb81; }
     .chart-ohlc.down { color: #f6465d; }
+    .chart-candle-stats.up { color: #0ecb81; }
+    .chart-candle-stats.down { color: #f6465d; }
     .binance-chart-actions button { display: inline-flex; width: 28px; height: 28px; flex: 0 0 28px; align-items: center; justify-content: center; border: 0; border-radius: 4px; background: transparent; color: #848e9c; padding: 0; font-size: 11px; white-space: nowrap; }
     .binance-chart-actions button i, .binance-chart-actions button svg { width: 15px; height: 15px; }
     .binance-chart-actions button:hover, .binance-chart-actions button:focus-visible, .binance-chart-actions button.active { background: #2b3139; color: #f0b90b; outline: none; }
@@ -1301,8 +1306,9 @@
       body.market-terminal .chart-advanced[open] > .chart-settings-panel { top: calc(100% + 4px); right: auto; left: 6px; width: calc(100vw - 27px); }
       body.market-terminal .binance-chart-bar { align-items: stretch; flex-direction: column; }
       body.market-terminal .binance-chart-meta { flex: 0 0 auto; width: 100%; flex-wrap: wrap; gap: 3px 5px; overflow: visible; white-space: normal; }
-      body.market-terminal .chart-ohlc { display: block; flex: 1 1 100%; width: 100%; overflow-x: auto; overflow-y: hidden; text-overflow: clip; scrollbar-width: thin; scrollbar-color: #474d57 #181a20; }
-      body.market-terminal .chart-ohlc:focus-visible, body.market-terminal .market-performance:focus-visible { outline: 1px solid #f0b90b; outline-offset: -1px; }
+      body.market-terminal .chart-candle-readout { flex: 1 1 100%; width: 100%; max-width: 100%; }
+      body.market-terminal .chart-ohlc { flex: 0 0 auto; width: auto; overflow: visible; text-overflow: clip; }
+      body.market-terminal .chart-candle-readout:focus-visible, body.market-terminal .market-performance:focus-visible { outline: 1px solid #f0b90b; outline-offset: -1px; }
       body.market-terminal .chart-indicator-values { display: block; flex: 1 1 100%; width: 100%; max-width: 100%; overflow-x: auto; overflow-y: hidden; text-overflow: clip; white-space: nowrap; scrollbar-width: none; }
       body.market-terminal .binance-chart-actions { width: 100%; flex: 0 0 auto; justify-content: flex-start; overflow-x: auto; }
       body.market-terminal .chart-wrap { min-height: 0; grid-template-columns: 1fr; }
@@ -1355,8 +1361,9 @@
       body.market-terminal .chart-plot { grid-column: 2; grid-row: 1; min-width: 0; }
       body.market-terminal .chart-coach { order: 5; display: block; height: auto; line-height: 1.6; white-space: normal; }
        body.market-terminal .binance-chart-bar { min-height: 34px; gap: 3px; padding: 3px 4px; flex-direction: column; align-items: stretch; overflow: visible; }
-       body.market-terminal .binance-chart-meta { flex: 0 0 auto; width: 100%; flex-wrap: nowrap; gap: 2px 4px; overflow: visible; white-space: nowrap; }
-       body.market-terminal .chart-ohlc { min-width: 0; flex: 1 1 auto; width: auto; overflow-x: auto; overflow-y: hidden; text-overflow: clip; }
+       body.market-terminal .binance-chart-meta { flex: 0 0 auto; width: 100%; flex-wrap: wrap; gap: 3px 5px; overflow: visible; white-space: normal; }
+       body.market-terminal .chart-candle-readout { min-width: 0; flex: 1 1 100%; width: 100%; max-width: 100%; flex-direction: column; align-items: flex-start; gap: 2px; overflow: visible; white-space: normal; }
+       body.market-terminal .chart-ohlc, body.market-terminal .chart-candle-stats { display: block; min-width: 0; width: 100%; max-width: 100%; overflow-x: auto; overflow-y: hidden; text-overflow: clip; }
        body.market-terminal .chart-indicator-values { display: block; flex: 1 1 100%; width: 100%; max-width: 100%; overflow-x: auto; overflow-y: hidden; text-overflow: clip; white-space: nowrap; scrollbar-width: none; }
        body.market-terminal .binance-chart-actions { flex: 0 0 auto; width: 100%; min-height: 24px; gap: 0; overflow-x: auto; }
       body.market-terminal .binance-chart-actions button { width: 32px; height: 32px; flex: 0 0 32px; padding: 0; }
@@ -1753,7 +1760,7 @@
           </div>
           <div class="chart-plot">
           <div class="binance-chart-bar" aria-label="K线图状态栏">
-            <div class="binance-chart-meta"><span id="chartIntervalLabel">1H</span><span id="chartModeBadge" class="chart-mode-badge" hidden title="Heikin Ashi 蜡烛和十字线 OHLC 为合成值；顶部最新报价、成交量、指标、账户与训练判断仍使用原始 K 线。">HA 合成</span><span id="chartOhlc" class="chart-ohlc" tabindex="0" aria-label="十字光标选中 K 线的开盘、最高、最低和收盘价，可横向滚动查看">开 — 高 — 低 — 收 —</span><span id="chartIndicatorValues" class="chart-indicator-values" tabindex="0" aria-label="图表指标读数，可横向滚动查看更多">EMA20 — · EMA60 —</span></div>
+            <div class="binance-chart-meta"><span id="chartIntervalLabel">1H</span><span id="chartModeBadge" class="chart-mode-badge" hidden title="Heikin Ashi 蜡烛和十字线 OHLC 为合成值；顶部最新报价、成交量、指标、账户与训练判断仍使用原始 K 线。">HA 合成</span><div id="chartCandleReadout" class="chart-candle-readout" tabindex="0" role="group" aria-label="十字光标选中 K 线的 OHLC、涨跌幅、振幅和时间，可横向滚动查看"><span id="chartOhlc" class="chart-ohlc" aria-label="开盘、最高、最低和收盘价">开 — 高 — 低 — 收 —</span><span id="chartCandleStats" class="chart-candle-stats">涨跌幅 — · 振幅 — · 时间 —</span></div><span id="chartIndicatorValues" class="chart-indicator-values" tabindex="0" aria-label="图表指标读数，可横向滚动查看更多">EMA20 — · EMA60 —</span></div>
             <div class="binance-chart-actions" aria-label="图表视图操作"><button type="button" class="active" data-chart-type="candles" aria-label="蜡烛图" title="蜡烛图"><i data-lucide="chart-no-axes-column-increasing" aria-hidden="true"></i></button><button type="button" data-chart-type="heikin" aria-label="Heikin Ashi 平均K线（合成）" title="Heikin Ashi 平均K线（合成）"><span class="chart-type-short" aria-hidden="true">HA</span></button><button type="button" data-chart-type="line" aria-label="分时线" title="分时线"><i data-lucide="chart-spline" aria-hidden="true"></i></button><button type="button" id="chartZoomOut" aria-label="缩小" title="缩小"><i data-lucide="minus" aria-hidden="true"></i></button><button type="button" id="chartZoomIn" aria-label="放大" title="放大"><i data-lucide="plus" aria-hidden="true"></i></button><button type="button" id="chartResetView" aria-label="重置图表视图" title="重置图表视图"><i data-lucide="rotate-ccw" aria-hidden="true"></i></button><button type="button" id="chartFullscreen" aria-label="全屏" title="全屏"><i data-lucide="maximize" aria-hidden="true"></i></button><button type="button" id="replayToggle" aria-label="开启真实回放" title="开启真实回放"><i data-lucide="database" aria-hidden="true"></i></button></div>
           </div>
           <div class="chart-stage" id="chartStage">
@@ -1762,7 +1769,7 @@
             <div class="chart-pane-separators" id="chartPaneSeparators" aria-label="图表面板高度调整"></div>
             <span class="chart-screen-reader" id="chartPaneResizeStatus" role="status" aria-live="polite"></span>
             <div id="chart" role="group" tabindex="0" aria-label="行情 K 线图" aria-describedby="chartKeyboardHelp"></div>
-            <span id="chartKeyboardHelp" class="chart-screen-reader">聚焦图表后，左右方向键逐根查看，Home 和 End 查看已加载范围首尾。双击绘图区或使用窗格按钮放大与还原；Escape 优先还原窗格，否则恢复最新读数。Tab 离开图表。</span>
+            <span id="chartKeyboardHelp" class="chart-screen-reader">聚焦图表后，左右方向键逐根查看，Home 和 End 查看已加载范围首尾；状态栏会显示当前 K 线 OHLC、涨跌幅、振幅和可用时间。双击绘图区或使用窗格按钮放大与还原；Escape 优先还原窗格，否则恢复最新读数。Tab 离开图表。</span>
             <span id="chartInspectionStatus" class="chart-screen-reader" role="status" aria-live="polite" aria-atomic="true"></span>
             <div class="chart-tooltip" id="chartTooltip" role="tooltip" hidden></div>
             <button type="button" id="finishAnyWaves" class="drawing-finish-btn" hidden><i data-lucide="check" aria-hidden="true"></i>完成自由折线</button>
@@ -2915,6 +2922,11 @@
       const set = (id, text) => { const node = document.getElementById(id); if (node) node.textContent = text; };
       set('chartIntervalLabel', `${state.timeframe} · —`);
       set('chartOhlc', `暂无 ${state.timeframe} 行情`);
+      set('chartCandleStats', '涨跌幅 — · 振幅 — · 时间 —');
+      const ohlc = document.getElementById('chartOhlc'), candleStats = document.getElementById('chartCandleStats');
+      ohlc?.classList.remove('up', 'down'); candleStats?.classList.remove('up', 'down');
+      ohlc?.setAttribute('aria-label', '开盘、最高、最低和收盘价');
+      candleStats?.setAttribute('aria-label', '当前 K 线的涨跌幅、振幅和时间');
       set('chartIndicatorValues', '指标等待行情');
       set('lastPrice', '—');
       const change = document.getElementById('priceChange');
@@ -3305,7 +3317,7 @@
       view.index = event.key === 'Home' ? view.first : event.key === 'End' ? view.last : Math.max(view.first, Math.min(view.last, current + (event.key === 'ArrowLeft' ? -1 : 1)));
       view.active = true;
       view.show(view.index);
-      document.getElementById('chartInspectionStatus').textContent = `第 ${view.index + 1} / ${view.rows.length} 根，${document.getElementById('chartOhlc').textContent}。${document.getElementById('chartIndicatorValues').textContent}`;
+      document.getElementById('chartInspectionStatus').textContent = `第 ${view.index + 1} / ${view.rows.length} 根，${document.getElementById('chartOhlc').textContent}。${document.getElementById('chartCandleStats').textContent}。${document.getElementById('chartIndicatorValues').textContent}`;
     }
     document.getElementById('chart').addEventListener('keydown', inspectChartWithKeyboard);
     document.getElementById('chart').addEventListener('blur', clearChartInspection);
@@ -3406,6 +3418,15 @@
         ? 'Heikin Ashi 合成 K 线的开盘、最高、最低和收盘价；真实行情值仍显示在顶部报价。'
         : '十字光标选中 K 线的开盘、最高、最低和收盘价，可横向滚动查看');
       ohlc.classList.toggle('up', visual.close >= visual.open); ohlc.classList.toggle('down', visual.close < visual.open);
+      const candleStats = document.getElementById('chartCandleStats');
+      if (candleStats) {
+        const stats = chartCandleReadoutValues(bar, rowIndex, visual);
+        const change = formatChartPercent(stats.changePercent), amplitude = formatChartPercent(stats.amplitudePercent, false);
+        candleStats.textContent = `涨跌幅 ${change} · 振幅 ${amplitude} · ${stats.timeLabel}`;
+        candleStats.setAttribute('aria-label', `当前 K 线开收涨幅 ${change}，高低振幅 ${amplitude}，${stats.timeLabel}${stats.heikinAshi ? '，HA 合成值' : ''}`);
+        candleStats.classList.toggle('up', Number.isFinite(stats.changePercent) && stats.changePercent >= 0);
+        candleStats.classList.toggle('down', Number.isFinite(stats.changePercent) && stats.changePercent < 0);
+      }
       const calculationRows = proChart.readoutRows || sourceRows;
       const calculationIndex = rowIndex + (proChart.readoutOffset || 0);
       if (!proChart.readoutData) {
@@ -3415,6 +3436,31 @@
       const summary = document.getElementById('chartIndicatorValues');
       summary.textContent = Object.values(groups).flat().map(item => `${item.label} ${item.value}`).join(' · ') || '指标已关闭';
       renderChartPaneLegends(groups);
+    }
+    function chartCandleReadoutValues(bar, index, visualBar = bar) {
+      const open = Number(visualBar?.open), close = Number(visualBar?.close);
+      const high = Number(visualBar?.high), low = Number(visualBar?.low);
+      const changePercent = Number.isFinite(open) && open !== 0 && Number.isFinite(close) ? (close - open) / open * 100 : null;
+      const amplitudePercent = Number.isFinite(open) && open !== 0 && Number.isFinite(high) && Number.isFinite(low) ? (high - low) / open * 100 : null;
+      const localIndex = Number.isInteger(bar?.i) ? bar.i : index;
+      const rowNumber = Number.isInteger(localIndex) && localIndex >= 0 ? localIndex + 1 : '—';
+      const openTime = Number(bar?.openTime);
+      const timeLabel = state.replayMode
+        ? `回放第 ${rowNumber} 根`
+        : state.dataMode === 'live' && Number.isFinite(openTime) && openTime > 1000000000000
+          ? `时间 ${formatChartCandleTime(openTime)}`
+          : `样本第 ${rowNumber} 根`;
+      return { changePercent, amplitudePercent, timeLabel, heikinAshi: Boolean(visualBar?.heikinAshi) };
+    }
+    function formatChartCandleTime(timestamp) {
+      const date = new Date(Number(timestamp));
+      if (!Number.isFinite(date.getTime())) return '—';
+      return `${date.toISOString().slice(0, 16).replace('T', ' ')} UTC`;
+    }
+    function formatChartPercent(value, signed = true) {
+      if (!Number.isFinite(value)) return '—';
+      const normalized = Object.is(value, -0) ? 0 : value;
+      return `${signed && normalized > 0 ? '+' : ''}${normalized.toFixed(2)}%`;
     }
     function formatChartPrice(value) {
       const price = Number(value);

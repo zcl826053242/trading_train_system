@@ -83,8 +83,13 @@ async (page) => {
       });
       const lockedProbe = await probe();
       await row.locator('[data-drawing-action="lock"]').click();
-      await target.mouse.move(lockedProbe.x, lockedProbe.y); await target.mouse.down();
-      await target.mouse.move(lockedProbe.x + 22, lockedProbe.y - 18, { steps: 6 }); await target.mouse.up();
+      // 在手机高度下，对象管理行会在图表下方，点击后浏览器可能滚动到操作按钮。
+      // 先把主图重新滚回视口，再投影锚点；不能把视口外坐标误判成绘图拖动失败。
+      await target.locator('#chart').scrollIntoViewIfNeeded();
+      await target.waitForTimeout(80);
+      const visibleLockedProbe = await probe();
+      await target.mouse.move(visibleLockedProbe.x, visibleLockedProbe.y); await target.mouse.down();
+      await target.mouse.move(visibleLockedProbe.x + 22, visibleLockedProbe.y - 18, { steps: 6 }); await target.mouse.up();
       const afterLockedDrag = await probe();
       const locked = await target.evaluate(() => proChart.drawings[0].locked);
       if (!locked || JSON.stringify(afterLockedDrag.geometry) !== JSON.stringify(lockedProbe.geometry)) {
@@ -92,6 +97,8 @@ async (page) => {
       }
 
       await row.locator('[data-drawing-action="lock"]').click();
+      await target.locator('#chart').scrollIntoViewIfNeeded();
+      await target.waitForTimeout(80);
       const editableProbe = await probe();
       await target.mouse.move(editableProbe.x, editableProbe.y); await target.mouse.down();
       await target.mouse.move(editableProbe.x + 22, editableProbe.y - 18, { steps: 6 }); await target.mouse.up();

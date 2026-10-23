@@ -108,6 +108,8 @@ async (page) => {
         await toolButton.evaluate(element => element.scrollIntoView({ block: 'center', inline: 'center', behavior: 'instant' }));
         await toolButton.click();
         for (let index = 0; index < pointCount; index++) {
+          // 对象管理器在手机端位于图表之后，打开后可能滚动页面；每次落点前确保主图处于视口内。
+          await target.locator('#chart').scrollIntoViewIfNeeded();
           const point = await target.evaluate(({ index, pointCount }) => {
             const surface = drawingSurface(), rect = document.querySelector('#chart').getBoundingClientRect();
             const width = surface.chart.timeScale().width(), height = surface.chart.panes()[0].getHeight();

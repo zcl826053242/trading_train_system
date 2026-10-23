@@ -15,7 +15,7 @@ async (page) => {
       await target.goto('http://127.0.0.1:4188/');
       await target.waitForFunction(() => sessionPersistenceReady && historicalReady);
       await target.locator('[data-nav-target="market"]').click();
-      await target.evaluate(() => { state.dataMode = 'sim'; state.replayMode = false; state.liveRows = []; state.liveError = ''; state.liveLoading = false; renderChart(); updateSimDisplay(); });
+      await target.evaluate(() => { state.dataMode = 'sim'; state.replayMode = false; state.liveRows = []; state.liveError = ''; state.liveLoading = false; state.chartType = 'candles'; renderChart(); updateSimDisplay(); });
       const marketSummary = () => target.evaluate(() => Object.fromEntries(
         ['lastPrice', 'priceChange', 'regime', 'regimeDesc', 'confidence'].map(id => [id, document.getElementById(id).textContent])));
       const initialSummary = await marketSummary();
@@ -49,9 +49,12 @@ async (page) => {
           const index = Math.round(first + (last - first) * fraction), row = proChart.visibleRows[index];
           const rect = document.querySelector('#chart').getBoundingClientRect();
           const y = surface.chart.panes()[0].getHeight() * fraction;
+          const change = (row.close - row.open) / row.open * 100, amplitude = (row.high - row.low) / row.open * 100;
+          const rowNumber = Number.isInteger(row.i) ? row.i + 1 : index + 1;
           return { index, x: rect.left + surface.left + scale.timeToCoordinate(row.time), y: rect.top + surface.top + y,
             price: formatChartPrice(surface.series.coordinateToPrice(y)),
-            expected: [row.open, row.high, row.low, row.close].map(formatChartPrice) };
+            expected: [row.open, row.high, row.low, row.close].map(formatChartPrice),
+            expectedStats: `涨跌幅 ${formatChartPercent(change)} · 振幅 ${formatChartPercent(amplitude, false)} · 样本第 ${rowNumber} 根` };
         }, fraction);
         await target.evaluate(() => document.querySelector('#chart').addEventListener('pointermove', event => {
           window.__auditPointer = { x: event.clientX, y: event.clientY };
@@ -59,11 +62,12 @@ async (page) => {
         await target.mouse.move(probe.x, probe.y); await target.waitForTimeout(80);
         const observed = await target.evaluate(() => {
           const surface = drawingSurface(), rect = document.querySelector('#chart').getBoundingClientRect();
-          return { ohlc: document.querySelector('#chartOhlc').textContent,
+          return { ohlc: document.querySelector('#chartOhlc').textContent, stats: document.querySelector('#chartCandleStats').textContent,
             pointerPrice: formatChartPrice(surface.series.coordinateToPrice(window.__auditPointer.y - rect.top - surface.top)),
             cross: [...document.querySelectorAll('.chart-fallback > g[opacity="1"] text')].map(node => node.textContent) };
         });
         check(probe.expected.every(value => observed.ohlc.includes(value)), `crosshair OHLC disagrees with candle ${probe.index}`);
+        check(observed.stats === probe.expectedStats, `crosshair percent/time readout disagrees with candle ${probe.index}: ${observed.stats}`);
         if (fallback) check(observed.cross.includes(observed.pointerPrice), 'fallback crosshair price disagrees with actual pointer coordinate');
         readouts.push({ ...probe, observed });
       }
@@ -72,10 +76,14 @@ async (page) => {
       await target.mouse.move(1, 1); await target.waitForTimeout(100);
       const cleared = await target.evaluate(() => {
         const row = chartInspection.rows.at(-1);
-        return { ohlc: document.querySelector('#chartOhlc').textContent,
-          expected: [row.open, row.high, row.low, row.close].map(formatChartPrice) };
+        const change = (row.close - row.open) / row.open * 100, amplitude = (row.high - row.low) / row.open * 100;
+        const rowNumber = Number.isInteger(row.i) ? row.i + 1 : chartInspection.rows.length;
+        return { ohlc: document.querySelector('#chartOhlc').textContent, stats: document.querySelector('#chartCandleStats').textContent,
+          expected: [row.open, row.high, row.low, row.close].map(formatChartPrice),
+          expectedStats: `涨跌幅 ${formatChartPercent(change)} · 振幅 ${formatChartPercent(amplitude, false)} · 样本第 ${rowNumber} 根` };
       });
       check(cleared.expected.every(value => cleared.ohlc.includes(value)), 'leaving chart did not restore latest OHLC');
+      check(cleared.stats === cleared.expectedStats, 'leaving chart did not restore latest candle statistics');
       checks.push({ action: 'crosshair-leave', ...cleared });
       // 切换周期会重建数据；未完成的绘图锚点不能串到新周期。
       await target.locator('[data-tool="trendline"]').click();
