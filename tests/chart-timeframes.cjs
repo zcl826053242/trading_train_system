@@ -38,9 +38,30 @@ for (const timeframe of expected) {
   const rows = context.buildData('range', timeframe);
   assert.ok(rows.length >= 24, `${timeframe} supplies a usable simulated chart window`);
   assert.ok(rows.every(row => [row.open, row.high, row.low, row.close, row.volume].every(Number.isFinite)));
+  for (const scenario of ['up', 'down', 'range']) {
+    const series = context.buildData(scenario, timeframe);
+    const green = series.filter(row => row.close > row.open).length;
+    const red = series.filter(row => row.close < row.open).length;
+    const net = series.at(-1).close - series[0].open;
+    const span = Math.max(...series.map(row => row.high)) - Math.min(...series.map(row => row.low));
+    assert.ok(series.every(row => row.high >= Math.max(row.open, row.close) && row.low <= Math.min(row.open, row.close) && row.volume > 0), `${scenario}/${timeframe} OHLC candles are valid`);
+    assert.ok(green > 0 && red > 0, `${scenario}/${timeframe} has both bullish and bearish candles instead of a one-color staircase`);
+    assert.equal(JSON.stringify(series), JSON.stringify(context.buildData(scenario, timeframe)), `${scenario}/${timeframe} remains deterministic for repeatable practice`);
+    if (scenario === 'up') assert.ok(net > 0, `${timeframe} up practice retains a rising structure`);
+    if (scenario === 'down') assert.ok(net < 0, `${timeframe} down practice retains a falling structure`);
+    if (scenario === 'range') assert.ok(Math.abs(net) < span * .3, `${timeframe} range practice remains centered rather than trending`);
+  }
   const times = rows.slice(0, 3).map((row, index) => context.barTime(row, index));
   assert.ok(times[0] < times[1] && times[1] < times[2], `${timeframe} simulation timestamps increase`);
 }
+for (const [scenario, wick, field] of [['longUpperWick', 'high', 'open'], ['longLowerWick', 'open', 'low']]) {
+  context.state.timeframe = '1H';
+  const rows = context.buildData(scenario, '1H'), target = rows.at(-4);
+  assert.ok((target[wick] - target[field]) >= 850, `${scenario} keeps its explicitly designed wick after realistic variation is added`);
+}
+context.state.timeframe = '1H';
+const gapRows = context.buildData('gapShock', '1H');
+assert.ok(Math.max(...gapRows.slice(1).map((row, i) => Math.abs(row.open - gapRows[i].close))) >= 800, 'gap-shock exercise keeps a visible price gap');
 context.state.timeframe = '1W';
 assert.equal(new Date(context.barTime({ i: 0 }, 0) * 1000).getUTCDay(), 1, 'simulated weekly candles start on Monday UTC');
 context.state.timeframe = '1M';
@@ -49,4 +70,4 @@ assert.deepEqual(monthly.map(date => [date.getUTCFullYear(), date.getUTCMonth(),
   [[2025, 0, 1], [2025, 1, 1], [2025, 2, 1]], 'simulated monthly candles follow calendar month boundaries');
 assert.equal((context.barTime({ i: 1 }, 1) - context.barTime({ i: 0 }, 0)) / 86400, 31,
   'monthly timestamp spacing reflects the actual month length');
-console.log('PASS: 15 live/simulation intervals map cleanly; simulated weeks/months use calendar boundaries; unavailable replay periods stay gated.');
+console.log('PASS: 15 live/simulation intervals; deterministic two-sided OHLC trends, centered ranges, designed wicks/gaps, calendar weeks/months, and replay gates.');
